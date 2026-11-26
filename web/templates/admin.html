@@ -75,13 +75,24 @@
   .hide { display:none !important }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:10 }
   @media (max-width:1000px) { .kpis { grid-template-columns:repeat(2,1fr) } .two { grid-template-columns:1fr } }
+  .menu { display:none }
+  @media (max-width:1024px) and (min-width:721px) {
+    .layout { grid-template-columns:200px 1fr; background:linear-gradient(to right, var(--side) 200px, transparent 200px) }
+    .island { --isl-x: calc(200px + (100vw - 200px) / 2) } .brand { font-size:13px } main { padding-top:66px !important }
+  }
+  @media (max-width:720px) {
+    .layout { grid-template-columns:1fr; background:none }
+    aside { position:sticky; top:0; z-index:20; height:auto; padding:10px 14px; flex-direction:row; flex-wrap:wrap; align-items:center; gap:0 }
+    .brand { padding:0; flex:1 } .brand > div { font-size:13px } .brand small { font-size:11px } .logo { width:36px; height:36px }
+    .island { --isl-x:50vw; top:12px } aside .brand > div { display:none }
+    .menu { all:unset; display:grid; place-items:center; width:40px; height:40px; border-radius:10px; color:#fff; cursor:pointer; background:#24264f }
+    .menu svg { width:22px; height:22px }
+    nav, .side-foot { display:none; flex-basis:100% }
+    aside.open nav { display:flex; margin-top:12px } aside.open .side-foot { display:block; margin-top:8px }
+    main { padding:20px 16px 50px; max-width:none } h1 { font-size:21px }
+  }
   @media (max-width:1024px) {
-    .layout { grid-template-columns:1fr; background:none } aside { position:static; height:auto; padding:10px 12px 6px }
-    .brand { padding:0 } .brand > div { display:none } .island { --isl-x:50vw; top:12px }
-    nav { flex-direction:row; flex-wrap:nowrap; overflow-x:auto; margin-top:10px; scrollbar-width:none } nav::-webkit-scrollbar { display:none }
-    nav button { width:auto; padding:8px 10px; white-space:nowrap }
-    .side-foot { display:flex; align-items:center; gap:4px; border:0; padding:0; margin:4px 0 0 } .side-foot b { display:none } .side-link { width:auto; padding:6px 10px }
-    main { padding:20px 16px 50px; max-width:none } .hm { display:none } .kpi .v { font-size:22px } h1 { font-size:21px }
+    main { padding:24px 16px 50px; max-width:none } .hm { display:none } .kpi .v { font-size:22px } h1 { font-size:21px }
     .kpis { gap:10px } .kpi { padding:14px } .card { padding:16px }
     .head .btn { width:100%; justify-content:center }
     .filters > * { flex:1 1 100% }
@@ -98,6 +109,7 @@
 <div class="layout">
   <aside>
     <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div>Disha Online Solution<small>Admin panel</small></div></div>
+    <button class="menu" id="menu" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav id="nav">
       <button data-tab="overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Overview</button>
       <button data-tab="typists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-2-5-4-5.5"/></svg>Typists</button>
@@ -434,5 +446,11 @@ let rT; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTime
 </script>
 <script src="/static/island.js"></script>
 <script>document.addEventListener("island:jobchange", () => { const on = store("admintab"); if (on === "overview") loadOverview(); else if (on === "history") loadHistory(); });</script>
+<script>
+(() => { const a = document.querySelector("aside"), m = document.getElementById("menu");
+  m.onclick = () => m.setAttribute("aria-expanded", a.classList.toggle("open"));
+  document.getElementById("nav").addEventListener("click", e => { if (e.target.closest("button")) { a.classList.remove("open"); m.setAttribute("aria-expanded", "false"); } });
+})();
+</script>
 </body>
 </html>
