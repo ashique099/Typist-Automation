@@ -300,7 +300,7 @@ $("#go").onclick = async () => {
   files.forEach(f => fd.append("files", f, f.name));
   fd.append("task", task); fd.append("title", $("#title").value);
   fd.append("ppt_template", $("#tpl").value); fd.append("mcq_count", $("#mcq").value);
-  try { await api("/api/jobs", {method: "POST", body: fd}); files = []; $("#title").value = ""; drawFiles(); toast("Job started", "ok"); loadToolRecent(); window.Island && Island.refresh(); }
+  try { await api("/api/jobs", {method: "POST", body: fd}); files = []; $("#title").value = ""; drawFiles(); loadToolRecent(); window.Island ? Island.refresh() : toast("Job started", "ok"); }
   catch (err) { toast("Upload failed: " + err.message); }
   go.textContent = "Start"; go.disabled = !files.length;
 };
