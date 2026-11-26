@@ -2,23 +2,17 @@
 
 Run:  python -m typist.solid_state OUT_DIR
 """
+import re
 import sys
 from pathlib import Path
 
 from . import solid_state_figures as fig
 from .docxkit import NoteDoc
 
-HEAD = "बिहार बोर्ड इंटर-2027  |  रसायन विज्ञान (Chemistry)"
-
-
-def header(d, part, topic):
-    d.para(HEAD, align="center", bold=True, color="8B1A1A")
-    d.title("अध्याय-1 : ठोस अवस्था (Solid State)", f"भाग-{part} : {topic}")
+TITLE = "ठोस अवस्था (Solid State)"
 
 
 def part1(d):
-    header(d, 1, "परिचय एवं ठोस के सामान्य लक्षण (1st Free Class)")
-    d.notice(["मंगलवार – HINDI + ENGLISH"])
 
     d.h2("★ Chemistry शब्द की उत्पत्ति")
     d.para("Chemistry शब्द की उत्पत्ति ग्रीक भाषा के एक शब्द **कीमिया** से हुई है, "
@@ -31,7 +25,7 @@ def part1(d):
     d.h1("# पदार्थ / द्रव्य (Matter / Substance)")
     d.para("वे सभी चीजें जिनमें द्रव्यमान होता है तथा जो स्थान घेरने की क्षमता रखती हैं, उसे "
            "**पदार्थ** कहते हैं।")
-    d.para("**उदाहरण –** हवा, पानी, पत्थर आदि।")
+    d.example("हवा, पानी, पत्थर आदि।")
 
     d.h1("पदार्थ का वर्गीकरण (Classification of Matter)")
     d.para("समस्त पदार्थों को मुख्य रूप से 2 भागों में वर्गीकृत किया गया है –")
@@ -47,7 +41,7 @@ def part1(d):
 
     d.h1("# ठोस (Solid)")
     d.para("ठोस पदार्थ की वह अवस्था है, जिसका आयतन, आकार एवं द्रव्यमान निश्चित होता है।")
-    d.para("**उदाहरण –** ईंट, कलम, मकान, पत्थर, लकड़ी आदि।")
+    d.example("ईंट, कलम, मकान, पत्थर, लकड़ी आदि।")
 
     d.h1("# ठोस के सामान्य लक्षण (General Characteristics of Solid)")
     d.para("ठोस के निम्नलिखित प्रमुख लक्षण हैं –")
@@ -61,17 +55,9 @@ def part1(d):
                  ("(viii)", "इसका एक निश्चित गलनांक होता है।")):
         d.item(m, t)
 
-    d.notice(["अगली Class : 7:00 AM",
-              "Tuesday → मंगलवार → Hindi;  बुधवार",
-              "Fee 10K+ → ₹1800/- (App);  CH = 7 AM",
-              "12th मंजिल बैच-2027 SCIENCE (हिन्दी माध्यम), 4 in 1, FEE ₹2400/- → ₹1800/-",
-              "Features : Live Batch, Recorded Batch, Crash Course, Exam सारथी (रामबाण, तांडव, "
-              "अंतिम प्रहार), Chapter Wise Notes, Chapter Wise Test, Panel Pdf",
-              "Subject : Physics, Chemistry, Biology, Math, Hindi, English, Urdu"])
 
 
 def part2(d):
-    header(d, 2, "क्रिस्टलीय ठोस")
 
     d.h1("# ठोसों का वर्गीकरण (Classification of Solids)")
     d.para("अवयवी कणों की व्यवस्था के आधार पर ठोस को दो भागों में बाँटा गया है –")
@@ -81,7 +67,7 @@ def part2(d):
     d.h1("(i) क्रिस्टलीय ठोस / रवादार ठोस")
     d.para("वैसा ठोस जिसका एक निश्चित ज्यामितीय आकार होता है तथा जिसमें कणों की दीर्घ परासी "
            "व्यवस्था होती है, उसे **क्रिस्टलीय ठोस** कहते हैं।")
-    d.para("**उदाहरण –** $NaCl$ (साधारण नमक), $CsCl$, लोहा, हीरा, ग्रेफाइट, सल्फर, क्वार्ट्ज, "
+    d.example("$NaCl$ (साधारण नमक), $CsCl$, लोहा, हीरा, ग्रेफाइट, सल्फर, क्वार्ट्ज, "
            "फिटकरी (पोटाश ऐलम), नैफ्थलीन, आयोडीन ($I_2$), $ZnS$ etc.")
     d.figure(fig.crystalline_lattice(), "चित्र 2.1 : क्रिस्टलीय ठोस")
     d.note("पारा ($Hg$) धातु है लेकिन यह द्रव अवस्था में पाया जाता है।")
@@ -105,7 +91,7 @@ def part2(d):
            "आकृति न होना।")
     d.para("“वैसा ठोस जिसकी कोई निश्चित ज्यामितीय आकार न हो तथा जिसमें कणों की लघु परासी "
            "व्यवस्था हो, उसे **अक्रिस्टलीय ठोस** कहते हैं।”")
-    d.para("**उदाहरण –** रबड़, प्लास्टिक, काँच (शीशा), क्वार्ट्ज काँच etc.")
+    d.example("रबड़, प्लास्टिक, काँच (शीशा), क्वार्ट्ज काँच etc.")
     d.figure(fig.amorphous_network(), "चित्र 2.2 : अक्रिस्टलीय ठोस")
 
     d.h2("★ अतिशीतित द्रव", boxed=True)
@@ -124,13 +110,11 @@ def part2(d):
                  ("(ix)", "इसके कण नियमित रूप से व्यवस्थित नहीं होते हैं।")):
         d.item(m, t)
 
-    d.para("**HOW –** क्रिस्टलीय ठोस एवं अक्रिस्टलीय ठोस में अंतर लिखें। **(5 Marks)**",
+    d.para("**प्रश्न –** क्रिस्टलीय ठोस एवं अक्रिस्टलीय ठोस में अंतर लिखें। **(5 Marks)**",
            color="C00000")
-    d.notice(["अगली Class : 7:00 AM"])
 
 
 def part3(d):
-    header(d, 3, "क्रिस्टलीय एवं अक्रिस्टलीय ठोस में अंतर")
 
     d.h1("# क्रिस्टलीय एवं अक्रिस्टलीय ठोसों में अंतर")
     d.para("क्रिस्टलीय एवं अक्रिस्टलीय ठोसों में निम्नलिखित प्रमुख अंतर हैं –")
@@ -152,7 +136,8 @@ def part3(d):
         ("(x) उदाहरण – $NaCl$, $CsCl$, हीरा, धातु, ग्रेफाइट आदि।",
          "(x) उदाहरण – प्लास्टिक, काँच, रबड़, क्वार्ट्ज काँच आदि।"),
     ]
-    d.table(["क्रिस्टलीय ठोस", "अक्रिस्टलीय ठोस"], rows, widths_cm=[8.5, 8.5])
+    d.compare("क्रिस्टलीय ठोस", "अक्रिस्टलीय ठोस",
+              [(re.sub(r"^\([ivx]+\) ", "", a), re.sub(r"^\([ivx]+\) ", "", b)) for a, b in rows])
 
     d.qa("क्रिस्टलीय ठोस विषमदैशिक प्रकृति के होते हैं, क्यों?",
          "क्रिस्टलीय ठोसों में अलग-अलग दिशाओं में अवयवी कणों की व्यवस्था अलग-अलग होती है, "
@@ -182,12 +167,13 @@ def part3(d):
     d.h1("(i) आयनिक ठोस (Ionic Solid) / आयनिक रवा (Ionic Crystal)   [V.V.I]")
     d.para("वैसा क्रिस्टलीय ठोस जो धन आयन एवं ऋण आयन से मिलकर बना हो तथा जिसका अवयवी कण "
            "प्रबल कूलॉमी (स्थिर वैद्युत) बलों से बँधा हो, उसे **आयनिक ठोस** कहते हैं।")
-    d.para("**उदाहरण –** $NaCl$, $NaNO_3$, $KCl$, $AgCl$, $CaCl_2$, $MgCl_2$ etc.")
-    d.figure(fig.ionic_crystal(), "चित्र 3.2 : आयनिक क्रिस्टल में धन (+) एवं ऋण (−) आयनों की व्यवस्था")
+    d.example("$NaCl$, $NaNO_3$, $KCl$, $AgCl$, $CaCl_2$, $MgCl_2$ etc.")
+    d.figure(fig.ionic_cube())
+    d.para("या", align="center", bold=True)
+    d.figure(fig.ionic_grid(), "चित्र 3.2 : आयनिक क्रिस्टल में धन (+) एवं ऋण (−) आयनों की व्यवस्था")
 
 
 def part4(d):
-    header(d, 4, "आयनिक ठोस के गुण एवं आण्विक ठोस")
 
     d.h1("# आयनिक ठोस के गुण (Properties of Ionic Solid)")
     d.para("आयनिक ठोस के निम्नलिखित प्रमुख गुण हैं –")
@@ -207,7 +193,7 @@ def part4(d):
     d.h1("(ii) आण्विक ठोस (Molecular Solid)")
     d.para("वैसा क्रिस्टलीय ठोस जिसका अवयवी कण अणु या अक्रिय गैस के परमाणु हो, उसे "
            "**आण्विक ठोस** कहते हैं।")
-    d.para("**उदाहरण –** $I_2$ (आयोडीन) **(V.V.I)**, $HCl_{(s)}$, $NH_{3(s)}$, $Ar_{(s)}$ आदि।")
+    d.example("$I_2$ (आयोडीन) **(V.V.I)**, $HCl_{(s)}$, $NH_{3(s)}$, $Ar_{(s)}$ आदि।")
     d.para("आण्विक ठोस तीन प्रकार के होते हैं –")
     d.item("(i)", "ध्रुवीय आण्विक ठोस")
     d.item("(ii)", "अध्रुवीय आण्विक ठोस")
@@ -215,18 +201,17 @@ def part4(d):
 
     d.h2("(i) ध्रुवीय आण्विक ठोस (Polar Molecular Solid)", boxed=True)
     d.para("वैसा आण्विक ठोस जिसका अवयवी कण ध्रुवीय अणु हो, उसे **ध्रुवीय आण्विक ठोस** कहते हैं।")
-    d.para("**उदाहरण –** $HCl_{(s)}$, $SO_{2(s)}$ आदि।")
+    d.example("$HCl_{(s)}$, $SO_{2(s)}$ आदि।")
     d.figure(fig.polar_hcl_chain(), "चित्र 4.1 : ठोस HCl में ध्रुवीय अणु "
              "(δ⁺ H — Cl δ⁻ ··· δ⁺ H — Cl δ⁻)")
 
     d.h2("(ii) अध्रुवीय आण्विक ठोस (Non-polar Molecular Solid)", boxed=True)
     d.para("वैसा ठोस जिसका अवयवी कण अध्रुवीय अणु हो, उसे **अध्रुवीय आण्विक ठोस** कहते हैं।")
-    d.para("**उदाहरण –** $I_{2(s)}$, $Cl_{2(s)}$, $H_{2(s)}$ etc.")
+    d.example("$I_{2(s)}$, $Cl_{2(s)}$, $H_{2(s)}$ etc.")
 
     d.h2("(iii) हाइड्रोजन आबंधित आण्विक ठोस (Hydrogen Bonded Molecular Solid)", boxed=True)
     d.para("ऐसे ठोस में $H$, $F$, $O$ या $N$ के साथ ध्रुवीय सहसंयोजक बंध से जुड़े होते हैं।")
-    d.para("**उदाहरण –** $H_2O_{(s)}$ (बर्फ), $HF_{(s)}$, $NH_{3(s)}$ आदि।")
-    d.notice(["Good night"], label="कक्षा समापन")
+    d.example("$H_2O_{(s)}$ (बर्फ), $HF_{(s)}$, $NH_{3(s)}$ आदि।")
 
 
 PARTS = {
@@ -242,14 +227,14 @@ def main(out_dir="."):
     out.mkdir(parents=True, exist_ok=True)
     for _, (name, fn) in PARTS.items():
         d = NoteDoc()
+        d.title(TITLE)
         fn(d)
         d.save(out / name)
         print("wrote", out / name)
     # all parts in one file, each part starting on a new page
     d = NoteDoc()
-    for n, (_, fn) in PARTS.items():
-        if n > 1:
-            d.page_break()
+    d.title(TITLE)
+    for _, fn in PARTS.values():
         fn(d)
     d.save(out / "Solid_State_Part-1-4_Combined.docx")
     print("wrote", out / "Solid_State_Part-1-4_Combined.docx")

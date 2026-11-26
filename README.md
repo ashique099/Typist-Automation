@@ -14,7 +14,11 @@ Turns live-class "panel" PDFs (handwritten slides exported as images) into clean
    * Inline markup: `**bold**`, `$NaNO_3$` → native Word equation (OMML), Unicode text.
      Syntax: `x_2`, `x^{2+}`, `x_{2(s)}`, `\frac{a}{b}`, `{group}`.
    * `Figure` → hand drawings redrawn as an editable DrawingML shape group (vector).
-5. **Check** – convert with LibreOffice to PDF and look at every page.
+5. **House style** (`docxkit.Style`, the user's standing rules): Sanskrit Text 13 pt;
+   colours red = topics, blue = sub-topics/labels, black = body, green = examples/notes;
+   A4 portrait, narrow margins, 2 columns; no tables (comparisons as coloured points);
+   no thumbnails, course ads, class timings or greetings.
+6. **Check** – convert with LibreOffice to PDF and look at every page.
 
 ```
 pip install python-docx

@@ -13,13 +13,13 @@ import re
 from xml.sax.saxutils import escape
 
 from docx import Document
-from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import parse_xml
 from docx.shared import Cm, Pt, RGBColor
 
-HINDI_FONT = "Nirmala UI"      # ships with Windows; LibreOffice substitutes a Devanagari font
+HINDI_FONT = "Sanskrit Text"   # set from Style.font by NoteDoc
 MATH_FONT = "Cambria Math"
+MATH_SIZE = 13
 
 NS = {
     "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
@@ -35,7 +35,8 @@ def _ns(*prefixes):
     return " ".join(f'xmlns:{p}="{NS[p]}"' for p in prefixes)
 
 
-def _rpr_xml(bold=False, italic=False, size=None, color=None, font=HINDI_FONT):
+def _rpr_xml(bold=False, italic=False, size=None, color=None, font=None):
+    font = font or HINDI_FONT
     parts = [f'<w:rFonts w:ascii="{font}" w:hAnsi="{font}" w:cs="{font}" w:eastAsia="{font}"/>']
     if bold:
         parts.append("<w:b/><w:bCs/>")
@@ -52,7 +53,8 @@ def _rpr_xml(bold=False, italic=False, size=None, color=None, font=HINDI_FONT):
 # ---------------------------------------------------------------- OMML ----
 def _m_run(text, upright=True):
     sty = '<m:rPr><m:sty m:val="p"/></m:rPr>' if upright else ""
-    return (f'<m:r>{sty}<w:rPr><w:rFonts w:ascii="{MATH_FONT}" w:hAnsi="{MATH_FONT}"/></w:rPr>'
+    return (f'<m:r>{sty}<w:rPr><w:rFonts w:ascii="{MATH_FONT}" w:hAnsi="{MATH_FONT}"/>'
+            f'<w:sz w:val="{MATH_SIZE*2}"/><w:szCs w:val="{MATH_SIZE*2}"/></w:rPr>'
             f'<m:t xml:space="preserve">{escape(text)}</m:t></m:r>')
 
 
@@ -139,7 +141,11 @@ def add_inline(p, text, bold=False, size=None, color=None):
         if not tok:
             continue
         if tok.startswith("$"):
-            p._p.append(omml(tok[1:-1]))
+            m = omml(tok[1:-1])
+            if color:  # equation text follows the surrounding colour
+                for rpr in m.iter(f"{{{NS['w']}}}rPr"):
+                    rpr.append(parse_xml(f'<w:color {_ns("w")} w:val="{color}"/>'))
+            p._p.append(m)
         else:
             b = bold
             if tok.startswith("**"):
@@ -151,33 +157,63 @@ def add_inline(p, text, bold=False, size=None, color=None):
 
 
 # ------------------------------------------------------------ document ----
+class Style:
+    """House style for notes (user's standing requirement, 2026-11-26).
+
+    Font Sanskrit Text 13 pt everywhere; 4 colours: red = topics/headings,
+    blue = sub-topics & labels, black = body, green = examples/notes.
+    A4 portrait, narrow margins (1.27 cm), 2 columns.  No tables: comparisons are
+    written as coloured points.  Class notices / thumbnails / greetings are not typed.
+    """
+    font = "Sanskrit Text"
+    size = 13
+    red, blue, black, green = "C00000", "1F4E9F", "000000", "00703C"
+    margin_cm = 1.27
+    columns = 2
+    column_gap_cm = 0.75
+
+
 class NoteDoc:
-    def __init__(self):
+    def __init__(self, style=Style):
+        global HINDI_FONT
+        self.st = style
+        HINDI_FONT = style.font
         self.doc = d = Document()
         sec = d.sections[0]
         sec.page_width, sec.page_height = Cm(21), Cm(29.7)
         for side in ("left_margin", "right_margin", "top_margin", "bottom_margin"):
-            setattr(sec, side, Cm(2))
+            setattr(sec, side, Cm(style.margin_cm))
+        sec.header_distance = sec.footer_distance = Cm(0.6)
+        if style.columns > 1:
+            sec._sectPr.append(parse_xml(
+                f'<w:cols {_ns("w")} w:num="{style.columns}" w:space="{int(style.column_gap_cm*567)}"/>'))
+        usable = 21 - 2 * style.margin_cm
+        col_cm = (usable - (style.columns - 1) * style.column_gap_cm) / style.columns
+        Figure.max_width = col_cm / 2.54 * 72 - 4  # points
         self._fig_id = 100
         self._style_fonts()
 
     def _style_fonts(self):
-        st = self.doc.styles
-        for name, size, color in (("Normal", 12, None), ("Title", 22, "1F3864"),
-                                  ("Subtitle", 14, "404040"), ("Heading 1", 16, "1F3864"),
-                                  ("Heading 2", 13.5, "8B1A1A"), ("Caption", 10.5, "404040")):
+        st, S = self.doc.styles, self.st
+        for name, color, bold in (("Normal", S.black, False), ("Title", S.red, True),
+                                  ("Heading 1", S.red, True), ("Heading 2", S.blue, True),
+                                  ("Caption", S.blue, False)):
             s = st[name]
             rpr = s.element.get_or_add_rPr()
-            new = parse_xml(_rpr_xml(size=size, color=color).replace("<w:rPr>", f"<w:rPr {_ns('w')}>"))
+            new = parse_xml(_rpr_xml(bold, size=S.size, color=color, font=S.font)
+                            .replace("<w:rPr>", f"<w:rPr {_ns('w')}>"))
             for child in list(rpr):
                 rpr.remove(child)
             for child in list(new):
                 rpr.append(child)
-            if name.startswith("Heading") or name == "Title":
-                rpr.append(parse_xml(f'<w:b {_ns("w")}/>'))
-                rpr.append(parse_xml(f'<w:bCs {_ns("w")}/>'))
-            s.paragraph_format.space_after = Pt(4)
-        st["Normal"].paragraph_format.line_spacing = 1.2
+            pf = s.paragraph_format
+            pf.space_before = Pt(6 if name.startswith("Heading") else 0)
+            pf.space_after = Pt(3)
+            # drop theme borders/shading Word's built-in Title style carries
+            ppr = s.element.get_or_add_pPr()
+            for el in ppr.findall(f"{{{NS['w']}}}pBdr"):
+                ppr.remove(el)
+        st["Normal"].paragraph_format.line_spacing = 1.1
 
     # --- text blocks
     def title(self, text, sub=None):
@@ -185,84 +221,73 @@ class NoteDoc:
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         add_inline(p, text)
         if sub:
-            q = self.doc.add_paragraph(style="Subtitle")
-            q.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            add_inline(q, sub)
+            self.para(sub, align="center", color=self.st.blue, bold=True)
 
-    def h1(self, text, boxed=True):
+    def h1(self, text, **_):
         p = self.doc.add_paragraph(style="Heading 1")
         add_inline(p, text)
-        if boxed:
-            self._border(p, "1F3864")
         return p
 
-    def h2(self, text, boxed=False):
+    def h2(self, text, **_):
         p = self.doc.add_paragraph(style="Heading 2")
         add_inline(p, text)
-        if boxed:
-            self._border(p, "8B1A1A")
         return p
 
-    def para(self, text, bold=False, indent=0.0, align=None, size=None, color=None):
+    def para(self, text, bold=False, indent=0.0, align=None, color=None, **_):
         p = self.doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER if align == "center" else WD_ALIGN_PARAGRAPH.JUSTIFY
         if indent:
             p.paragraph_format.left_indent = Cm(indent)
-        if align == "center":
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        add_inline(p, text, bold=bold, size=size, color=color)
+        add_inline(p, text, bold=bold, color=color)
         return p
 
-    def item(self, marker, text, level=0):
+    def example(self, text):
+        """'उदाहरण – ...' line: label blue, examples green."""
+        p = self.doc.add_paragraph()
+        add_inline(p, "**उदाहरण –** ", color=self.st.blue)
+        add_inline(p, text, color=self.st.green)
+        return p
+
+    def item(self, marker, text, level=0, color=None):
         """Numbered point with a hanging indent, marker typed as text e.g. '(i)'."""
         p = self.doc.add_paragraph()
         pf = p.paragraph_format
-        pf.left_indent = Cm(1.4 + 0.8 * level)
-        pf.first_line_indent = Cm(-1.2)
-        pf.tab_stops.add_tab_stop(Cm(1.4 + 0.8 * level))
-        add_inline(p, f"{marker}\t{text}")
+        pf.left_indent = Cm(1.1 + 0.6 * level)
+        pf.first_line_indent = Cm(-1.1)
+        pf.tab_stops.add_tab_stop(Cm(1.1 + 0.6 * level))
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        add_inline(p, marker, bold=True, color=self.st.blue)
+        add_inline(p, "\t" + text, color=color)
         return p
+
+    def compare(self, title_a, title_b, pairs):
+        """Comparison as coloured points instead of a table."""
+        for k, (a, b) in enumerate(pairs, 1):
+            m = f"({_roman(k)})"
+            p = self.item(m, f"**{title_a} :** {a}", color=self.st.blue)
+            q = self.doc.add_paragraph()
+            q.paragraph_format.left_indent = Cm(1.1)
+            q.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            add_inline(q, f"**{title_b} :** {b}", color=self.st.green)
 
     def qa(self, q, a):
-        self.para(f"**प्रश्न –** {q}", color="8B1A1A")
-        self.para(f"**उत्तर –** {a}", indent=0.0)
+        self.para(f"**प्रश्न –** {q}", color=self.st.red)
+        p = self.doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        add_inline(p, "**उत्तर –** ", color=self.st.blue)
+        add_inline(p, a)
 
     def note(self, text, label="NOTE"):
-        p = self.para(f"**[{label}]** {text}")
-        self._border(p, "C55A11", shade="FBE4D5")
+        p = self.doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        add_inline(p, f"**[{label}]** ", color=self.st.red)
+        add_inline(p, text, color=self.st.green)
         return p
-
-    def notice(self, lines, label="कक्षा सूचना / विज्ञापन (Class notice)"):
-        p = self.para(f"**{label}**", size=10.5, color="595959")
-        self._border(p, "A6A6A6", shade="F2F2F2")
-        for ln in lines:
-            q = self.para(ln, size=10.5, color="595959")
-            self._border(q, "A6A6A6", shade="F2F2F2")
-
-    def table(self, header, rows, widths_cm=None):
-        t = self.doc.add_table(rows=1, cols=len(header))
-        t.style = "Table Grid"
-        t.alignment = WD_TABLE_ALIGNMENT.CENTER
-        for c, h in zip(t.rows[0].cells, header):
-            c.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-            add_inline(c.paragraphs[0], h, bold=True)
-            c._tc.get_or_add_tcPr().append(parse_xml(
-                f'<w:shd {_ns("w")} w:val="clear" w:color="auto" w:fill="D9E2F3"/>'))
-        for row in rows:
-            cells = t.add_row().cells
-            for c, v in zip(cells, row):
-                add_inline(c.paragraphs[0], v)
-        if widths_cm:
-            for row in t.rows:
-                for c, w in zip(row.cells, widths_cm):
-                    c.width = Cm(w)
-        # repeat header row on each page
-        t.rows[0]._tr.get_or_add_trPr().append(parse_xml(f'<w:tblHeader {_ns("w")}/>'))
-        self.doc.add_paragraph()
-        return t
 
     def figure(self, fig: "Figure", caption=None):
         p = self.doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.keep_with_next = True
         self._fig_id += 1
         p._p.append(fig.to_run(self._fig_id))
         if caption:
@@ -273,17 +298,17 @@ class NoteDoc:
     def page_break(self):
         self.doc.add_page_break()
 
-    @staticmethod
-    def _border(p, color, shade=None):
-        ppr = p._p.get_or_add_pPr()
-        edges = "".join(f'<w:{e} w:val="single" w:sz="8" w:space="4" w:color="{color}"/>'
-                        for e in ("top", "left", "bottom", "right"))
-        ppr.append(parse_xml(f'<w:pBdr {_ns("w")}>{edges}</w:pBdr>'))
-        if shade:
-            ppr.append(parse_xml(f'<w:shd {_ns("w")} w:val="clear" w:color="auto" w:fill="{shade}"/>'))
-
     def save(self, path):
         self.doc.save(path)
+
+
+def _roman(n):
+    vals = ((10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i"))
+    out = ""
+    for v, r in vals:
+        while n >= v:
+            out, n = out + r, n - v
+    return out
 
 
 # ------------------------------------------------------------ figures -----
@@ -293,8 +318,11 @@ EMU = 12700  # per point
 class Figure:
     """Vector figure in points; emitted as one inline DrawingML group (editable in Word)."""
 
+    max_width = None  # points; set by NoteDoc to the column width
+
     def __init__(self, w, h):
-        self.w, self.h, self.shapes = w, h, []
+        self.s = min(1.0, self.max_width / w) if self.max_width else 1.0
+        self.w, self.h, self.shapes = w * self.s, h * self.s, []
 
     def _add(self, xml):
         self.shapes.append(xml)
@@ -313,6 +341,8 @@ class Figure:
 
     def _shape(self, prst, x, y, w, h, line, fill=None, text=None, flip="", size=11,
                bold=False, color="000000", tx_inset=1.0):
+        k = self.s
+        x, y, w, h, size = x * k, y * k, w * k, h * k, max(7.5, size * k)
         xfrm = (f'<a:xfrm{flip}><a:off x="{int(x*EMU)}" y="{int(y*EMU)}"/>'
                 f'<a:ext cx="{int(w*EMU)}" cy="{int(h*EMU)}"/></a:xfrm>')
         sp = (f"<wps:spPr>{xfrm}<a:prstGeom prst=\"{prst}\"><a:avLst/></a:prstGeom>"
@@ -334,19 +364,19 @@ class Figure:
 
     # public primitives (all in points)
     def rect(self, x, y, w, h, color="000000", width=1.0, fill=None, text=None, **kw):
-        self._shape("rect", x, y, w, h, self._ln(color, width), fill, text, **kw)
+        self._shape("rect", x, y, w, h, self._ln(color, width * self.s), fill, text, **kw)
 
     def text(self, x, y, w, h, text, **kw):
         self._shape("rect", x, y, w, h, "<a:ln><a:noFill/></a:ln>", None, text, **kw)
 
     def circle(self, cx, cy, r, color="000000", width=1.0, fill=None, text=None, **kw):
-        self._shape("ellipse", cx - r, cy - r, 2 * r, 2 * r, self._ln(color, width), fill, text,
+        self._shape("ellipse", cx - r, cy - r, 2 * r, 2 * r, self._ln(color, width * self.s), fill, text,
                     tx_inset=0, **kw)
 
     def line(self, x1, y1, x2, y2, color="000000", width=1.0, dash=None, arrow=False):
         flip = (' flipH="1"' if x2 < x1 else "") + (' flipV="1"' if y2 < y1 else "")
         self._shape("line", min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1),
-                    self._ln(color, width, dash, tail="triangle" if arrow else None), flip=flip)
+                    self._ln(color, width * self.s, dash, tail="triangle" if arrow else None), flip=flip)
 
     def arrow(self, x1, y1, x2, y2, **kw):
         self.line(x1, y1, x2, y2, arrow=True, **kw)
