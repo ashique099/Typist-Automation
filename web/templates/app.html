@@ -33,9 +33,32 @@
   h1 { font-size:24px; margin:0 0 4px } .sub { color:var(--muted); margin:0 0 22px; font-size:14px }
   .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:18px }
   .card h2 { margin:0 0 14px; font-size:16px }
-  .hero { background:linear-gradient(120deg, var(--navy), var(--blue)); color:#fff; border-radius:16px; padding:26px 28px; margin-bottom:22px; position:relative; overflow:hidden }
-  .hero::after { content:""; position:absolute; right:-40px; top:-40px; width:200px; height:200px; border-radius:50%; border:26px solid rgba(158,35,48,.6) }
-  .hero h1 { color:#fff } .hero .sub { color:#d6def3; margin:0 }
+  .hero { background:linear-gradient(125deg, #14153a 0%, var(--navy) 45%, var(--blue) 100%); color:#fff; border-radius:22px; padding:30px 32px; margin-bottom:28px;
+          position:relative; overflow:hidden; display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:24px; align-items:center;
+          box-shadow:0 18px 40px -22px rgba(25,26,62,.7) }
+  .hero::after { content:""; position:absolute; right:-70px; top:-90px; width:260px; height:260px; border-radius:50%; border:34px solid rgba(158,35,48,.55); pointer-events:none }
+  .hero > * { position:relative; z-index:1 }
+  .hero .date { display:inline-block; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#ffb3b8; margin-bottom:10px }
+  .hero h1 { color:#fff; font-size:30px; line-height:1.2; margin:0 0 8px } .hero .sub { color:#d6def3; margin:0; font-size:15px; line-height:1.6; max-width:520px }
+  .hero .quick { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px }
+  .hero .quick a { color:#fff; text-decoration:none; font-size:13px; font-weight:600; padding:8px 14px; border-radius:99px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22) }
+  .hero .quick a:hover { background:rgba(255,255,255,.2) }
+  .hstats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px }
+  .hstat { all:unset; cursor:pointer; box-sizing:border-box; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:16px; padding:16px 14px; text-align:left }
+  .hstat:hover { background:rgba(255,255,255,.16) }
+  .hstat b { display:block; font-size:28px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums } .hstat span { display:block; font-size:12px; color:#d6def3; margin-top:4px }
+  .hstat.ok b { color:#7ee2a8 } .hstat.run b { color:#ffb3b8 }
+  .sec { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 0 14px }
+  .sec h2 { margin:0; font-size:18px; color:var(--navy) } .sec a, .sec button { all:unset; cursor:pointer; color:var(--blue); font-size:14px; font-weight:600 } .sec a:hover, .sec button:hover { color:var(--red) }
+  .panels { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-bottom:22px }
+  .panels .card { margin:0; border-radius:18px }
+  .item { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line) } .item:first-of-type { border-top:0 }
+  .item .ft { width:38px; height:38px; border-radius:10px; display:grid; place-items:center; font-size:10px; font-weight:800; color:#fff; flex:none; letter-spacing:.02em }
+  .ft.notes { background:var(--red) } .ft.ppt { background:var(--blue) } .ft.test { background:var(--green) }
+  .item .mid { flex:1; min-width:0 } .item .mid b { display:block; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--navy) }
+  .item .mid small { display:block; color:var(--muted); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .item .mid small.e { color:var(--red) }
+  .nothing { color:var(--muted); font-size:14px; padding:18px 0 8px; text-align:center }
   .tools { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px }
   .tool { all:unset; box-sizing:border-box; cursor:pointer; border-radius:20px; padding:12px 12px 16px; display:flex; flex-direction:column; gap:14px;
           background:#fff; border:1px solid var(--line); transition:border-color .15s }
@@ -113,12 +136,13 @@
   .island { top:18px }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:9 }
   @media (max-width:900px) { .tools { grid-template-columns:1fr } }
-  @media (max-width:900px) { .hero { padding:22px } .hero::after { width:150px; height:150px; border-width:20px } }
+  @media (max-width:900px) { .hero { padding:24px; grid-template-columns:1fr } .hero::after { width:170px; height:170px; border-width:22px } .panels { grid-template-columns:1fr } }
   @media (max-width:720px) {
     .bar { padding:0 16px; height:64px } .bt, .adminlink, .so { display:none !important }
     .tabs nav { padding:0 6px } .navadmin:not(.hide) { display:inline-block !important; color:var(--navy) } .navout { display:inline-block !important }
     main { padding:18px 16px 50px } .hm { display:none } h1 { font-size:21px }
-    .hero { padding:20px 18px } .hero::after { display:none }
+    .art { height:110px } .hero { padding:22px 18px; border-radius:18px } .hero::after { display:none } .hero h1 { font-size:24px } .hstat { padding:12px 10px } .hstat b { font-size:22px }
+    .item .dls { margin-top:0 } .item { flex-wrap:wrap } .item .dls { flex-basis:100%; padding-left:50px }
     .card { padding:16px } .tool { padding:18px } .tool h3 { font-size:17px }
     .filters > * { flex:1 1 100% } .meter { gap:8px 12px }
     table, tbody, tr, td { display:block; width:100% } thead { display:none }
@@ -144,8 +168,17 @@
 </header>
 <main>
   <section id="tab-home">
-    <div class="hero"><div><h1 id="hello">Welcome</h1><p class="sub">Choose what you want to make today.</p></div></div>
+    <div class="hero">
+      <div><span class="date" id="today"></span><h1 id="hello">Welcome</h1><p class="sub" id="welcomeMsg">Pick a tool below to start. Your finished files are always one click away.</p>
+        <div class="quick"><a href="#" data-go="history">My work history</a><a href="#" data-go="account">My account</a></div></div>
+      <div class="hstats">
+        <button class="hstat" data-go="history"><b id="stToday">0</b><span>Jobs today</span></button>
+        <button class="hstat ok" data-go="ready"><b id="stReady">0</b><span>Ready to download</span></button>
+        <button class="hstat run" data-go="history"><b id="stRun">0</b><span>Running now</span></button>
+      </div>
+    </div>
     <div id="noKey" class="alert hide">The Claude API key is not set on the server, so tools 1 and 3 will not run. Please tell the admin.</div>
+    <div class="sec"><h2>Start a new job</h2></div>
     <div class="tools">
       <button class="tool t1" data-task="notes">
         <div class="art" data-art="notes"><span class="num">01</span></div>
@@ -160,8 +193,11 @@
         <div class="body"><h3>PPT or DOCX to MCQ Test</h3><span class="go">→</span></div>
       </button>
     </div>
+    <div class="panels">
+      <div class="card" id="readyCard"><div class="sec"><h2>Ready to download</h2><button data-go="history">View all →</button></div><div id="ready"></div></div>
+      <div class="card"><div class="sec"><h2>Recent activity</h2><button data-go="history">Work history →</button></div><div id="recent"></div></div>
+    </div>
     <div class="meter" id="meter"></div>
-    <div class="card"><h2>My recent work</h2><table><tbody id="recent"></tbody></table></div>
   </section>
 
   <section id="tab-tool" class="hide">
@@ -288,7 +324,9 @@ async function loadMe() {
   ME = await api("/api/me");
   const u = ME.user;
   $("#whoName").textContent = u.name; $("#avatar").textContent = (u.name || "?").trim()[0].toUpperCase();
-  $("#hello").textContent = "Welcome, " + u.name;
+  const hr = new Date().getHours(), first = (u.name || "").trim().split(/\s+/)[0];
+  $("#hello").textContent = `${hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening"}, ${first} 👋`;
+  $("#today").textContent = new Date().toLocaleDateString("en-IN", {weekday: "long", day: "numeric", month: "long"});
   $("#accInfo").textContent = `${u.name} · username: ${u.username} · ${u.is_admin ? "Admin account" : "Typist"}`;
   $$(".adm").forEach(e => e.classList.toggle("hide", u.role !== "admin"));
   $("#noKey").classList.toggle("hide", ME.api_key);
@@ -355,10 +393,30 @@ function jobRow(j, full) {
     <td>${j.status === "done" ? dls(j) : ""}</td></tr>`;
 }
 const empty = (n, t) => `<tr><td colspan="${n}" class="small">${t}</td></tr>`;
+const FT = {notes: "DOCX", ppt: "PPT", test: "MCQ"};
+const jname = j => j.title || j.chapter || j.files[0];
 async function loadRecent() {
-  const d = await api("/api/jobs?scope=mine");
-  $("#recent").innerHTML = d.jobs.slice(0, 6).map(j => jobRow(j, false)).join("") || empty(3, "No jobs yet. Pick a tool above to start.");
+  const d = await api("/api/jobs?scope=mine&per=40"), jobs = d.jobs, day = new Date().setHours(0, 0, 0, 0) / 1000;
+  const ready = jobs.filter(j => j.status === "done" && j.downloads.length), run = jobs.filter(j => j.status === "running" || j.status === "queued");
+  $("#stToday").textContent = jobs.filter(j => j.created >= day).length;
+  $("#stReady").textContent = ready.filter(j => j.created >= day - 6 * 86400).length;
+  $("#stRun").textContent = run.length;
+  $("#welcomeMsg").textContent = !jobs.length ? "Welcome to Disha Online Solution! Start with a tool below. Upload your files and the finished notes, slides or test appear here, ready to download."
+    : run.length ? `${run.length} job${run.length > 1 ? "s are" : " is"} running. You can keep working; we'll show it at the top when it's ready.`
+    : "Great to see you again. Pick a tool below, or download your finished files on the right.";
+  $("#ready").innerHTML = ready.slice(0, 5).map(j => `<div class="item"><span class="ft ${j.task}">${FT[j.task] || ""}</span>
+      <div class="mid"><b>${esc(jname(j))}</b><small>${esc(j.task_label)} · ${when(j.finished || j.created)}</small></div>${dls(j)}</div>`).join("")
+    || `<div class="nothing">Finished files will appear here.</div>`;
+  $("#recent").innerHTML = jobs.slice(0, 5).map(j => `<div class="item"><span class="ft ${j.task}">${FT[j.task] || ""}</span>
+      <div class="mid"><b>${esc(jname(j))}</b><small class="${j.status === "failed" ? "e" : ""}">${esc(j.status === "failed" ? (j.error || "Failed") : j.status === "done" ? j.task_label : (j.step || "Waiting"))}</small></div>
+      <span class="pill ${j.status}">${STATUS[j.status] || j.status}</span></div>`).join("")
+    || `<div class="nothing">No jobs yet. Pick a tool above to start.</div>`;
 }
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]"); if (!g) return; e.preventDefault();
+  if (g.dataset.go === "ready") return $("#readyCard").scrollIntoView({behavior: "smooth", block: "center"});
+  show(g.dataset.go);
+});
 async function loadToolRecent() {
   const d = await api("/api/jobs?scope=mine&task=" + task);
   $("#toolRecent").innerHTML = d.jobs.slice(0, 6).map(j => jobRow(j, false)).join("") || empty(3, "No jobs with this tool yet.");
