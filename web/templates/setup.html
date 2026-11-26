@@ -43,16 +43,16 @@
 <main>
 <form method="post" action="/setup">
   <div class="mob"><img src="/static/disha-logo.png" alt="Disha"><div><b>Disha Online Solution</b><small>Direction to Success</small></div></div>
-  <h2>First-time setup</h2><p class="lead">Create the admin (owner) account. The admin then adds a login for each typist.</p>
-  <label for="n">Your name</label>
+  <h2>First-Time Setup</h2><p class="lead">Create the admin (owner) account. The admin then adds a login for each typist.</p>
+  <label for="n">Your Name</label>
   <input id="n" name="name" autocomplete="name" required>
-  <label for="u">Username (for login, e.g. ashique)</label>
+  <label for="u">Username (Used to Sign In, e.g. ashique)</label>
   <input id="u" name="username" autocomplete="username" autofocus required>
   <label for="pw">Password</label>
   <input id="pw" name="password" type="password" autocomplete="new-password" minlength="6" required>
-  <label for="pw2">Confirm password</label>
+  <label for="pw2">Confirm Password</label>
   <input id="pw2" name="password2" type="password" autocomplete="new-password" minlength="6" required>
-  <button type="submit">Create admin account</button>
+  <button type="submit">Create Admin Account</button>
   <div class="err">{{error}}</div>
 </form>
 </main>

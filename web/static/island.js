@@ -43,6 +43,10 @@
     if (/Starting/.test(s)) return 0.02;
     return null;
   }
+  // short headlines in Title Case (same rule as headings and buttons); full sentences stay as they are
+  const SMALL = /^(a|an|the|and|or|of|to|in|on|for|with|by|at|from)$/i;
+  const title = t => { t = String(t || ""); if (/[.?]$/.test(t.trim()) || t.split(/\s+/).length > 6) return t;
+    return t.split(/(\s+)/).map((w, i) => /^\s+$/.test(w) || /[A-Z].*[A-Z]|^[^A-Za-z]/.test(w) ? w : i && SMALL.test(w) ? w.toLowerCase() : w[0].toUpperCase() + w.slice(1)).join(""); };
   const name = j => j.title || j.chapter || (j.files && j.files[0]) || "Task";
   const tool = j => SHORT[j.task] || "Task";
   const ago = t => { const s = Math.max(0, (Date.now() - t) / 1000);
@@ -86,7 +90,7 @@
     if (queue.length) return show(queue.shift());
     if (active.length) { drawActive(); return set("active", active[0].status === "queued" ? "queue" : "run"); }
     const [k, t] = idleInfo();
-    V("idle").querySelector("span").textContent = t;
+    V("idle").querySelector("span").textContent = title(t);
     set("idle", k);
   }
 
@@ -107,9 +111,9 @@
   function drawOpen() {
     const b = health.budget, pc = b && b.limit_inr > 0 ? Math.round(b.spent_inr / b.limit_inr * 100) : null;
     const sys = `<div class="isl-sys">
-      ${chip(health.online ? "ok" : "off", health.online ? "Server online" : "Server offline")}
-      ${ADMIN ? chip(health.api_key ? "ok" : "warn", health.api_key ? "API key set" : "API key missing")
-        : chip(health.api_key && !(pc >= 100) ? "ok" : "warn", health.api_key && !(pc >= 100) ? "All tools ready" : "Notes & MCQ paused · contact Ashique Sir")}
+      ${chip(health.online ? "ok" : "off", health.online ? "Server Online" : "Server Offline")}
+      ${ADMIN ? chip(health.api_key ? "ok" : "warn", health.api_key ? "API Key Set" : "API Key Missing")
+        : chip(health.api_key && !(pc >= 100) ? "ok" : "warn", health.api_key && !(pc >= 100) ? "All Tools Ready" : "Notes & MCQ Paused · Contact Ashique Sir")}
       ${pc === null || !ADMIN ? "" : chip(pc >= 100 ? "err" : pc >= 80 ? "warn" : "ok", `Budget ${pc}% · ₹${b.spent_inr.toLocaleString("en-IN")} of ₹${Math.round(b.limit_inr).toLocaleString("en-IN")}`)}</div>`;
     const jobs = active.length ? active.slice(0, 4).map(j => { const p = progress(j), q = j.status === "queued";
         return `<div class="isl-job"><div class="row"><b>${esc(tool(j))} · ${esc(name(j))}</b>${chip(q ? "queue" : "run", q ? "Queued" : p === null ? "Running" : Math.round(p * 100) + "%")}</div>
@@ -120,8 +124,8 @@
         <div><b>${esc(f.t)}</b>${f.s ? `<small>${esc(f.s)}</small>` : ""}</div><time>${ago(f.at)}</time></div>`).join("")
       : `<div class="isl-empty">No updates yet. Finished files are in Work history.</div>`;
     V("open").innerHTML = sys +
-      `<h4><span>${scope === "all" ? "Running now (everyone)" : "My tasks in progress"}</span><span>${active.length}</span></h4>${jobs}` +
-      `<h4><span>Recent updates</span></h4>${log}`;
+      `<h4><span>${scope === "all" ? "Running Now (Everyone)" : "My Tasks in Progress"}</span><span>${active.length}</span></h4>${jobs}` +
+      `<h4><span>Recent Updates</span></h4>${log}`;
   }
 
   function show(o) {
@@ -133,6 +137,7 @@
   }
   // show a message now (or after the one on screen when quiet) and keep it in the feed
   function flash(text, o = {}) {
+    text = title(text);
     o = Object.assign({kind: "info"}, o, {text});
     if (!o.quietLog) { feed.unshift({k: o.kind, t: text, s: o.sub || "", at: Date.now()}); feed = feed.slice(0, 20); ss.set("feed", feed); }
     if (state === "open") { drawOpen(); return set("open"); }
@@ -154,7 +159,7 @@
         flash(`Welcome, ${first}`, {kind: "ok", sub: "Signed in to Disha Online Solution", wait: true});
       }
       if (!d.api_key && !seen.key) { seen.key = 1;
-        flash(ADMIN ? "API key missing" : "Notes & MCQ paused", {kind: "warn", sub: ADMIN ? "Settings → API integration" : "Please contact Ashique Sir to resolve this", wait: true}); }
+        flash(ADMIN ? "API key missing" : "Notes & MCQ paused", {kind: "warn", sub: ADMIN ? "Settings → API Integration" : "Please contact Ashique Sir to resolve this", wait: true}); }
       const lvl = pc >= 1 ? 2 : pc >= 0.8 ? 1 : 0;
       if (lvl > (seen.budget || 0) && (ADMIN || lvl === 2)) flash(!ADMIN ? "Monthly limit reached" : lvl === 2 ? "Monthly budget used up" : `Budget ${Math.round(pc * 100)}% used`,
         {kind: lvl === 2 ? "err" : "warn", sub: !ADMIN ? "Notes and MCQ are paused. Please contact Ashique Sir" : lvl === 2 ? "New AI tasks are paused until the limit is raised" : `₹${b.spent_inr} of ₹${Math.round(b.limit_inr)} this month`, wait: true});

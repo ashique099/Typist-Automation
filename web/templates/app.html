@@ -39,7 +39,7 @@
           box-shadow:0 18px 40px -22px rgba(25,26,62,.7) }
   .hero::after { content:""; position:absolute; right:-70px; top:-90px; width:260px; height:260px; border-radius:50%; border:34px solid rgba(158,35,48,.55); pointer-events:none }
   .hero > * { position:relative; z-index:1 }
-  .hero .date { display:inline-block; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#ffb3b8; margin-bottom:10px }
+  .hero .date { display:inline-block; font-size:12px; font-weight:600; letter-spacing:.06em; color:#ffb3b8; margin-bottom:10px }
   .hero h1 { color:#fff; font-size:30px; line-height:1.2; margin:0 0 8px } .hero .sub { color:#d6def3; margin:0; font-size:15px; line-height:1.6; max-width:520px }
   .hero .quick { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px }
   .hero .quick a { color:#fff; text-decoration:none; font-size:13px; font-weight:600; padding:8px 14px; border-radius:99px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22) }
@@ -116,12 +116,12 @@
   .hint { color:var(--muted); font-size:13px; margin-top:10px }
   .alert { background:#fff3f3; border:1px solid #f0c4c4; color:var(--red); padding:10px 14px; border-radius:8px; margin-bottom:16px; font-size:14px }
   table { width:100%; border-collapse:collapse; font-size:14px }
-  th { text-align:left; color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; padding:8px }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:12px; letter-spacing:.03em; padding:8px }
   td { padding:12px 8px; border-top:1px solid var(--line); vertical-align:top }
   .pill { display:inline-block; padding:3px 9px; border-radius:99px; font-size:12px; font-weight:600; white-space:nowrap }
   .pill.done { background:#e5f4ec; color:var(--green) } .pill.failed { background:#fdecec; color:var(--red) } .pill.running, .pill.queued { background:var(--soft); color:var(--blue) }
   .pill.admin { background:#f3e8fd; color:#6b21a8 } .pill.typist { background:#eef0f3; color:var(--muted) } .pill.off { background:#fdecec; color:var(--red) }
-  .kind { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em }
+  .kind { font-size:11px; font-weight:700; letter-spacing:.04em }
   .kind.notes { color:var(--red) } .kind.ppt { color:var(--blue) } .kind.test { color:var(--green) }
   .small { color:var(--muted); font-size:12px; margin-top:3px; word-break:break-word }
   .dls { display:flex; flex-wrap:wrap; gap:6px }
@@ -131,7 +131,7 @@
   .pager { display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:12px; color:var(--muted); font-size:13px }
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px }
   .stat { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px }
-  .stat .k { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em } .stat .v { font-size:22px; font-weight:700; margin-top:4px }
+  .stat .k { color:var(--muted); font-size:12px; letter-spacing:.04em } .stat .v { font-size:22px; font-weight:700; margin-top:4px }
   .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap } .row > div { flex:1 1 160px }
   .hide { display:none !important }
   .acc { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:18px; max-width:880px; align-items:start }
@@ -165,28 +165,28 @@
   <div class="bar">
     <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div class="bt"><b>Disha Online Solution</b><small>Direction to Success</small></div></div>
     <div class="spacer"></div>
-    <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout" class="so" title="Sign out" aria-label="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Sign out</span></a></div>
+    <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout" class="so" title="Sign Out" aria-label="Sign Out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Sign Out</span></a></div>
   </div>
   <div class="tabs"><nav id="nav">
     <button data-tab="home" class="on">Dashboard</button>
-    <button data-tab="history">Work history</button>
-    <button data-tab="account">My account</button>
-    <a href="/logout" class="navout">Sign out</a>
+    <button data-tab="history">Work History</button>
+    <button data-tab="account">My Account</button>
+    <a href="/logout" class="navout">Sign Out</a>
   </nav></div>
 </header>
 <main>
   <section id="tab-home">
     <div class="hero">
       <div><span class="date" id="today"></span><h1 id="hello">Welcome</h1><p class="sub" id="welcomeMsg">Pick a tool below to start. Your finished files are always one click away.</p>
-        <div class="quick"><a href="#" data-go="history">My work history</a><a href="#" data-go="account">My account</a></div></div>
+        <div class="quick"><a href="#" data-go="history">My Work History</a><a href="#" data-go="account">My Account</a></div></div>
       <div class="hstats">
-        <button class="hstat" data-go="history"><b id="stToday">0</b><span>Tasks today</span></button>
-        <button class="hstat ok" data-go="ready"><b id="stReady">0</b><span>Files ready</span></button>
-        <button class="hstat run" data-go="history"><b id="stRun">0</b><span>In progress</span></button>
+        <button class="hstat" data-go="history"><b id="stToday">0</b><span>Tasks Today</span></button>
+        <button class="hstat ok" data-go="ready"><b id="stReady">0</b><span>Files Ready</span></button>
+        <button class="hstat run" data-go="history"><b id="stRun">0</b><span>In Progress</span></button>
       </div>
     </div>
     <div id="noKey" class="alert hide"><b>Notes and MCQ generation are temporarily unavailable.</b> Please contact Ashique Sir to resolve this. DOCX to PPT works as usual.</div>
-    <div class="sec"><h2>Start a new task</h2></div>
+    <div class="sec"><h2>Start a New Task</h2></div>
     <div class="tools">
       <button class="tool t1" data-task="notes">
         <div class="art" data-art="notes"><span class="num">01</span></div>
@@ -202,8 +202,8 @@
       </button>
     </div>
     <div class="panels">
-      <div class="card" id="readyCard"><div class="sec"><h2>Ready to download</h2><button data-go="history">View all →</button></div><div id="ready"></div></div>
-      <div class="card"><div class="sec"><h2>Recent activity</h2><button data-go="history">Work history →</button></div><div id="recent"></div></div>
+      <div class="card" id="readyCard"><div class="sec"><h2>Ready to Download</h2><button data-go="history">View All →</button></div><div id="ready"></div></div>
+      <div class="card"><div class="sec"><h2>Recent Activity</h2><button data-go="history">Work History →</button></div><div id="recent"></div></div>
     </div>
     <div class="meter hide" id="meter"></div>
   </section>
@@ -212,12 +212,12 @@
     <button class="back" id="back">← Dashboard</button>
     <h1 id="toolTitle"></h1><p class="sub" id="toolSub"></p>
     <div class="card">
-      <div id="drop"><div class="dz" id="dz"></div><b id="dropText"></b><small>Files are joined in the order shown; use ↑ ↓ to change it</small><span class="pickbtn">Choose files</span></div>
+      <div id="drop"><div class="dz" id="dz"></div><b id="dropText"></b><small>Files are joined in the order shown; use ↑ ↓ to change it</small><span class="pickbtn">Choose Files</span></div>
       <input id="pick" type="file" multiple hidden>
       <ul id="files"></ul>
       <div class="grid">
-        <div><label for="title">Chapter name (optional)</label><input id="title" type="text" placeholder="Leave empty to take it from the file"></div>
-        <div id="tplBox"><label for="tpl">PPT design</label><select id="tpl"><option value="">Plain (white)</option></select></div>
+        <div><label for="title">Chapter Name (Optional)</label><input id="title" type="text" placeholder="Leave empty to take it from the file"></div>
+        <div id="tplBox"><label for="tpl">PPT Design</label><select id="tpl"><option value="">Plain (White)</option></select></div>
         <div id="mcqBox"><label for="mcq">Number of MCQs</label>
           <select id="mcq"><option>25</option><option>50</option><option>75</option><option>100</option><option>150</option></select></div>
       </div>
@@ -225,17 +225,17 @@
       <div class="hint" id="toolHint"></div>
       <div class="alert hide" id="toolOff" style="margin:14px 0 0"><b>This tool is temporarily unavailable.</b> Please contact Ashique Sir to resolve this.</div>
     </div>
-    <div class="card"><h2>Recent tasks with this tool</h2><table><tbody id="toolRecent"></tbody></table></div>
+    <div class="card"><h2>Recent Tasks with This Tool</h2><table><tbody id="toolRecent"></tbody></table></div>
   </section>
 
   <section id="tab-history" class="hide">
-    <h1>Work history</h1><p class="sub">Every task: when it was uploaded, which files, and its result.</p>
+    <h1>Work History</h1><p class="sub">Every task: when it was uploaded, which files, and its result.</p>
     <div class="card">
       <div class="filters">
-        <select id="hScope" class="adm hide"><option value="all">Everyone</option><option value="mine">Only mine</option></select>
-        <select id="hTask"><option value="">All tools</option><option value="notes">PDF to Notes</option><option value="ppt">DOCX to PPT</option><option value="test">MCQ Test</option></select>
-        <select id="hStatus"><option value="">Any status</option><option value="done">Ready</option><option value="running">Running</option><option value="failed">Failed</option></select>
-        <select id="hDays"><option value="0">All time</option><option value="1">Today</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>
+        <select id="hScope" class="adm hide"><option value="all">Everyone</option><option value="mine">Only Mine</option></select>
+        <select id="hTask"><option value="">All Tools</option><option value="notes">PDF to Notes</option><option value="ppt">DOCX to PPT</option><option value="test">MCQ Test</option></select>
+        <select id="hStatus"><option value="">Any Status</option><option value="done">Ready</option><option value="running">Running</option><option value="failed">Failed</option></select>
+        <select id="hDays"><option value="0">All Time</option><option value="1">Today</option><option value="7">Last 7 Days</option><option value="30">Last 30 Days</option></select>
         <input id="hQ" type="search" placeholder="Search chapter or file name">
       </div>
       <table><thead><tr><th>Task</th><th class="hm">Uploaded</th><th>Status</th><th class="hm">Details</th><th>Download</th></tr></thead>
@@ -245,18 +245,18 @@
   </section>
 
   <section id="tab-account" class="hide">
-    <h1>My account</h1><p class="sub">Your profile and password.</p>
+    <h1>My Account</h1><p class="sub">Your profile and password.</p>
     <div class="acc">
       <div class="card profile"><div class="bigav" id="bigAv"></div>
         <div><b id="accName"></b><div class="small" id="accUser"></div><span class="pill typist" id="accRole"></span></div>
         <p class="help">Need help with your account or a file? Please contact <b>Ashique Sir</b>.</p></div>
-      <div class="card"><h2>Change password</h2>
+      <div class="card"><h2>Change Password</h2>
         <form id="pwForm">
-          <label for="pwOld">Current password</label><input id="pwOld" type="password" name="old" required autocomplete="current-password">
-          <label for="pwNew">New password</label><input id="pwNew" type="password" name="new" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
-          <label for="pwNew2">Type the new password again</label><input id="pwNew2" type="password" required minlength="6" autocomplete="new-password">
+          <label for="pwOld">Current Password</label><input id="pwOld" type="password" name="old" required autocomplete="current-password">
+          <label for="pwNew">New Password</label><input id="pwNew" type="password" name="new" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+          <label for="pwNew2">Type the New Password Again</label><input id="pwNew2" type="password" required minlength="6" autocomplete="new-password">
           <label class="chk"><input type="checkbox" id="pwShow"> Show passwords</label>
-          <div style="margin-top:18px"><button class="btn">Change password</button></div>
+          <div style="margin-top:18px"><button class="btn">Change Password</button></div>
         </form>
       </div>
     </div>
@@ -351,7 +351,7 @@ async function loadMe() {
   $$(".adm").forEach(e => e.classList.toggle("hide", u.role !== "admin"));
   $("#noKey").classList.toggle("hide", ME.api_key);
   const b = ME.budget, pct = b.limit_inr ? Math.min(100, 100 * b.spent_inr / b.limit_inr) : 0;
-  $("#meter").innerHTML = `<b>This month</b><span>${inr(b.spent_inr)} of ${inr(b.limit_inr)} used</span>
+  $("#meter").innerHTML = `<b>This Month</b><span>${inr(b.spent_inr)} of ${inr(b.limit_inr)} used</span>
     <div class="track"><i class="${pct >= 100 ? "over" : pct > 80 ? "warn" : ""}" style="width:${pct}%"></i></div>
     <span class="small" style="margin:0">${inr(Math.max(0, b.limit_inr - b.spent_inr))} left</span>`;
   const sel = $("#tpl"), keep = sel.value || store("tpl") || ""; sel.length = 1;

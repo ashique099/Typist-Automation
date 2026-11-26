@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="/static/favicon.png">
-<title>Admin sign in – Disha Online Solution</title>
+<title>Admin Sign In – Disha Online Solution</title>
 <meta name="robots" content="noindex, nofollow">
 <style>
   @font-face { font-family:"RupeeSign"; src:local("Segoe UI"), local("Nirmala UI"), local("Arial"), local("Noto Sans"), local("DejaVu Sans"); unicode-range:U+20B9; }
@@ -30,7 +30,7 @@
   input:focus { outline:2px solid #c5cfe6; border-color:var(--blue) }
   button { margin-top:24px; width:100%; padding:13px; border:0; border-radius:10px; background:var(--navy); color:#fff; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit }
   button:hover { background:var(--blue) }
-  .badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--red); background:#fdecec; border-radius:99px; padding:4px 10px; margin-bottom:12px }
+  .badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.08em; ; color:var(--red); background:#fdecec; border-radius:99px; padding:4px 10px; margin-bottom:12px }
   .err { color:var(--red); font-size:13px; margin-top:12px; min-height:1em }
   .foot { color:var(--muted); font-size:12px; margin-top:28px }
   @media (max-width:820px) { body { grid-template-columns:1fr } .side { display:none } .mob { display:flex } }
@@ -46,13 +46,13 @@
 <main>
 <form method="post" action="/admin/login">
   <div class="mob"><img src="/static/disha-logo.png" alt="Disha"><div><b>Disha Online Solution</b><small>Direction to Success</small></div></div>
-  <span class="badge">🔒 Admins only</span>
-  <h2>Admin sign in</h2><p class="lead">Only admin accounts can sign in here. Typists use the normal sign-in page.</p>
+  <span class="badge">🔒 Admins Only</span>
+  <h2>Admin Sign In</h2><p class="lead">Only admin accounts can sign in here. Typists use the normal sign-in page.</p>
   <label for="u">Username</label>
   <input id="u" name="username" autocomplete="username" autofocus required>
   <label for="pw">Password</label>
   <input id="pw" name="password" type="password" autocomplete="current-password" required>
-  <button type="submit">Sign in</button>
+  <button type="submit">Sign In</button>
   <div class="err">{{error}}</div>
   <div class="foot">Forgot the admin password? On the server PC run: <code>python -m web.manage reset USERNAME</code></div>
 </form>

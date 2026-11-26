@@ -34,7 +34,7 @@
   .card h2 span { color:var(--muted); font-weight:500; font-size:13px }
   .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px }
   .kpi { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px }
-  .kpi .k { color:var(--muted); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em }
+  .kpi .k { color:var(--muted); font-size:12px; font-weight:600; letter-spacing:.04em }
   .kpi .v { font-size:26px; font-weight:700; margin-top:6px; font-variant-numeric:tabular-nums } .kpi .s { color:var(--muted); font-size:13px; margin-top:4px }
   .track { height:8px; background:#e8ebf0; border-radius:5px; overflow:hidden; margin-top:10px }
   .track i { display:block; height:100%; background:var(--green); border-radius:5px } .track i.warn { background:var(--amber) } .track i.over { background:var(--red) }
@@ -45,13 +45,13 @@
   .alert { background:#fff6e5; border:1px solid #f1d8a6; color:#6b4a00; padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:14px }
   .alert.err { background:#fff3f3; border-color:#f0c4c4; color:var(--red) }
   table { width:100%; border-collapse:collapse; font-size:14px }
-  th { text-align:left; color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; padding:8px; white-space:nowrap }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:12px; letter-spacing:.03em; padding:8px; white-space:nowrap }
   td { padding:11px 8px; border-top:1px solid var(--line); vertical-align:top }
   td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap }
   .pill { display:inline-block; padding:3px 9px; border-radius:99px; font-size:12px; font-weight:600; white-space:nowrap }
   .pill.done { background:#e5f4ec; color:var(--green) } .pill.failed { background:#fdecec; color:var(--red) } .pill.running, .pill.queued { background:var(--soft); color:var(--blue) }
   .pill.admin { background:#f3e8fd; color:#6b21a8 } .pill.typist { background:#eef0f3; color:var(--muted) } .pill.off { background:#fdecec; color:var(--red) }
-  .kind { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em }
+  .kind { font-size:11px; font-weight:700; letter-spacing:.04em }
   .kind.notes { color:var(--red) } .kind.ppt { color:var(--blue) } .kind.test { color:var(--green) }
   .small { color:var(--muted); font-size:12px; margin-top:3px; word-break:break-word }
   .dls { display:flex; flex-wrap:wrap; gap:6px }
@@ -122,37 +122,37 @@
 <body data-island-scope="all">
 <div class="layout">
   <aside>
-    <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div>Disha Online Solution<small>Admin panel</small></div></div>
+    <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div>Disha Online Solution<small>Admin Panel</small></div></div>
     <button class="menu" id="menu" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav id="nav">
       <button data-tab="overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Overview</button>
       <button data-tab="typists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-2-5-4-5.5"/></svg>Typists</button>
-      <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Work history</button>
-      <button data-tab="designs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>PPT designs</button>
+      <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Work History</button>
+      <button data-tab="designs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>PPT Designs</button>
       <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
     </nav>
     <div class="side-foot">
       <b id="whoName"></b>
-      <a class="side-link" href="/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Open typist site ↗</a>
-      <a class="side-link" href="/admin/logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</a>
+      <a class="side-link" href="/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Open Typist Site ↗</a>
+      <a class="side-link" href="/admin/logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign Out</a>
     </div>
   </aside>
   <main>
     <!-- OVERVIEW -->
     <section id="tab-overview">
       <div class="head"><div><h1>Overview</h1><p class="sub" id="ovSub">Today and this month at a glance.</p></div>
-        <a class="btn ghost" href="#" id="ovCsv">⬇ This month's report (CSV)</a></div>
+        <a class="btn ghost" href="#" id="ovCsv">⬇ This Month's Report (CSV)</a></div>
       <div id="ovAlerts"></div>
       <div class="kpis" id="kpis"></div>
       <div class="two">
-        <div class="card"><h2>Spending, last 30 days <span>₹ per day</span></h2><svg class="chart" id="chart"></svg></div>
-        <div class="card"><h2>By tool <span>this month</span></h2><table><thead><tr><th>Tool</th><th class="n">Jobs</th><th class="n">Output</th><th class="n">Cost</th></tr></thead><tbody id="byTool"></tbody></table></div>
+        <div class="card"><h2>Spending, Last 30 Days <span>₹ per day</span></h2><svg class="chart" id="chart"></svg></div>
+        <div class="card"><h2>By Tool <span>This Month</span></h2><table><thead><tr><th>Tool</th><th class="n">Jobs</th><th class="n">Output</th><th class="n">Cost</th></tr></thead><tbody id="byTool"></tbody></table></div>
       </div>
-      <div class="card"><h2>Typists <span>this month</span></h2>
-        <table><thead><tr><th>Typist</th><th class="n">Jobs</th><th class="n hm">PDF pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last job</th></tr></thead><tbody id="ovUsers"></tbody></table></div>
+      <div class="card"><h2>Typists <span>This Month</span></h2>
+        <table><thead><tr><th>Typist</th><th class="n">Jobs</th><th class="n hm">PDF Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last Job</th></tr></thead><tbody id="ovUsers"></tbody></table></div>
       <div class="two">
-        <div class="card"><h2>Running now <span id="runCount"></span></h2><table><tbody id="running"></tbody></table></div>
-        <div class="card"><h2>Failed in the last 7 days</h2><table><tbody id="failed"></tbody></table></div>
+        <div class="card"><h2>Running Now <span id="runCount"></span></h2><table><tbody id="running"></tbody></table></div>
+        <div class="card"><h2>Failed in the Last 7 Days</h2><table><tbody id="failed"></tbody></table></div>
       </div>
       <div class="card"><h2>System</h2><dl class="kv" id="system"></dl></div>
     </section>
@@ -160,7 +160,7 @@
     <!-- TYPISTS -->
     <section id="tab-typists" class="hide">
       <div class="head"><div><h1>Typists</h1><p class="sub">Each typist has their own login. A disabled account cannot sign in.</p></div></div>
-      <div class="card"><h2>Add a typist</h2>
+      <div class="card"><h2>Add a Typist</h2>
         <form id="addUser" class="row">
           <div><label>Name</label><input type="text" name="name" required></div>
           <div><label>Username</label><input type="text" name="username" required pattern="[a-zA-Z0-9_.\-]{3,30}" title="3-30 letters, numbers, _ . -"></div>
@@ -169,24 +169,24 @@
           <div style="flex:0 0 auto"><button class="btn">Add</button></div>
         </form>
       </div>
-      <div class="card"><h2>All accounts <span>numbers are for this month</span></h2>
-        <table class="stack"><thead><tr><th>Name</th><th>Role</th><th class="n">Jobs</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last active</th><th></th></tr></thead><tbody id="users"></tbody></table>
+      <div class="card"><h2>All Accounts <span>Numbers Are for This Month</span></h2>
+        <table class="stack"><thead><tr><th>Name</th><th>Role</th><th class="n">Jobs</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last Active</th><th></th></tr></thead><tbody id="users"></tbody></table>
       </div>
     </section>
 
     <!-- HISTORY -->
     <section id="tab-history" class="hide">
-      <div class="head"><div><h1>Work history</h1><p class="sub">Every job by every typist. Filter, download outputs, re-run failed jobs, or export to Excel (CSV).</p></div>
+      <div class="head"><div><h1>Work History</h1><p class="sub">Every job by every typist. Filter, download outputs, re-run failed jobs, or export to Excel (CSV).</p></div>
         <a class="btn" href="#" id="csv">⬇ Export CSV</a></div>
       <div class="card">
         <div class="filters">
-          <select id="hUser"><option value="0">All typists</option></select>
-          <select id="hTask"><option value="">All tools</option><option value="notes">PDF to Notes</option><option value="ppt">DOCX to PPT</option><option value="test">MCQ Test</option></select>
-          <select id="hStatus"><option value="">Any status</option><option value="done">Ready</option><option value="running">Running</option><option value="failed">Failed</option></select>
-          <select id="hMonth"><option value="">All time</option></select>
+          <select id="hUser"><option value="0">All Typists</option></select>
+          <select id="hTask"><option value="">All Tools</option><option value="notes">PDF to Notes</option><option value="ppt">DOCX to PPT</option><option value="test">MCQ Test</option></select>
+          <select id="hStatus"><option value="">Any Status</option><option value="done">Ready</option><option value="running">Running</option><option value="failed">Failed</option></select>
+          <select id="hMonth"><option value="">All Time</option></select>
           <input id="hQ" type="search" placeholder="Search chapter or file name">
         </div>
-        <table class="stack"><thead><tr><th>Job</th><th class="hm">Typist / when</th><th>Status</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th>Files</th></tr></thead>
+        <table class="stack"><thead><tr><th>Job</th><th class="hm">Typist / When</th><th>Status</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th>Files</th></tr></thead>
           <tbody id="hist"></tbody></table>
         <div class="pager"><span id="hInfo"></span><button class="btn ghost sm" id="hPrev">‹ Prev</button><button class="btn ghost sm" id="hNext">Next ›</button></div>
       </div>
@@ -194,12 +194,12 @@
 
     <!-- DESIGNS -->
     <section id="tab-designs" class="hide">
-      <div class="head"><div><h1>PPT designs</h1><p class="sub">Upload any class PPT. Its background and header strip are reused; its slides are dropped.</p></div></div>
-      <div class="card"><h2>New design</h2>
+      <div class="head"><div><h1>PPT Designs</h1><p class="sub">Upload any class PPT. Its background and header strip are reused; its slides are dropped.</p></div></div>
+      <div class="card"><h2>New Design</h2>
         <form id="addTpl" class="row">
           <div><label>Name (e.g. Class 12 Chemistry)</label><input type="text" name="name" required></div>
-          <div><label>PPT file (.pptx)</label><input type="file" name="pptx" accept=".pptx" required></div>
-          <div><label>Logo (.png, for topic slides)</label><input type="file" name="logo" accept="image/png,image/jpeg"></div>
+          <div><label>PPT File (.pptx)</label><input type="file" name="pptx" accept=".pptx" required></div>
+          <div><label>Logo (.png, for Topic Slides)</label><input type="file" name="logo" accept="image/png,image/jpeg"></div>
           <div style="flex:0 0 auto"><button class="btn">Upload</button></div>
         </form>
       </div>
@@ -209,41 +209,41 @@
     <!-- SETTINGS -->
     <section id="tab-settings" class="hide">
       <div class="head"><div><h1>Settings</h1><p class="sub">API connection, budget and models. Changes apply to new jobs.</p></div></div>
-      <div class="card"><h2>API integration <span id="apiState"></span></h2>
+      <div class="card"><h2>API Integration <span id="apiState"></span></h2>
         <div class="apibox">
           <div class="apistat" id="apiStat"></div>
           <form id="keyForm" class="row" autocomplete="off">
-            <div><label for="apiKey">Claude API key</label><input type="password" id="apiKey" name="key" placeholder="sk-ant-…" autocomplete="off" spellcheck="false"></div>
-            <div style="flex:0 0 auto"><button class="btn">Save key</button></div>
+            <div><label for="apiKey">Claude API Key</label><input type="password" id="apiKey" name="key" placeholder="sk-ant-…" autocomplete="off" spellcheck="false"></div>
+            <div style="flex:0 0 auto"><button class="btn">Save Key</button></div>
           </form>
           <div class="row" style="margin-top:12px">
-            <div style="flex:0 0 auto"><button class="btn ghost" id="keyTest" type="button">Test connection</button></div>
-            <div style="flex:0 0 auto"><button class="btn danger" id="keyDel" type="button">Remove key</button></div>
+            <div style="flex:0 0 auto"><button class="btn ghost" id="keyTest" type="button">Test Connection</button></div>
+            <div style="flex:0 0 auto"><button class="btn danger" id="keyDel" type="button">Remove Key</button></div>
           </div>
-          <label>Model for each tool</label>
+          <label>Model for Each Tool</label>
           <div class="models" id="modelPick"></div>
           <div class="hint">The key is saved only on this server PC (in the data folder), never in GitHub, and is never shown again in full. Get a key from console.anthropic.com → API keys. "Test connection" spends no tokens.</div>
         </div>
       </div>
-      <div class="card"><h2>Budget &amp; advanced</h2>
+      <div class="card"><h2>Budget &amp; Advanced</h2>
         <form id="settings">
           <div class="grid">
-            <div><label>Monthly budget (₹)</label><input type="number" name="monthly_budget_inr" min="0" step="100"></div>
-            <div><label>$1 = ₹ (including bank charges)</label><input type="number" name="usd_to_inr" min="1" step="0.5"></div>
-            <div><label>Model for notes (PDF reading)</label><select name="model"></select></div>
+            <div><label>Monthly Budget (₹)</label><input type="number" name="monthly_budget_inr" min="0" step="100"></div>
+            <div><label>$1 = ₹ (Including Bank Charges)</label><input type="number" name="usd_to_inr" min="1" step="0.5"></div>
+            <div><label>Model for Notes (PDF Reading)</label><select name="model"></select></div>
             <div><label>Model for MCQs</label><select name="mcq_model"></select></div>
-            <div><label>Effort</label><select name="effort"><option value="low">Low (cheapest)</option><option value="medium">Medium</option><option value="high">High (best)</option></select></div>
-            <div><label>Default number of MCQs</label><input type="number" name="default_mcq_count" min="5" max="150"></div>
+            <div><label>Effort</label><select name="effort"><option value="low">Low (Cheapest)</option><option value="medium">Medium</option><option value="high">High (Best)</option></select></div>
+            <div><label>Default Number of MCQs</label><input type="number" name="default_mcq_count" min="5" max="150"></div>
           </div>
-          <div style="margin-top:18px"><button class="btn">Save settings</button></div>
+          <div style="margin-top:18px"><button class="btn">Save Settings</button></div>
           <div class="hint">When the budget is used up, PDF and MCQ jobs are blocked until next month (DOCX to PPT still works). Costs come from the real API token counts of each job.</div>
         </form>
       </div>
-      <div class="card" style="max-width:480px"><h2>My password</h2>
+      <div class="card" style="max-width:480px"><h2>My Password</h2>
         <form id="pwForm">
-          <label>Current password</label><input type="password" name="old" required autocomplete="current-password">
-          <label>New password</label><input type="password" name="new" required minlength="6" autocomplete="new-password">
-          <div style="margin-top:16px"><button class="btn">Change password</button></div>
+          <label>Current Password</label><input type="password" name="old" required autocomplete="current-password">
+          <label>New Password</label><input type="password" name="new" required minlength="6" autocomplete="new-password">
+          <div style="margin-top:16px"><button class="btn">Change Password</button></div>
         </form>
       </div>
     </section>
@@ -293,17 +293,17 @@ async function loadOverview() {
   const o = await api("/api/admin/overview");
   const m = o.month, t = o.today, pct = o.budget_inr ? 100 * m.inr / o.budget_inr : 0;
   const alerts = [];
-  if (!o.api_key) alerts.push(`<div class="alert err">The Claude API key is not set, so PDF and MCQ jobs cannot run. Add it in <a href="#" onclick="show('settings');return false">Settings → API integration</a>.</div>`);
+  if (!o.api_key) alerts.push(`<div class="alert err">The Claude API key is not set, so PDF and MCQ jobs cannot run. Add it in <a href="#" onclick="show('settings');return false">Settings → API Integration</a>.</div>`);
   if (pct >= 100) alerts.push(`<div class="alert err">This month's budget is used up. PDF and MCQ jobs are blocked. Raise it in Settings if needed.</div>`);
   else if (pct >= 80) alerts.push(`<div class="alert">${Math.round(pct)}% of this month's budget is used.</div>`);
   $("#ovAlerts").innerHTML = alerts.join("");
   $("#kpis").innerHTML = `
-    <div class="kpi"><div class="k">Spent this month</div><div class="v">${inr(m.inr)}</div>
+    <div class="kpi"><div class="k">Spent This Month</div><div class="v">${inr(m.inr)}</div>
       <div class="track"><i class="${pct >= 100 ? "over" : pct >= 80 ? "warn" : ""}" style="width:${Math.min(100, pct)}%"></i></div>
       <div class="s">of ${inr(o.budget_inr)} · ${inr(Math.max(0, o.budget_inr - m.inr))} left</div></div>
     <div class="kpi"><div class="k">Today</div><div class="v">${num(t.jobs)} job${t.jobs === 1 ? "" : "s"}</div><div class="s">${inr(t.inr)} spent · ${num(t.failed)} failed</div></div>
-    <div class="kpi"><div class="k">Jobs this month</div><div class="v">${num(m.jobs)}</div><div class="s">${num(m.done)} ready · ${num(m.failed)} failed</div></div>
-    <div class="kpi"><div class="k">Output this month</div><div class="v">${num(m.pages)} <small style="font-size:14px;font-weight:600">pages</small></div>
+    <div class="kpi"><div class="k">Jobs This Month</div><div class="v">${num(m.jobs)}</div><div class="s">${num(m.done)} ready · ${num(m.failed)} failed</div></div>
+    <div class="kpi"><div class="k">Output This Month</div><div class="v">${num(m.pages)} <small style="font-size:14px;font-weight:600">pages</small></div>
       <div class="s">${num(m.pages - m.sent)} repeats skipped · ${num(m.mcqs)} MCQs</div></div>`;
   drawChart(o.series);
   const tools = {notes: {}, ppt: {}, test: {}}; o.by_tool.forEach(r => tools[r.task] = r);
@@ -319,10 +319,10 @@ async function loadOverview() {
     <div class="small">${esc(j.by_name)} · started ${ago(j.created)}</div><div class="small" style="color:var(--blue)">${esc(j.step || "")}</div></td></tr>`).join("") || empty(1, "Nothing running.");
   $("#failed").innerHTML = o.failed.map(j => `<tr><td><b>${esc(j.title || j.chapter || j.files[0])}</b>
     <div class="small">${esc(j.by_name)} · ${when(j.created)}</div><div class="small" style="color:var(--red)">${esc(j.error || "")}</div></td>
-    <td class="n"><button class="btn ghost sm" data-retry="${j.id}">Run again</button></td></tr>`).join("") || empty(2, "No failures. 👍");
-  $("#system").innerHTML = `<dt>Claude API key</dt><dd>${o.api_key ? "Set" : '<span style="color:var(--red)">Not set</span>'}</dd>
-    <dt>Notes model</dt><dd>${esc(o.models.notes)} · effort ${esc(o.models.effort)}</dd><dt>MCQ model</dt><dd>${esc(o.models.mcq)}</dd>
-    <dt>PDF reader</dt><dd>${esc(o.pdf_engine)}</dd><dt>Job files</dt><dd>${o.storage.jobs_mb} MB, kept ${o.storage.keep_days} days · ${o.storage.free_gb} GB free on disk</dd>`;
+    <td class="n"><button class="btn ghost sm" data-retry="${j.id}">Run Again</button></td></tr>`).join("") || empty(2, "No failures. 👍");
+  $("#system").innerHTML = `<dt>Claude API Key</dt><dd>${o.api_key ? "Set" : '<span style="color:var(--red)">Not set</span>'}</dd>
+    <dt>Notes Model</dt><dd>${esc(o.models.notes)} · effort ${esc(o.models.effort)}</dd><dt>MCQ Model</dt><dd>${esc(o.models.mcq)}</dd>
+    <dt>PDF Reader</dt><dd>${esc(o.pdf_engine)}</dd><dt>Job Files</dt><dd>${o.storage.jobs_mb} MB, kept ${o.storage.keep_days} days · ${o.storage.free_gb} GB free on disk</dd>`;
   $("#ovSub").textContent = new Date().toLocaleDateString("en-IN", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
   $("#ovCsv").href = "/api/admin/jobs.csv?month=" + thisMonth();
 }
@@ -372,7 +372,7 @@ async function loadUsers() {
     <td><div class="acts">
       <button class="btn ghost sm" data-work="${u.id}">Work</button>
       <button class="btn ghost sm" data-rename="${u.id}">Rename</button>
-      <button class="btn ghost sm" data-pw="${u.id}">Reset password</button>
+      <button class="btn ghost sm" data-pw="${u.id}">Reset Password</button>
       ${u.id === ME.user.id ? "" : `<button class="btn ghost sm" data-role="${u.id}" data-v="${u.role === "admin" ? "typist" : "admin"}">${u.role === "admin" ? "Make typist" : "Make admin"}</button>
       <button class="btn ${u.active ? "danger" : "ghost"} sm" data-act="${u.id}" data-v="${u.active ? 0 : 1}">${u.active ? "Disable" : "Enable"}</button>`}
     </div></td></tr>`).join("");
@@ -422,7 +422,7 @@ async function loadHistory() {
     <td class="n hm">${j.pages ? num(j.pages) : "–"}</td><td class="n hm">${j.mcqs ? num(j.mcqs) : "–"}</td>
     <td class="n">${j.task === "ppt" ? "Free" : inr(j.cost_inr)}</td>
     <td><div class="dls">${j.downloads.map(x => `<a class="dl ${x.kind}" href="/api/jobs/${j.id}/download?kind=${x.kind}&panel=admin">⬇ ${esc(x.label)}</a>`).join("")}
-      ${j.status === "failed" ? `<button class="btn ghost sm" data-retry="${j.id}">Run again</button>` : ""}
+      ${j.status === "failed" ? `<button class="btn ghost sm" data-retry="${j.id}">Run Again</button>` : ""}
       ${(j.status === "done" || j.status === "failed") && j.downloads.length ? `<button class="btn danger sm" data-delfiles="${j.id}" title="Delete files">🗑</button>` : ""}</div></td></tr>`).join("")
     || empty(7, "Nothing found.");
   const pages = Math.max(1, Math.ceil(d.total / d.per));
@@ -456,7 +456,7 @@ function drawApi(a) {
   $("#apiStat").className = "apistat" + (a.set ? " on" : "");
   $("#apiStat").innerHTML = a.set ? `<i></i><span>Key saved · <code>${esc(a.masked)}</code> from ${esc(a.source)}</span>`
     : `<i></i><span>No API key yet. PDF to Notes and MCQ Test will not run until you add one.</span>`;
-  $("#apiState").textContent = a.set ? "Key set" : "Not connected";
+  $("#apiState").textContent = a.set ? "Key Set" : "Not Connected";
   $("#keyDel").classList.toggle("hide", a.source !== "admin panel");
 }
 function drawModels(d) {
