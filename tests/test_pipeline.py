@@ -91,6 +91,7 @@ def test_web_flow(client, tmp_path):
     me = c.get("/api/me").json()
     assert me["user"]["name"] == "Rahul" and me["user"]["role"] == "typist" and me["api_key"]
     assert c.get("/api/admin/users").status_code == 403
+    assert c.get("/admin", follow_redirects=False).headers["location"] == "/"
 
     # 1. PDFs -> notes
     r = c.post("/api/jobs", data={"task": "notes"},
@@ -132,6 +133,26 @@ def test_web_flow(client, tmp_path):
     assert c.get("/api/jobs?scope=mine").json()["total"] == 0
     assert c.get("/api/admin/settings").json()["month"]["jobs"] == 3
     assert next(u for u in c.get("/api/admin/users").json() if u["username"] == "rahul")["jobs"] == 3
+    # admin panel
+    assert c.get("/admin").status_code == 200
+    o = c.get("/api/admin/overview").json()
+    assert o["month"]["jobs"] == 3 and o["today"]["jobs"] == 3 and len(o["series"]) == 30
+    assert o["series"][-1]["jobs"] == 3 and {t["task"] for t in o["by_tool"]} == {"notes", "ppt", "test"}
+    rid = next(u for u in o["users"] if u["username"] == "rahul")["id"]
+    assert c.get(f"/api/jobs?scope=all&user={rid}").json()["total"] == 3
+    import time as _t
+    assert c.get(f"/api/jobs?scope=all&month={_t.strftime('%Y-%m')}").json()["total"] == 3
+    assert c.get("/api/jobs?scope=all&month=2001-01").json()["total"] == 0
+    csv = c.get("/api/admin/jobs.csv?task=notes")
+    assert csv.status_code == 200 and csv.text.count("\n") == 2 and "Rahul" in csv.text
+    c.post(f"/api/admin/users/{rid}", data={"name": "Rahul K"})
+    assert any(u["name"] == "Rahul K" and u["all_jobs"] == 3 for u in c.get("/api/admin/users").json())
+    me_id = c.get("/api/me").json()["user"]["id"]
+    assert c.post(f"/api/admin/users/{me_id}", data={"active": "0"}).status_code == 400
+    jid = h["jobs"][0]["id"]
+    assert c.post(f"/api/admin/jobs/{jid}/retry").status_code == 400  # not failed
+    assert c.post(f"/api/admin/jobs/{jid}/delete").status_code == 200
+    assert c.get(f"/api/jobs/{jid}").json()["downloads"] == []
     c.post("/api/admin/settings", data={"monthly_budget_inr": "0"})
     r = c.post("/api/jobs", data={"task": "notes"}, files=[("files", ("a.pdf", _pdf_bytes()))])
     assert r.status_code == 400 and "budget" in r.json()["detail"]

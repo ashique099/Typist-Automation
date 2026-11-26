@@ -16,12 +16,13 @@ After signing in, each typist sees a dashboard with three tools:
 3. **PPT or DOCX to MCQ Test**: drop notes or slides; Claude writes the MCQs (`typist/mcq.py`), answers
    are spread evenly over options 1-4, output is the Word table test plus an Objective PPT.
 
-Accounts and history (`web/db.py`, SQLite in `DATA_DIR/typist.db`):
+Accounts, history and the **Admin panel** at `/admin` (`web/templates/admin.html`, data in `web/db.py`, SQLite in `DATA_DIR/typist.db`):
 
 * The first visit creates the **admin** account. The admin adds a login for each typist, resets
   passwords, and disables accounts (Typists page).
 * **Work history** keeps every job: who, when, which files, pages, MCQs, real API cost (from token
   counts), and the downloads. Admins see everyone's work; typists see their own.
+* **Overview** (admin): spend vs budget, today's and this month's jobs, a 30-day spending chart, totals per tool and per typist, running and failed jobs (with Run again), system status. Work history can be filtered by typist/tool/status/month and exported as CSV.
 * **Settings** (admin): monthly budget in ₹ (AI jobs are blocked once it is used up), $→₹ rate,
   model for notes and for MCQs, effort. **PPT designs** (admin): upload any class PPT; its master
   background is kept and its slides are dropped.

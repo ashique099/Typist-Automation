@@ -9,8 +9,8 @@ PRICES = {
     "claude-sonnet-5-5": (2.0, 10.0, 0.10, 2.5),
     "claude-haiku-5-5": (0.10, 0.50, 0.01, 0.125),
 }
-MODELS = {"claude-opus-5-5": "Opus 5.5 (best quality)", "claude-sonnet-5-5": "Sonnet 5.5 (aadha kharcha)",
-          "claude-haiku-5-5": "Haiku 5.5 (sabse sasta)"}
+MODELS = {"claude-opus-5-5": "Opus 5.5 (best quality)", "claude-sonnet-5-5": "Sonnet 5.5 (half the cost)",
+          "claude-haiku-5-5": "Haiku 5.5 (cheapest)"}
 
 _local = threading.local()
 

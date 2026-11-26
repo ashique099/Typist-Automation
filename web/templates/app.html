@@ -16,6 +16,7 @@
   nav { display:flex; gap:4px; flex:1; overflow-x:auto }
   nav button { all:unset; padding:8px 12px; border-radius:8px; cursor:pointer; color:var(--muted); font-weight:500; white-space:nowrap }
   nav button:hover { background:#f1f3f6 } nav button.on { background:var(--soft); color:var(--blue) }
+  .adminlink { padding:7px 12px; border-radius:8px; background:#141a26; color:#fff; text-decoration:none; font-size:13px; font-weight:600; white-space:nowrap }
   .who { display:flex; align-items:center; gap:10px; font-size:14px; white-space:nowrap }
   .avatar { width:32px; height:32px; border-radius:50%; background:#e7ecf5; color:var(--blue); display:grid; place-items:center; font-weight:700 }
   .who a { color:var(--muted); text-decoration:none; font-size:13px } .who a:hover { color:var(--red) }
@@ -85,11 +86,9 @@
   <nav id="nav">
     <button data-tab="home" class="on">Dashboard</button>
     <button data-tab="history">Work history</button>
-    <button data-tab="users" class="adm hide">Typists</button>
-    <button data-tab="settings" class="adm hide">Settings</button>
-    <button data-tab="designs" class="adm hide">PPT designs</button>
     <button data-tab="account">My account</button>
   </nav>
+  <a href="/admin" class="adm hide adminlink">Admin panel</a>
   <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout">Sign out</a></div>
 </div></header>
 <main>
@@ -155,54 +154,6 @@
     </div>
   </section>
 
-  <section id="tab-users" class="hide">
-    <h1>Typists</h1><p class="sub">Each typist gets their own login. A disabled account cannot sign in.</p>
-    <div class="card"><h2>Add a typist</h2>
-      <form id="addUser" class="row">
-        <div><label>Name</label><input type="text" name="name" required></div>
-        <div><label>Username</label><input type="text" name="username" required pattern="[a-zA-Z0-9_.\-]{3,30}"></div>
-        <div><label>Password</label><input type="text" name="password" required minlength="6"></div>
-        <div><label>Role</label><select name="role"><option value="typist">Typist</option><option value="admin">Admin</option></select></div>
-        <div style="flex:0 0 auto"><button class="btn">Add</button></div>
-      </form>
-    </div>
-    <div class="card"><h2>All accounts (work this month)</h2>
-      <table><thead><tr><th>Name</th><th>Role</th><th class="hm">Jobs</th><th class="hm">Pages</th><th class="hm">MCQs</th><th>Cost</th><th></th></tr></thead><tbody id="users"></tbody></table>
-    </div>
-  </section>
-
-  <section id="tab-settings" class="hide">
-    <h1>Settings &amp; spending</h1><p class="sub">Monthly budget, models, and this month's usage.</p>
-    <div class="stats" id="monthStats"></div>
-    <div class="card"><h2>Settings</h2>
-      <form id="settings">
-        <div class="grid">
-          <div><label>Monthly budget (₹)</label><input type="number" name="monthly_budget_inr" min="0" step="100"></div>
-          <div><label>$1 = ₹ (including bank charges)</label><input type="number" name="usd_to_inr" min="1" step="0.5"></div>
-          <div><label>Model for notes</label><select name="model"></select></div>
-          <div><label>Model for MCQs</label><select name="mcq_model"></select></div>
-          <div><label>Effort</label><select name="effort"><option value="low">Low (cheapest)</option><option value="medium">Medium</option><option value="high">High (best)</option></select></div>
-          <div><label>Default number of MCQs</label><input type="number" name="default_mcq_count" min="5" max="150"></div>
-        </div>
-        <div style="margin-top:18px"><button class="btn">Save</button></div>
-        <div class="hint">When the budget is used up, new PDF and MCQ jobs are blocked until next month. Costs come from the real API token counts of each job.</div>
-      </form>
-    </div>
-  </section>
-
-  <section id="tab-designs" class="hide">
-    <h1>PPT designs</h1><p class="sub">Upload any of your class PPTs. Its background and header strip are reused; its slides are not.</p>
-    <div class="card"><h2>New design</h2>
-      <form id="addTpl" class="row">
-        <div><label>Name (e.g. Class 12 Chemistry)</label><input type="text" name="name" required></div>
-        <div><label>PPT file (.pptx)</label><input type="file" name="pptx" accept=".pptx" required></div>
-        <div><label>Logo (.png, for topic slides)</label><input type="file" name="logo" accept="image/png,image/jpeg"></div>
-        <div style="flex:0 0 auto"><button class="btn">Upload</button></div>
-      </form>
-    </div>
-    <div class="card"><h2>Designs</h2><table><tbody id="tpls"></tbody></table></div>
-  </section>
-
   <section id="tab-account" class="hide">
     <h1>My account</h1><p class="sub" id="accInfo"></p>
     <div class="card" style="max-width:460px"><h2>Change password</h2>
@@ -250,7 +201,7 @@ function show(tab) {
   $$("#nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === navTab));
   $$("main > section").forEach(s => s.classList.toggle("hide", s.id !== "tab-" + tab));
   if (tab !== "tool") store("tab", tab);
-  ({home: loadRecent, tool: loadToolRecent, history: loadHistory, users: loadUsers, settings: loadSettings, designs: loadDesigns}[tab] || (() => {}))();
+  ({home: loadRecent, tool: loadToolRecent, history: loadHistory}[tab] || (() => {}))();
   window.scrollTo(0, 0);
 }
 $("#nav").onclick = e => { const b = e.target.closest("button"); if (b) show(b.dataset.tab); };
@@ -357,63 +308,6 @@ async function loadHistory() {
 ["#hScope", "#hTask", "#hStatus", "#hDays"].forEach(s => $(s).onchange = () => { hPage = 1; loadHistory(); });
 let qT; $("#hQ").oninput = () => { clearTimeout(qT); qT = setTimeout(() => { hPage = 1; loadHistory(); }, 300); };
 $("#hPrev").onclick = () => { hPage--; loadHistory(); }; $("#hNext").onclick = () => { hPage++; loadHistory(); };
-
-async function loadUsers() {
-  const us = await api("/api/admin/users");
-  $("#users").innerHTML = us.map(u => `<tr>
-    <td><b>${esc(u.name)}</b><div class="small">${esc(u.username)}</div></td>
-    <td><span class="pill ${u.role}">${u.role === "admin" ? "Admin" : "Typist"}</span> ${u.active ? "" : '<span class="pill off">Disabled</span>'}</td>
-    <td class="hm">${u.jobs}</td><td class="hm">${u.pages}</td><td class="hm">${u.mcqs}</td><td>${inr(u.cost_inr)}</td>
-    <td style="white-space:nowrap;text-align:right"><button class="btn ghost sm" data-pw="${u.id}">Reset password</button>
-      ${u.id === ME.user.id ? "" : `<button class="btn ${u.active ? "danger" : "ghost"} sm" data-act="${u.id}" data-v="${u.active ? 0 : 1}">${u.active ? "Disable" : "Enable"}</button>`}</td></tr>`).join("");
-}
-$("#users").onclick = async e => {
-  const b = e.target.closest("button"); if (!b) return;
-  const fd = new FormData();
-  if (b.dataset.pw) { const p = prompt("New password (at least 6 characters)"); if (!p) return; fd.append("password", p); }
-  if (b.dataset.act) fd.append("active", b.dataset.v);
-  try { await api(`/api/admin/users/${b.dataset.pw || b.dataset.act}`, {method: "POST", body: fd}); toast("Saved"); loadUsers(); }
-  catch (err) { toast(err.message); }
-};
-$("#addUser").onsubmit = async e => {
-  e.preventDefault();
-  try { await api("/api/admin/users", form(e.target)); e.target.reset(); toast("Typist added"); loadUsers(); }
-  catch (err) { toast(err.message); }
-};
-
-async function loadSettings() {
-  const d = await api("/api/admin/settings"), s = d.settings, f = $("#settings");
-  ["model", "mcq_model"].forEach(n => { f[n].innerHTML = Object.entries(d.models).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join(""); });
-  Object.entries(s).forEach(([k, v]) => { if (f[k]) f[k].value = v; });
-  const m = d.month, lim = +s.monthly_budget_inr;
-  $("#monthStats").innerHTML = [
-    ["Spent this month", inr(m.inr), `of ${inr(lim)} · $${m.usd.toFixed(2)}`],
-    ["Jobs", m.jobs, "this month"], ["PDF pages", m.pages, `${m.pages - m.sent} repeats skipped`], ["MCQs", m.mcqs, "this month"],
-    ["Cost per page", m.sent ? inr(m.notes_inr / m.sent) : "–", "average, notes only"]
-  ].map(([k, v, s2]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="small">${s2}</div></div>`).join("");
-}
-$("#settings").onsubmit = async e => {
-  e.preventDefault();
-  try { await api("/api/admin/settings", form(e.target)); toast("Settings saved"); loadSettings(); loadMe(); } catch (err) { toast(err.message); }
-};
-
-async function loadDesigns() {
-  const d = await api("/api/admin/settings");
-  $("#tpls").innerHTML = d.templates.map(t => `<tr><td><b>${esc(t)}</b></td>
-    <td style="text-align:right"><button class="btn danger sm" data-del="${esc(t)}">Delete</button></td></tr>`).join("")
-    || empty(2, "No designs yet. Upload one of your class PPTs above.");
-}
-$("#tpls").onclick = async e => {
-  const b = e.target.closest("button[data-del]"); if (!b || !confirm(`Delete the design "${b.dataset.del}"?`)) return;
-  try { await api(`/api/admin/templates/${encodeURIComponent(b.dataset.del)}/delete`, {method: "POST"}); loadDesigns(); loadMe(); }
-  catch (err) { toast(err.message); }
-};
-$("#addTpl").onsubmit = async e => {
-  e.preventDefault(); const btn = e.target.querySelector("button"); btn.disabled = true; btn.textContent = "Uploading…";
-  try { await api("/api/admin/templates", form(e.target)); e.target.reset(); toast("Design added"); loadDesigns(); loadMe(); }
-  catch (err) { toast(err.message); }
-  btn.disabled = false; btn.textContent = "Upload";
-};
 
 $("#pwForm").onsubmit = async e => {
   e.preventDefault();

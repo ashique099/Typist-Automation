@@ -30,7 +30,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 
 from typist import mcq as mcqmod
 from typist import usage
@@ -216,13 +216,16 @@ def _make_ppt(parts, out, tpl, logo, title):
         render_deck(parts, out, title)
 
 
-def run_job(jid):
+def run_job(jid, keep_cost=False):
     m = db.get_job(jid)
     opts = m["options"]
     task = opts.get("task", "notes")
     d = JOBS / jid
     s = db.all_settings()
     meter = usage.start(model=s["mcq_model"] if task == "test" else s["model"], effort=s["effort"])
+    if keep_cost:  # a retry adds to what the failed attempt already spent
+        meter.calls, meter.input, meter.output = m["calls"] or 0, m["input_tokens"] or 0, m["output_tokens"] or 0
+        meter.cost = m["cost_usd"] or 0
     outputs = {}
 
     def save_usage(**kw):
@@ -324,16 +327,31 @@ def _public(j, rate):
     return j
 
 
+def _job_filters(u, scope, status, q, days, task, user, month):
+    """Shared by the history list and the CSV export. month = 'YYYY-MM'."""
+    uid = u["id"]
+    if u["role"] == "admin" and scope == "all":
+        uid = user or None
+    since = until = None
+    if month and re.fullmatch(r"\d{4}-\d{2}", month):
+        y, mo = map(int, month.split("-"))
+        since = time.mktime((y, mo, 1, 0, 0, 0, 0, 0, -1))
+        until = time.mktime((y + mo // 12, mo % 12 + 1, 1, 0, 0, 0, 0, 0, -1))
+    elif days:
+        since = time.time() - days * 86400
+    return dict(user_id=uid, status=status or None, since=since, until=until, search=q.strip() or None,
+                task=task if task in TASKS else None)
+
+
 @app.get("/api/jobs")
 def list_jobs(request: Request, scope: str = "mine", status: str = "", q: str = "", days: int = 0,
-              page: int = 1, task: str = ""):
+              page: int = 1, task: str = "", user: int = 0, month: str = "", per: int = 25):
     u = need_user(request)
-    uid = None if (scope == "all" and u["role"] == "admin") else u["id"]
-    since = time.time() - days * 86400 if days else None
-    rows, total = db.list_jobs(uid, 25, (max(page, 1) - 1) * 25, status or None, since, q.strip() or None,
-                             task if task in TASKS else None)
+    per = max(5, min(per, 100))
+    f = _job_filters(u, scope, status, q, days, task, user, month)
+    rows, total = db.list_jobs(limit=per, offset=(max(page, 1) - 1) * per, **f)
     rate = float(db.setting("usd_to_inr"))
-    return {"jobs": [_public(r, rate) for r in rows], "total": total, "page": page}
+    return {"jobs": [_public(r, rate) for r in rows], "total": total, "page": page, "per": per}
 
 
 def _own_job(request, jid):
@@ -362,13 +380,91 @@ def download(jid: str, request: Request, kind: str = "notes"):
 
 
 # ----------------------------------------------------------------- admin --
+@app.get("/api/admin/overview")
+def admin_overview(request: Request):
+    need_admin(request)
+    s = db.all_settings()
+    rate = float(s["usd_to_inr"])
+    o = db.overview(rate)
+    o["budget_inr"] = float(s["monthly_budget_inr"])
+    o["api_key"] = bool(os.environ.get("ANTHROPIC_API_KEY", "").strip())
+    o["models"] = {"notes": usage.MODELS.get(s["model"], s["model"]),
+                   "mcq": usage.MODELS.get(s["mcq_model"], s["mcq_model"]), "effort": s["effort"]}
+    o["labels"] = {k: v["label"] for k, v in TASKS.items()}
+    du = shutil.disk_usage(DATA)
+    used = sum(f.stat().st_size for f in JOBS.rglob("*") if f.is_file())
+    o["storage"] = {"jobs_mb": round(used / 2 ** 20, 1), "free_gb": round(du.free / 2 ** 30, 1),
+                    "keep_days": KEEP_DAYS}
+    return o
+
+
+@app.get("/api/admin/jobs.csv")
+def admin_jobs_csv(request: Request, status: str = "", q: str = "", days: int = 0, task: str = "",
+                   user: int = 0, month: str = ""):
+    import csv
+    import io
+    u = need_admin(request)
+    f = _job_filters(u, "all", status, q, days, task, user, month)
+    rows, _ = db.list_jobs(limit=100000, offset=0, **f)
+    rate = float(db.setting("usd_to_inr"))
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["Date", "Time", "Typist", "Tool", "Chapter", "Files", "Status", "Pages", "Pages sent",
+                "MCQs", "Minutes", "Cost (INR)", "Cost (USD)", "Model", "Error"])
+    for r in rows:
+        t = time.localtime(r["created"])
+        mins = round((r["finished"] - r["started"]) / 60, 1) if r.get("finished") and r.get("started") else ""
+        w.writerow([time.strftime("%Y-%m-%d", t), time.strftime("%H:%M", t), r.get("by_name") or "",
+                    TASKS.get((r["options"] or {}).get("task", "notes"), TASKS["notes"])["label"],
+                    r.get("title") or r.get("chapter") or "", " | ".join(r["files"]), r["status"],
+                    r.get("pages") or 0, r.get("pages_sent") or 0, r.get("mcqs") or 0, mins,
+                    round((r.get("cost_usd") or 0) * rate, 2), round(r.get("cost_usd") or 0, 4),
+                    r.get("model") or "", r.get("error") or ""])
+    name = f"work-history-{month or time.strftime('%Y-%m-%d')}.csv"
+    return Response("\ufeff" + buf.getvalue(), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@app.post("/api/admin/jobs/{jid}/retry")
+def admin_retry(jid: str, request: Request):
+    need_admin(request)
+    j = _own_job(request, jid)
+    if j["status"] != "failed":
+        raise HTTPException(400, "Only failed jobs can be run again.")
+    if not (JOBS / jid / "input").exists():
+        raise HTTPException(400, "The uploaded files of this job were already deleted.")
+    if TASKS.get(j["options"].get("task", "notes"), TASKS["notes"])["ai"]:
+        if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
+            raise HTTPException(400, "The Claude API key is not set on the server.")
+        if _budget_left_inr() <= 0:
+            raise HTTPException(400, "This month's budget is used up.")
+    # the earlier attempt's cost stays counted: it was really spent
+    db.update_job(jid, status="queued", step="Queued", error=None, outputs={}, finished=None)
+    pool.submit(run_job, jid, keep_cost=True)
+    return {"ok": True}
+
+
+@app.post("/api/admin/jobs/{jid}/delete")
+def admin_delete_job(jid: str, request: Request):
+    need_admin(request)
+    j = _own_job(request, jid)
+    if j["status"] in ("queued", "running"):
+        raise HTTPException(400, "This job is still running.")
+    shutil.rmtree(JOBS / jid, ignore_errors=True)
+    db.update_job(jid, outputs={}, error="Files deleted by admin", step=j["step"])
+    return {"ok": True}
+
+
 @app.get("/api/admin/users")
 def users(request: Request):
     need_admin(request)
     rate = float(db.setting("usd_to_inr"))
     use = {r["id"]: r for r in db.usage_by_user(db.month_start())}
     out = []
-    for u in db.q("select id,username,name,role,active,created from users order by role, name"):
+    for u in db.q("select id,username,name,role,active,created, "
+                  "(select max(last_seen) from sessions s where s.user_id=users.id) last_seen, "
+                  "(select count(*) from jobs j where j.user_id=users.id) all_jobs "
+                  "from users order by role, name"):
         r = use.get(u["id"], {})
         out.append({**u, "jobs": r.get("jobs", 0), "pages": r.get("pages", 0), "mcqs": r.get("mcqs", 0),
                     "cost_inr": round(r.get("cost_usd", 0) * rate)})
@@ -390,7 +486,8 @@ def add_user(request: Request, username: str = Form(""), name: str = Form(""), p
 
 
 @app.post("/api/admin/users/{uid}")
-def edit_user(uid: int, request: Request, active: str = Form(""), password: str = Form(""), role: str = Form("")):
+def edit_user(uid: int, request: Request, active: str = Form(""), password: str = Form(""), role: str = Form(""),
+              name: str = Form("")):
     me_ = need_admin(request)
     u = db.get_user(uid)
     if not u:
@@ -398,6 +495,9 @@ def edit_user(uid: int, request: Request, active: str = Form(""), password: str 
     if active in ("0", "1"):
         if uid == me_["id"] and active == "0":
             raise HTTPException(400, "You cannot disable your own account.")
+        if active == "0" and u["role"] == "admin" and db.q(
+                "select count(*) n from users where role='admin' and active=1", one=True)["n"] <= 1:
+            raise HTTPException(400, "At least one admin must stay active.")
         db.x("update users set active=? where id=?", (int(active), uid))
         if active == "0":
             db.x("delete from sessions where user_id=?", (uid,))
@@ -405,6 +505,8 @@ def edit_user(uid: int, request: Request, active: str = Form(""), password: str 
         if len(password) < 6:
             raise HTTPException(400, "Password must be at least 6 characters.")
         db.x("update users set pw=? where id=?", (db.hash_pw(password), uid))
+    if name.strip():
+        db.x("update users set name=? where id=?", (name.strip()[:60], uid))
     if role in ("admin", "typist") and uid != me_["id"]:
         db.x("update users set role=? where id=?", (role, uid))
     return {"ok": True}
@@ -493,6 +595,16 @@ def delete_template(name: str, request: Request):
 @app.get("/healthz")
 def health():
     return {"ok": True, "api_key": bool(os.environ.get("ANTHROPIC_API_KEY", "").strip())}
+
+
+@app.get("/admin")
+def admin_page(request: Request):
+    u = current_user(request)
+    if not u:
+        return RedirectResponse("/login", status_code=303)
+    if u["role"] != "admin":
+        return RedirectResponse("/", status_code=303)
+    return _page("admin.html")
 
 
 @app.get("/")

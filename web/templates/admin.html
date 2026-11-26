@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Panel – Typist Automation</title>
+<style>
+  :root { --red:#C00000; --blue:#1F4E9F; --green:#00703C; --amber:#9a6700; --bg:#f4f5f8; --card:#fff; --text:#1b1f24;
+          --muted:#5d6672; --line:#e3e6eb; --soft:#eef3fb; --side:#141a26; --sidetext:#aeb8c8; }
+  * { box-sizing:border-box }
+  body { margin:0; font-family:system-ui,"Segoe UI","Nirmala UI",sans-serif; background:var(--bg); color:var(--text); font-size:15px }
+  a { color:var(--blue) }
+  .layout { display:grid; grid-template-columns:232px 1fr; min-height:100vh; background:linear-gradient(to right, var(--side) 232px, transparent 232px) }
+  aside { background:var(--side); color:var(--sidetext); padding:20px 14px; display:flex; flex-direction:column; gap:4px; position:sticky; top:0; height:100vh }
+  .brand { display:flex; align-items:center; gap:10px; color:#fff; font-weight:700; font-size:15px; padding:0 8px 4px }
+  .brand small { display:block; color:var(--sidetext); font-weight:500; font-size:12px }
+  .logo { width:34px; height:34px; border-radius:9px; background:var(--red); color:#fff; display:grid; place-items:center; font-weight:800; flex:none }
+  nav { display:flex; flex-direction:column; gap:2px; margin-top:18px }
+  nav button, .side-link { all:unset; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; color:var(--sidetext); font-size:14px; box-sizing:border-box; width:100% }
+  nav button:hover, .side-link:hover { background:#1f2738; color:#fff } nav button.on { background:#263049; color:#fff }
+  nav svg, .side-link svg { width:18px; height:18px; flex:none }
+  .side-foot { margin-top:auto; border-top:1px solid #263049; padding-top:12px; font-size:13px }
+  .side-foot b { color:#fff; display:block; padding:0 12px 6px }
+  main { padding:28px 30px 60px; max-width:1180px; width:100% }
+  .head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px }
+  h1 { font-size:24px; margin:0 0 4px } .sub { color:var(--muted); margin:0; font-size:14px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:18px; min-width:0 }
+  .card h2 { margin:0 0 14px; font-size:15px; display:flex; justify-content:space-between; align-items:center; gap:8px }
+  .card h2 span { color:var(--muted); font-weight:500; font-size:13px }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px }
+  .kpi { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px }
+  .kpi .k { color:var(--muted); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em }
+  .kpi .v { font-size:26px; font-weight:700; margin-top:6px; font-variant-numeric:tabular-nums } .kpi .s { color:var(--muted); font-size:13px; margin-top:4px }
+  .track { height:8px; background:#e8ebf0; border-radius:5px; overflow:hidden; margin-top:10px }
+  .track i { display:block; height:100%; background:var(--green); border-radius:5px } .track i.warn { background:var(--amber) } .track i.over { background:var(--red) }
+  .two { display:grid; grid-template-columns:1.4fr 1fr; gap:18px }
+  .chart { width:100%; height:190px; display:block } .chart text { font-size:11px; fill:var(--muted) }
+  .chart .b { fill:var(--blue) } .chart .b:hover { fill:#163a78 } .chart .grid { stroke:#eceef2 }
+  #tip { position:fixed; pointer-events:none; background:#141a26; color:#fff; font-size:12px; padding:6px 9px; border-radius:6px; z-index:9; display:none; white-space:nowrap }
+  .alert { background:#fff6e5; border:1px solid #f1d8a6; color:#6b4a00; padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:14px }
+  .alert.err { background:#fff3f3; border-color:#f0c4c4; color:var(--red) }
+  table { width:100%; border-collapse:collapse; font-size:14px }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; padding:8px; white-space:nowrap }
+  td { padding:11px 8px; border-top:1px solid var(--line); vertical-align:top }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap }
+  .pill { display:inline-block; padding:3px 9px; border-radius:99px; font-size:12px; font-weight:600; white-space:nowrap }
+  .pill.done { background:#e5f4ec; color:var(--green) } .pill.failed { background:#fdecec; color:var(--red) } .pill.running, .pill.queued { background:var(--soft); color:var(--blue) }
+  .pill.admin { background:#f3e8fd; color:#6b21a8 } .pill.typist { background:#eef0f3; color:var(--muted) } .pill.off { background:#fdecec; color:var(--red) }
+  .kind { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em }
+  .kind.notes { color:var(--red) } .kind.ppt { color:var(--blue) } .kind.test { color:var(--green) }
+  .small { color:var(--muted); font-size:12px; margin-top:3px; word-break:break-word }
+  .dls { display:flex; flex-wrap:wrap; gap:6px }
+  .dl { font-size:12px; font-weight:600; padding:5px 9px; border-radius:6px; text-decoration:none; color:#fff; background:var(--red); white-space:nowrap }
+  .dl.ppt, .dl.objective { background:var(--blue) } .dl.test { background:var(--green) }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border:0; border-radius:8px; background:var(--blue); color:#fff; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; white-space:nowrap }
+  .btn:disabled { opacity:.5; cursor:default } .btn.ghost { background:#fff; color:var(--text); border:1px solid var(--line) } .btn.sm { padding:5px 10px; font-size:12px }
+  .btn.danger { background:#fff; color:var(--red); border:1px solid #f0c4c4 }
+  .acts { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end }
+  label { display:block; font-size:13px; font-weight:600; margin:14px 0 6px }
+  input[type=text], input[type=password], input[type=number], input[type=search], select { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; background:#fff; color:var(--text) }
+  input:focus, select:focus { outline:2px solid #c9d6ef; border-color:var(--blue) }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px }
+  .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap } .row > div { flex:1 1 160px }
+  .filters { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px } .filters > * { width:auto; flex:0 1 auto } .filters input { flex:1 1 200px }
+  .pager { display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:12px; color:var(--muted); font-size:13px }
+  .hint { color:var(--muted); font-size:13px; margin-top:10px }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:8px 16px; font-size:14px } .kv dt { color:var(--muted) } .kv dd { margin:0; font-weight:600 }
+  .empty { color:var(--muted); font-size:13px; padding:8px 0 }
+  .hide { display:none !important }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:10 }
+  @media (max-width:1000px) { .kpis { grid-template-columns:repeat(2,1fr) } .two { grid-template-columns:1fr } }
+  @media (max-width:760px) {
+    .layout { grid-template-columns:1fr; background:none } aside { position:static; height:auto; padding:12px 12px 8px }
+    nav { flex-direction:row; flex-wrap:wrap; margin-top:10px } nav button { width:auto; padding:8px 10px }
+    .side-foot { display:flex; align-items:center; gap:4px; border:0; padding:0; margin:6px 0 0 } .side-foot b { display:none } .side-link { width:auto }
+    main { padding:20px 16px 50px } .hm { display:none } .kpi .v { font-size:22px }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <div class="brand"><div class="logo">T</div><div>Typist Automation<small>Admin panel</small></div></div>
+    <nav id="nav">
+      <button data-tab="overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Overview</button>
+      <button data-tab="typists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-2-5-4-5.5"/></svg>Typists</button>
+      <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Work history</button>
+      <button data-tab="designs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>PPT designs</button>
+      <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+    </nav>
+    <div class="side-foot">
+      <b id="whoName"></b>
+      <a class="side-link" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to tools</a>
+      <a class="side-link" href="/logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</a>
+    </div>
+  </aside>
+  <main>
+    <!-- OVERVIEW -->
+    <section id="tab-overview">
+      <div class="head"><div><h1>Overview</h1><p class="sub" id="ovSub">Today and this month at a glance.</p></div>
+        <a class="btn ghost" href="#" id="ovCsv">⬇ This month's report (CSV)</a></div>
+      <div id="ovAlerts"></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="two">
+        <div class="card"><h2>Spending, last 30 days <span>₹ per day</span></h2><svg class="chart" id="chart"></svg></div>
+        <div class="card"><h2>By tool <span>this month</span></h2><table><thead><tr><th>Tool</th><th class="n">Jobs</th><th class="n">Output</th><th class="n">Cost</th></tr></thead><tbody id="byTool"></tbody></table></div>
+      </div>
+      <div class="card"><h2>Typists <span>this month</span></h2>
+        <table><thead><tr><th>Typist</th><th class="n">Jobs</th><th class="n hm">PDF pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last job</th></tr></thead><tbody id="ovUsers"></tbody></table></div>
+      <div class="two">
+        <div class="card"><h2>Running now <span id="runCount"></span></h2><table><tbody id="running"></tbody></table></div>
+        <div class="card"><h2>Failed in the last 7 days</h2><table><tbody id="failed"></tbody></table></div>
+      </div>
+      <div class="card"><h2>System</h2><dl class="kv" id="system"></dl></div>
+    </section>
+
+    <!-- TYPISTS -->
+    <section id="tab-typists" class="hide">
+      <div class="head"><div><h1>Typists</h1><p class="sub">Each typist has their own login. A disabled account cannot sign in.</p></div></div>
+      <div class="card"><h2>Add a typist</h2>
+        <form id="addUser" class="row">
+          <div><label>Name</label><input type="text" name="name" required></div>
+          <div><label>Username</label><input type="text" name="username" required pattern="[a-zA-Z0-9_.\-]{3,30}" title="3-30 letters, numbers, _ . -"></div>
+          <div><label>Password</label><input type="text" name="password" required minlength="6"></div>
+          <div><label>Role</label><select name="role"><option value="typist">Typist</option><option value="admin">Admin</option></select></div>
+          <div style="flex:0 0 auto"><button class="btn">Add</button></div>
+        </form>
+      </div>
+      <div class="card"><h2>All accounts <span>numbers are for this month</span></h2>
+        <table><thead><tr><th>Name</th><th>Role</th><th class="n">Jobs</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last active</th><th></th></tr></thead><tbody id="users"></tbody></table>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="tab-history" class="hide">
+      <div class="head"><div><h1>Work history</h1><p class="sub">Every job by every typist. Filter, download outputs, re-run failed jobs, or export to Excel (CSV).</p></div>
+        <a class="btn" href="#" id="csv">⬇ Export CSV</a></div>
+      <div class="card">
+        <div class="filters">
+          <select id="hUser"><option value="0">All typists</option></select>
+          <select id="hTask"><option value="">All tools</option><option value="notes">PDF to Notes</option><option value="ppt">DOCX to PPT</option><option value="test">MCQ Test</option></select>
+          <select id="hStatus"><option value="">Any status</option><option value="done">Ready</option><option value="running">Running</option><option value="failed">Failed</option></select>
+          <select id="hMonth"><option value="">All time</option></select>
+          <input id="hQ" type="search" placeholder="Search chapter or file name">
+        </div>
+        <table><thead><tr><th>Job</th><th class="hm">Typist / when</th><th>Status</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th>Files</th></tr></thead>
+          <tbody id="hist"></tbody></table>
+        <div class="pager"><span id="hInfo"></span><button class="btn ghost sm" id="hPrev">‹ Prev</button><button class="btn ghost sm" id="hNext">Next ›</button></div>
+      </div>
+    </section>
+
+    <!-- DESIGNS -->
+    <section id="tab-designs" class="hide">
+      <div class="head"><div><h1>PPT designs</h1><p class="sub">Upload any class PPT. Its background and header strip are reused; its slides are dropped.</p></div></div>
+      <div class="card"><h2>New design</h2>
+        <form id="addTpl" class="row">
+          <div><label>Name (e.g. Class 12 Chemistry)</label><input type="text" name="name" required></div>
+          <div><label>PPT file (.pptx)</label><input type="file" name="pptx" accept=".pptx" required></div>
+          <div><label>Logo (.png, for topic slides)</label><input type="file" name="logo" accept="image/png,image/jpeg"></div>
+          <div style="flex:0 0 auto"><button class="btn">Upload</button></div>
+        </form>
+      </div>
+      <div class="card"><h2>Designs</h2><table><tbody id="tpls"></tbody></table></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="hide">
+      <div class="head"><div><h1>Settings</h1><p class="sub">Budget and models. Changes apply to new jobs.</p></div></div>
+      <div class="card"><h2>Budget &amp; models</h2>
+        <form id="settings">
+          <div class="grid">
+            <div><label>Monthly budget (₹)</label><input type="number" name="monthly_budget_inr" min="0" step="100"></div>
+            <div><label>$1 = ₹ (including bank charges)</label><input type="number" name="usd_to_inr" min="1" step="0.5"></div>
+            <div><label>Model for notes (PDF reading)</label><select name="model"></select></div>
+            <div><label>Model for MCQs</label><select name="mcq_model"></select></div>
+            <div><label>Effort</label><select name="effort"><option value="low">Low (cheapest)</option><option value="medium">Medium</option><option value="high">High (best)</option></select></div>
+            <div><label>Default number of MCQs</label><input type="number" name="default_mcq_count" min="5" max="150"></div>
+          </div>
+          <div style="margin-top:18px"><button class="btn">Save settings</button></div>
+          <div class="hint">When the budget is used up, PDF and MCQ jobs are blocked until next month (DOCX to PPT still works). Costs come from the real API token counts of each job.</div>
+        </form>
+      </div>
+      <div class="card" style="max-width:480px"><h2>My password</h2>
+        <form id="pwForm">
+          <label>Current password</label><input type="password" name="old" required autocomplete="current-password">
+          <label>New password</label><input type="password" name="new" required minlength="6" autocomplete="new-password">
+          <div style="margin-top:16px"><button class="btn">Change password</button></div>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="tip"></div>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inr = v => "₹" + Math.round(v || 0).toLocaleString("en-IN");
+const num = v => (v || 0).toLocaleString("en-IN");
+const when = t => t ? new Date(t * 1000).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"}) : "";
+const ago = t => { if (!t) return "never"; const s = Date.now() / 1000 - t;
+  return s < 120 ? "just now" : s < 3600 ? Math.round(s / 60) + " min ago" : s < 86400 ? Math.round(s / 3600) + " h ago" : Math.round(s / 86400) + " days ago"; };
+const dur = j => !(j.finished && j.started) ? "" : j.finished - j.started < 60 ? "under 1 min" : Math.round((j.finished - j.started) / 60) + " min";
+const STATUS = {queued:"Queued", running:"Running", done:"Ready", failed:"Failed"};
+const TASKS = {notes: "PDF to Notes", ppt: "DOCX to PPT", test: "MCQ Test"};
+const empty = (n, t) => `<tr><td colspan="${n}" class="empty">${t}</td></tr>`;
+let ME = null, USERS = [], hPage = 1;
+function toast(t) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 3500); }
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  if (r.status === 401) { location.href = "/login"; throw new Error("login"); }
+  if (r.status === 403) { location.href = "/"; throw new Error("admin"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+}
+const post = (url, data) => { const fd = new FormData(); Object.entries(data || {}).forEach(([k, v]) => fd.append(k, v)); return api(url, {method: "POST", body: fd}); };
+const form = el => ({method: "POST", body: new FormData(el)});
+const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; };
+
+function show(tab) {
+  $$("#nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  $$("main > section").forEach(s => s.classList.toggle("hide", s.id !== "tab-" + tab));
+  store("admintab", tab);
+  ({overview: loadOverview, typists: loadUsers, history: loadHistory, designs: loadDesigns, settings: loadSettings}[tab])();
+}
+$("#nav").onclick = e => { const b = e.target.closest("button"); if (b) show(b.dataset.tab); };
+
+// ------------------------------------------------------------- overview --
+function thisMonth() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
+async function loadOverview() {
+  const o = await api("/api/admin/overview");
+  const m = o.month, t = o.today, pct = o.budget_inr ? 100 * m.inr / o.budget_inr : 0;
+  const alerts = [];
+  if (!o.api_key) alerts.push(`<div class="alert err">The Claude API key is not set, so PDF and MCQ jobs cannot run. Add it to <code>settings.bat</code> and restart the server.</div>`);
+  if (pct >= 100) alerts.push(`<div class="alert err">This month's budget is used up. PDF and MCQ jobs are blocked. Raise it in Settings if needed.</div>`);
+  else if (pct >= 80) alerts.push(`<div class="alert">${Math.round(pct)}% of this month's budget is used.</div>`);
+  $("#ovAlerts").innerHTML = alerts.join("");
+  $("#kpis").innerHTML = `
+    <div class="kpi"><div class="k">Spent this month</div><div class="v">${inr(m.inr)}</div>
+      <div class="track"><i class="${pct >= 100 ? "over" : pct >= 80 ? "warn" : ""}" style="width:${Math.min(100, pct)}%"></i></div>
+      <div class="s">of ${inr(o.budget_inr)} · ${inr(Math.max(0, o.budget_inr - m.inr))} left</div></div>
+    <div class="kpi"><div class="k">Today</div><div class="v">${num(t.jobs)} job${t.jobs === 1 ? "" : "s"}</div><div class="s">${inr(t.inr)} spent · ${num(t.failed)} failed</div></div>
+    <div class="kpi"><div class="k">Jobs this month</div><div class="v">${num(m.jobs)}</div><div class="s">${num(m.done)} ready · ${num(m.failed)} failed</div></div>
+    <div class="kpi"><div class="k">Output this month</div><div class="v">${num(m.pages)} <small style="font-size:14px;font-weight:600">pages</small></div>
+      <div class="s">${num(m.pages - m.sent)} repeats skipped · ${num(m.mcqs)} MCQs</div></div>`;
+  drawChart(o.series);
+  const tools = {notes: {}, ppt: {}, test: {}}; o.by_tool.forEach(r => tools[r.task] = r);
+  const rate = m.usd ? m.inr / m.usd : 0;
+  $("#byTool").innerHTML = Object.entries(tools).map(([k, r]) => `<tr><td><span class="kind ${k}">${esc(o.labels[k])}</span></td>
+    <td class="n">${num(r.jobs)}</td><td class="n small">${k === "notes" ? num(r.pages) + " pages" : k === "test" ? num(r.mcqs) + " MCQs" : "–"}</td>
+    <td class="n">${k === "ppt" ? "Free" : inr((r.usd || 0) * rate)}</td></tr>`).join("");
+  $("#ovUsers").innerHTML = o.users.map(u => `<tr><td><b>${esc(u.name)}</b> ${u.active ? "" : '<span class="pill off">Disabled</span>'}<div class="small">${esc(u.username)}</div></td>
+    <td class="n">${num(u.jobs)}</td><td class="n hm">${num(u.pages)}</td><td class="n hm">${num(u.mcqs)}</td><td class="n">${inr(u.inr)}</td>
+    <td class="hm small">${u.last_job ? ago(u.last_job) : "–"}</td></tr>`).join("") || empty(6, "No typists yet.");
+  $("#runCount").textContent = o.running.length ? o.running.length + " job" + (o.running.length > 1 ? "s" : "") : "";
+  $("#running").innerHTML = o.running.map(j => `<tr><td><b>${esc(j.title || j.chapter || j.files[0])}</b>
+    <div class="small">${esc(j.by_name)} · started ${ago(j.created)}</div><div class="small" style="color:var(--blue)">${esc(j.step || "")}</div></td></tr>`).join("") || empty(1, "Nothing running.");
+  $("#failed").innerHTML = o.failed.map(j => `<tr><td><b>${esc(j.title || j.chapter || j.files[0])}</b>
+    <div class="small">${esc(j.by_name)} · ${when(j.created)}</div><div class="small" style="color:var(--red)">${esc(j.error || "")}</div></td>
+    <td class="n"><button class="btn ghost sm" data-retry="${j.id}">Run again</button></td></tr>`).join("") || empty(2, "No failures. 👍");
+  $("#system").innerHTML = `<dt>Claude API key</dt><dd>${o.api_key ? "Set" : '<span style="color:var(--red)">Not set</span>'}</dd>
+    <dt>Notes model</dt><dd>${esc(o.models.notes)} · effort ${esc(o.models.effort)}</dd><dt>MCQ model</dt><dd>${esc(o.models.mcq)}</dd>
+    <dt>Job files</dt><dd>${o.storage.jobs_mb} MB, kept ${o.storage.keep_days} days · ${o.storage.free_gb} GB free on disk</dd>`;
+  $("#ovSub").textContent = new Date().toLocaleDateString("en-IN", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+  $("#ovCsv").href = "/api/admin/jobs.csv?month=" + thisMonth();
+}
+function drawChart(series) {
+  const svg = $("#chart"), W = svg.clientWidth || 600, H = 190, L = 44, B = 22, T = 8;
+  const max = Math.max(10, ...series.map(d => d.inr)), step = niceStep(max / 3), top = Math.ceil(max / step) * step;
+  const bw = (W - L) / series.length, y = v => T + (H - T - B) * (1 - v / top);
+  const every = Math.max(5, Math.ceil(48 / bw / 5) * 5);
+  let g = "";
+  for (let v = 0; v <= top + 0.01; v += step)
+    g += `<line class="grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">₹${Math.round(v).toLocaleString("en-IN")}</text>`;
+  series.forEach((d, i) => {
+    const h = Math.max(d.inr > 0 ? 2 : 0, (H - T - B) - (y(d.inr) - T));
+    g += `<rect class="b" x="${L + i * bw + bw * 0.18}" y="${H - B - h}" width="${bw * 0.64}" height="${h}" rx="2" data-i="${i}"/>`;
+    g += `<rect x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" fill="transparent" data-i="${i}"/>`;
+    if ((i % every === 0 && i < series.length - every * 0.7) || i === series.length - 1)
+      g += `<text x="${i === series.length - 1 ? W - 2 : L + i * bw + bw / 2}" y="${H - 6}" text-anchor="${i === series.length - 1 ? "end" : "middle"}">${new Date(d.date + "T12:00").toLocaleDateString("en-IN", {day: "numeric", month: "short"})}</text>`;
+  });
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+  const tip = $("#tip");
+  svg.onmousemove = e => { const i = e.target.dataset.i; if (i === undefined) { tip.style.display = "none"; return; }
+    const d = series[i]; tip.style.display = "block"; tip.style.left = e.clientX + 12 + "px"; tip.style.top = e.clientY - 30 + "px";
+    tip.textContent = `${new Date(d.date + "T12:00").toLocaleDateString("en-IN", {day: "numeric", month: "short"})}: ${inr(d.inr)} · ${d.jobs} job${d.jobs === 1 ? "" : "s"}`; };
+  svg.onmouseleave = () => tip.style.display = "none";
+}
+function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x))); return [1, 2, 2.5, 5, 10].map(k => k * p).find(s => s >= x); }
+
+document.addEventListener("click", async e => {
+  const r = e.target.closest("[data-retry]"), d = e.target.closest("[data-delfiles]");
+  try {
+    if (r) { r.disabled = true; await post(`/api/admin/jobs/${r.dataset.retry}/retry`); toast("Job queued again"); }
+    else if (d) { if (!confirm("Delete this job's uploaded and output files? The history row stays.")) return;
+      await post(`/api/admin/jobs/${d.dataset.delfiles}/delete`); toast("Files deleted"); }
+    else return;
+    const on = store("admintab"); on === "history" ? loadHistory() : loadOverview();
+  } catch (err) { toast(err.message); if (r) r.disabled = false; }
+});
+
+// -------------------------------------------------------------- typists --
+async function loadUsers() {
+  USERS = await api("/api/admin/users");
+  $("#users").innerHTML = USERS.map(u => `<tr>
+    <td><b>${esc(u.name)}</b><div class="small">${esc(u.username)} · ${num(u.all_jobs)} jobs in total</div></td>
+    <td><span class="pill ${u.role}">${u.role === "admin" ? "Admin" : "Typist"}</span> ${u.active ? "" : '<span class="pill off">Disabled</span>'}</td>
+    <td class="n">${num(u.jobs)}</td><td class="n hm">${num(u.pages)}</td><td class="n hm">${num(u.mcqs)}</td><td class="n">${inr(u.cost_inr)}</td>
+    <td class="hm small">${ago(u.last_seen)}</td>
+    <td><div class="acts">
+      <button class="btn ghost sm" data-work="${u.id}">Work</button>
+      <button class="btn ghost sm" data-rename="${u.id}">Rename</button>
+      <button class="btn ghost sm" data-pw="${u.id}">Reset password</button>
+      ${u.id === ME.user.id ? "" : `<button class="btn ghost sm" data-role="${u.id}" data-v="${u.role === "admin" ? "typist" : "admin"}">${u.role === "admin" ? "Make typist" : "Make admin"}</button>
+      <button class="btn ${u.active ? "danger" : "ghost"} sm" data-act="${u.id}" data-v="${u.active ? 0 : 1}">${u.active ? "Disable" : "Enable"}</button>`}
+    </div></td></tr>`).join("");
+}
+$("#users").onclick = async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.work) { fillUserFilter(); $("#hUser").value = b.dataset.work; hPage = 1; show("history"); return; }
+  const id = b.dataset.rename || b.dataset.pw || b.dataset.role || b.dataset.act, u = USERS.find(x => x.id == id), data = {};
+  if (b.dataset.rename) { const n = prompt("New name", u.name); if (!n) return; data.name = n; }
+  if (b.dataset.pw) { const p = prompt(`New password for ${u.name} (at least 6 characters)`); if (!p) return; data.password = p; }
+  if (b.dataset.role) { if (!confirm(`Make ${u.name} ${b.dataset.v === "admin" ? "an admin" : "a typist"}?`)) return; data.role = b.dataset.v; }
+  if (b.dataset.act) data.active = b.dataset.v;
+  try { await post(`/api/admin/users/${id}`, data); toast("Saved"); loadUsers(); } catch (err) { toast(err.message); }
+};
+$("#addUser").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/admin/users", form(e.target)); e.target.reset(); toast("Typist added"); loadUsers(); } catch (err) { toast(err.message); }
+};
+
+// -------------------------------------------------------------- history --
+async function fillUserFilter() {
+  if (!USERS.length) USERS = await api("/api/admin/users");
+  const sel = $("#hUser"), keep = sel.value; sel.length = 1;
+  USERS.forEach(u => sel.insertAdjacentHTML("beforeend", `<option value="${u.id}">${esc(u.name)}</option>`)); sel.value = keep;
+}
+function fillMonths() {
+  const sel = $("#hMonth"); if (sel.length > 1) return; const d = new Date();
+  for (let i = 0; i < 12; i++) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    sel.insertAdjacentHTML("beforeend", `<option value="${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}">${x.toLocaleDateString("en-IN", {month: "long", year: "numeric"})}</option>`); }
+}
+function histParams() {
+  return new URLSearchParams({scope: "all", user: $("#hUser").value, task: $("#hTask").value, status: $("#hStatus").value,
+                              month: $("#hMonth").value, q: $("#hQ").value});
+}
+async function loadHistory() {
+  await fillUserFilter(); fillMonths();
+  const p = histParams(); p.set("page", hPage); p.set("per", 50);
+  $("#csv").href = "/api/admin/jobs.csv?" + histParams();
+  const d = await api("/api/jobs?" + p);
+  $("#hist").innerHTML = d.jobs.map(j => `<tr>
+    <td><div class="kind ${j.task}">${esc(j.task_label)}</div><b>${esc(j.title || j.chapter || j.files[0])}</b>
+      <div class="small">${j.files.length} file${j.files.length > 1 ? "s" : ""}: ${esc(j.files.join(", "))}</div>
+      ${j.status === "running" || j.status === "queued" ? `<div class="small" style="color:var(--blue)">${esc(j.step || "")}</div>` : ""}
+      ${j.error ? `<div class="small" style="color:var(--red)">${esc(j.error)}</div>` : ""}</td>
+    <td class="hm small">${esc(j.by_name || "")}<br>${when(j.created)}${dur(j) ? " · " + dur(j) : ""}</td>
+    <td><span class="pill ${j.status}">${STATUS[j.status] || j.status}</span></td>
+    <td class="n hm">${j.pages ? num(j.pages) : "–"}</td><td class="n hm">${j.mcqs ? num(j.mcqs) : "–"}</td>
+    <td class="n">${j.task === "ppt" ? "Free" : inr(j.cost_inr)}</td>
+    <td><div class="dls">${j.downloads.map(x => `<a class="dl ${x.kind}" href="/api/jobs/${j.id}/download?kind=${x.kind}">⬇ ${esc(x.label)}</a>`).join("")}
+      ${j.status === "failed" ? `<button class="btn ghost sm" data-retry="${j.id}">Run again</button>` : ""}
+      ${(j.status === "done" || j.status === "failed") && j.downloads.length ? `<button class="btn danger sm" data-delfiles="${j.id}" title="Delete files">🗑</button>` : ""}</div></td></tr>`).join("")
+    || empty(7, "Nothing found.");
+  const pages = Math.max(1, Math.ceil(d.total / d.per));
+  $("#hInfo").textContent = `${num(d.total)} job${d.total === 1 ? "" : "s"} · page ${hPage} of ${pages}`;
+  $("#hPrev").disabled = hPage <= 1; $("#hNext").disabled = hPage >= pages;
+}
+["#hUser", "#hTask", "#hStatus", "#hMonth"].forEach(s => $(s).onchange = () => { hPage = 1; loadHistory(); });
+let qT; $("#hQ").oninput = () => { clearTimeout(qT); qT = setTimeout(() => { hPage = 1; loadHistory(); }, 300); };
+$("#hPrev").onclick = () => { hPage--; loadHistory(); }; $("#hNext").onclick = () => { hPage++; loadHistory(); };
+
+// -------------------------------------------------------------- designs --
+async function loadDesigns() {
+  const d = await api("/api/admin/settings");
+  $("#tpls").innerHTML = d.templates.map(t => `<tr><td><b>${esc(t)}</b></td>
+    <td class="n"><button class="btn danger sm" data-del="${esc(t)}">Delete</button></td></tr>`).join("")
+    || empty(2, "No designs yet. Upload one of your class PPTs above.");
+}
+$("#tpls").onclick = async e => {
+  const b = e.target.closest("button[data-del]"); if (!b || !confirm(`Delete the design "${b.dataset.del}"?`)) return;
+  try { await post(`/api/admin/templates/${encodeURIComponent(b.dataset.del)}/delete`); loadDesigns(); } catch (err) { toast(err.message); }
+};
+$("#addTpl").onsubmit = async e => {
+  e.preventDefault(); const btn = e.target.querySelector("button"); btn.disabled = true; btn.textContent = "Uploading…";
+  try { await api("/api/admin/templates", form(e.target)); e.target.reset(); toast("Design added"); loadDesigns(); } catch (err) { toast(err.message); }
+  btn.disabled = false; btn.textContent = "Upload";
+};
+
+// ------------------------------------------------------------- settings --
+async function loadSettings() {
+  const d = await api("/api/admin/settings"), s = d.settings, f = $("#settings");
+  ["model", "mcq_model"].forEach(n => { f[n].innerHTML = Object.entries(d.models).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join(""); });
+  Object.entries(s).forEach(([k, v]) => { if (f[k]) f[k].value = v; });
+}
+$("#settings").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/admin/settings", form(e.target)); toast("Settings saved"); } catch (err) { toast(err.message); }
+};
+$("#pwForm").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/password", form(e.target)); e.target.reset(); toast("Password changed"); } catch (err) { toast(err.message); }
+};
+
+// ---------------------------------------------------------------- start --
+api("/api/me").then(me => {
+  ME = me; $("#whoName").textContent = me.user.name;
+  const t = store("admintab"); show(["overview", "typists", "history", "designs", "settings"].includes(t) ? t : "overview");
+  setInterval(() => { if (document.hidden) return; const on = store("admintab");
+    if (on === "overview") loadOverview(); else if (on === "history") loadHistory(); }, 10000);
+});
+let rT; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => { if (store("admintab") === "overview") loadOverview(); }, 200); });
+</script>
+</body>
+</html>

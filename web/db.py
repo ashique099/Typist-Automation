@@ -170,7 +170,7 @@ def get_job(jid):
                   (jid,), one=True))
 
 
-def list_jobs(user_id=None, limit=50, offset=0, status=None, since=None, search=None, task=None):
+def list_jobs(user_id=None, limit=50, offset=0, status=None, since=None, search=None, task=None, until=None):
     where, args = [], []
     if task:
         where.append("coalesce(json_extract(j.options,'$.task'),'notes')=?"); args.append(task)
@@ -180,6 +180,8 @@ def list_jobs(user_id=None, limit=50, offset=0, status=None, since=None, search=
         where.append("j.status=?"); args.append(status)
     if since:
         where.append("j.created>=?"); args.append(since)
+    if until:
+        where.append("j.created<?"); args.append(until)
     if search:
         where.append("(j.title like ? or j.chapter like ? or j.files like ?)"); args += [f"%{search}%"] * 3
     w = ("where " + " and ".join(where)) if where else ""
@@ -203,3 +205,49 @@ def usage_by_user(since):
              "coalesce(sum(j.mcqs),0) mcqs, coalesce(sum(j.cost_usd),0) cost_usd "
              "from users u left join jobs j on j.user_id=u.id and j.created>=? group by u.id order by cost_usd desc",
              (since,))
+
+
+TASK_SQL = "coalesce(json_extract(options,'$.task'),'notes')"
+
+
+def overview(rate, days=30):
+    """Numbers for the admin overview page."""
+    now = time.time()
+    lt = time.localtime(now)
+    today = time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, 0, 0, 0, 0, 0, -1))
+    month = month_start()
+    agg = ("select count(*) jobs, coalesce(sum(status='done'),0) done, coalesce(sum(status='failed'),0) failed, "
+           "coalesce(sum(pages),0) pages, coalesce(sum(pages_sent),0) sent, coalesce(sum(mcqs),0) mcqs, "
+           "coalesce(sum(cost_usd),0) usd from jobs where created>=?")
+    t, m = q(agg, (today,), one=True), q(agg, (month,), one=True)
+    for r in (t, m):
+        r["inr"] = round(r["usd"] * rate, 1)
+    by_tool = q(f"select {TASK_SQL} task, count(*) jobs, coalesce(sum(cost_usd),0) usd, "
+                "coalesce(sum(pages),0) pages, coalesce(sum(mcqs),0) mcqs from jobs where created>=? group by 1",
+                (month,))
+    start = today - (days - 1) * 86400
+    rows = q("select date(created,'unixepoch','localtime') d, count(*) jobs, coalesce(sum(cost_usd),0) usd "
+             "from jobs where created>=? group by 1", (start,))
+    got = {r["d"]: r for r in rows}
+    series = []
+    for i in range(days):
+        d = time.strftime("%Y-%m-%d", time.localtime(start + i * 86400 + 3600))
+        r = got.get(d, {})
+        series.append({"date": d, "jobs": r.get("jobs", 0), "inr": round(r.get("usd", 0) * rate, 1)})
+    running = q("select j.id, j.title, j.chapter, j.files, j.step, j.status, j.created, u.name by_name "
+                "from jobs j left join users u on u.id=j.user_id where j.status in ('queued','running') "
+                "order by j.created")
+    failed = q("select j.id, j.title, j.chapter, j.files, j.error, j.created, u.name by_name "
+               "from jobs j left join users u on u.id=j.user_id where j.status='failed' and j.created>=? "
+               "order by j.created desc limit 5", (now - 7 * 86400,))
+    for r in running + failed:
+        r["files"] = json.loads(r["files"] or "[]")
+    users = q("select u.id, u.name, u.username, u.role, u.active, count(j.id) jobs, "
+              "coalesce(sum(j.pages),0) pages, coalesce(sum(j.mcqs),0) mcqs, coalesce(sum(j.cost_usd),0) usd, "
+              "max(j.created) last_job, (select max(last_seen) from sessions s where s.user_id=u.id) last_seen "
+              "from users u left join jobs j on j.user_id=u.id and j.created>=? group by u.id "
+              "order by jobs desc, u.name", (month,))
+    for r in users:
+        r["inr"] = round(r.pop("usd") * rate)
+    return {"today": t, "month": m, "by_tool": by_tool, "series": series, "running": running,
+            "failed": failed, "users": users}
