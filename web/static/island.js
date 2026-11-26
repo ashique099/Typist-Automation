@@ -43,8 +43,8 @@
     if (/Starting/.test(s)) return 0.02;
     return null;
   }
-  const name = j => j.title || j.chapter || (j.files && j.files[0]) || "Job";
-  const tool = j => SHORT[j.task] || "Job";
+  const name = j => j.title || j.chapter || (j.files && j.files[0]) || "Task";
+  const tool = j => SHORT[j.task] || "Task";
   const ago = t => { const s = Math.max(0, (Date.now() - t) / 1000);
     return s < 50 ? "just now" : s < 3600 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago"; };
 
@@ -120,7 +120,7 @@
         <div><b>${esc(f.t)}</b>${f.s ? `<small>${esc(f.s)}</small>` : ""}</div><time>${ago(f.at)}</time></div>`).join("")
       : `<div class="isl-empty">No updates yet. Finished files are in Work history.</div>`;
     V("open").innerHTML = sys +
-      `<h4><span>${scope === "all" ? "Running now (everyone)" : "My running jobs"}</span><span>${active.length}</span></h4>${jobs}` +
+      `<h4><span>${scope === "all" ? "Running now (everyone)" : "My tasks in progress"}</span><span>${active.length}</span></h4>${jobs}` +
       `<h4><span>Recent updates</span></h4>${log}`;
   }
 
@@ -155,7 +155,7 @@
         flash(ADMIN ? "API key missing" : "Notes & MCQ paused", {kind: "warn", sub: ADMIN ? "Settings → API integration" : "Please contact Ashique Sir to resolve this", wait: true}); }
       const lvl = pc >= 1 ? 2 : pc >= 0.8 ? 1 : 0;
       if (lvl > (seen.budget || 0) && (ADMIN || lvl === 2)) flash(!ADMIN ? "Monthly limit reached" : lvl === 2 ? "Monthly budget used up" : `Budget ${Math.round(pc * 100)}% used`,
-        {kind: lvl === 2 ? "err" : "warn", sub: !ADMIN ? "Notes and MCQ are paused. Please contact Ashique Sir" : lvl === 2 ? "New AI jobs are paused until the limit is raised" : `₹${b.spent_inr} of ₹${Math.round(b.limit_inr)} this month`, wait: true});
+        {kind: lvl === 2 ? "err" : "warn", sub: !ADMIN ? "Notes and MCQ are paused. Please contact Ashique Sir" : lvl === 2 ? "New AI tasks are paused until the limit is raised" : `₹${b.spent_inr} of ₹${Math.round(b.limit_inr)} this month`, wait: true});
       seen.budget = lvl;
       ss.set("seen", seen);
     } catch (e) {}
@@ -181,7 +181,7 @@
       for (const j of jobs.slice().reverse()) {
         const was = known[j.id], who = scope === "all" && j.by_name ? j.by_name + " · " : "";
         if (!was && (j.status === "queued" || j.status === "running"))
-          flash(`${tool(j)} job queued`, {kind: "queue", sub: who + name(j), wait: true});
+          flash(`${tool(j)} task queued`, {kind: "queue", sub: who + name(j), wait: true});
         else if (was === "queued" && j.status === "running")
           flash(`${tool(j)} started`, {kind: "run", sub: who + name(j), wait: true});
         if ((was === "queued" || was === "running" || (!was && known)) && (j.status === "done" || j.status === "failed") && was !== j.status) {

@@ -46,7 +46,7 @@
   .hstats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px }
   .hstat { all:unset; cursor:pointer; box-sizing:border-box; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:16px; padding:16px 14px; text-align:left }
   .hstat:hover { background:rgba(255,255,255,.16) }
-  .hstat b { display:block; font-size:28px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums } .hstat span { display:block; font-size:12px; color:#d6def3; margin-top:4px }
+  .hstat b { display:block; font-size:28px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums } .hstat span { display:block; font-size:12px; color:#d6def3; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
   .hstat.ok b { color:#7ee2a8 } .hstat.run b { color:#ffb3b8 }
   .sec { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 0 14px }
   .sec h2 { margin:0; font-size:18px; color:var(--navy) } .sec a, .sec button { all:unset; cursor:pointer; color:var(--blue); font-size:14px; font-weight:600 } .sec a:hover, .sec button:hover { color:var(--red) }
@@ -172,13 +172,13 @@
       <div><span class="date" id="today"></span><h1 id="hello">Welcome</h1><p class="sub" id="welcomeMsg">Pick a tool below to start. Your finished files are always one click away.</p>
         <div class="quick"><a href="#" data-go="history">My work history</a><a href="#" data-go="account">My account</a></div></div>
       <div class="hstats">
-        <button class="hstat" data-go="history"><b id="stToday">0</b><span>Jobs today</span></button>
-        <button class="hstat ok" data-go="ready"><b id="stReady">0</b><span>Ready to download</span></button>
-        <button class="hstat run" data-go="history"><b id="stRun">0</b><span>Running now</span></button>
+        <button class="hstat" data-go="history"><b id="stToday">0</b><span>Tasks today</span></button>
+        <button class="hstat ok" data-go="ready"><b id="stReady">0</b><span>Files ready</span></button>
+        <button class="hstat run" data-go="history"><b id="stRun">0</b><span>In progress</span></button>
       </div>
     </div>
     <div id="noKey" class="alert hide"><b>Notes and MCQ generation are temporarily unavailable.</b> Please contact Ashique Sir to resolve this. DOCX to PPT works as usual.</div>
-    <div class="sec"><h2>Start a new job</h2></div>
+    <div class="sec"><h2>Start a new task</h2></div>
     <div class="tools">
       <button class="tool t1" data-task="notes">
         <div class="art" data-art="notes"><span class="num">01</span></div>
@@ -216,11 +216,11 @@
       <div style="margin-top:20px"><button id="go" class="btn" disabled>Start</button></div>
       <div class="hint" id="toolHint"></div>
     </div>
-    <div class="card"><h2>Recent jobs with this tool</h2><table><tbody id="toolRecent"></tbody></table></div>
+    <div class="card"><h2>Recent tasks with this tool</h2><table><tbody id="toolRecent"></tbody></table></div>
   </section>
 
   <section id="tab-history" class="hide">
-    <h1>Work history</h1><p class="sub">Every job: who uploaded it, when, which files, and what it cost.</p>
+    <h1>Work history</h1><p class="sub">Every task: when it was uploaded, which files, and its result.</p>
     <div class="card">
       <div class="filters">
         <select id="hScope" class="adm hide"><option value="all">Everyone</option><option value="mine">Only mine</option></select>
@@ -229,7 +229,7 @@
         <select id="hDays"><option value="0">All time</option><option value="1">Today</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>
         <input id="hQ" type="search" placeholder="Search chapter or file name">
       </div>
-      <table><thead><tr><th>Job</th><th class="hm">By / when</th><th>Status</th><th class="hm">Pages · MCQs · Cost</th><th>Download</th></tr></thead>
+      <table><thead><tr><th>Task</th><th class="hm">By / when</th><th>Status</th><th class="hm">Pages · MCQs · Cost</th><th>Download</th></tr></thead>
         <tbody id="hist"></tbody></table>
       <div class="pager"><span id="hInfo"></span><button class="btn ghost sm" id="hPrev">‹</button><button class="btn ghost sm" id="hNext">›</button></div>
     </div>
@@ -374,7 +374,7 @@ $("#go").onclick = async () => {
   files.forEach(f => fd.append("files", f, f.name));
   fd.append("task", task); fd.append("title", $("#title").value);
   fd.append("ppt_template", $("#tpl").value); fd.append("mcq_count", $("#mcq").value);
-  try { await api("/api/jobs", {method: "POST", body: fd}); files = []; $("#title").value = ""; drawFiles(); loadToolRecent(); window.Island ? Island.refresh() : toast("Job started", "ok"); }
+  try { await api("/api/jobs", {method: "POST", body: fd}); files = []; $("#title").value = ""; drawFiles(); loadToolRecent(); window.Island ? Island.refresh() : toast("Task started", "ok"); }
   catch (err) { toast("Upload failed: " + err.message); }
   go.textContent = "Start"; go.disabled = !files.length;
 };
@@ -402,7 +402,7 @@ async function loadRecent() {
   $("#stReady").textContent = ready.filter(j => j.created >= day - 6 * 86400).length;
   $("#stRun").textContent = run.length;
   $("#welcomeMsg").textContent = !jobs.length ? "Welcome to Disha Online Solution! Start with a tool below. Upload your files and the finished notes, slides or test appear here, ready to download."
-    : run.length ? `${run.length} job${run.length > 1 ? "s are" : " is"} running. You can keep working; we'll show it at the top when it's ready.`
+    : run.length ? `${run.length} task${run.length > 1 ? "s are" : " is"} in progress. You can keep working; we'll show it at the top when it's ready.`
     : "Great to see you again. Pick a tool below, or download your finished files on the right.";
   $("#ready").innerHTML = ready.slice(0, 5).map(j => `<div class="item"><span class="ft ${j.task}">${FT[j.task] || ""}</span>
       <div class="mid"><b>${esc(jname(j))}</b><small>${esc(j.task_label)} · ${when(j.finished || j.created)}</small></div>${dls(j)}</div>`).join("")
@@ -410,7 +410,7 @@ async function loadRecent() {
   $("#recent").innerHTML = jobs.slice(0, 5).map(j => `<div class="item"><span class="ft ${j.task}">${FT[j.task] || ""}</span>
       <div class="mid"><b>${esc(jname(j))}</b><small class="${j.status === "failed" ? "e" : ""}">${esc(j.status === "failed" ? (j.error || "Failed") : j.status === "done" ? j.task_label : (j.step || "Waiting"))}</small></div>
       <span class="pill ${j.status}">${STATUS[j.status] || j.status}</span></div>`).join("")
-    || `<div class="nothing">No jobs yet. Pick a tool above to start.</div>`;
+    || `<div class="nothing">No tasks yet. Pick a tool above to start.</div>`;
 }
 document.addEventListener("click", e => {
   const g = e.target.closest("[data-go]"); if (!g) return; e.preventDefault();
@@ -419,7 +419,7 @@ document.addEventListener("click", e => {
 });
 async function loadToolRecent() {
   const d = await api("/api/jobs?scope=mine&task=" + task);
-  $("#toolRecent").innerHTML = d.jobs.slice(0, 6).map(j => jobRow(j, false)).join("") || empty(3, "No jobs with this tool yet.");
+  $("#toolRecent").innerHTML = d.jobs.slice(0, 6).map(j => jobRow(j, false)).join("") || empty(3, "No tasks with this tool yet.");
 }
 async function loadHistory() {
   const p = new URLSearchParams({scope: ME.user.role === "admin" ? $("#hScope").value : "mine", task: $("#hTask").value,
@@ -427,7 +427,7 @@ async function loadHistory() {
   const d = await api("/api/jobs?" + p);
   $("#hist").innerHTML = d.jobs.map(j => jobRow(j, true)).join("") || empty(5, "Nothing found.");
   const pages = Math.max(1, Math.ceil(d.total / 25));
-  $("#hInfo").textContent = `${d.total} job${d.total === 1 ? "" : "s"} · page ${hPage} of ${pages}`;
+  $("#hInfo").textContent = `${d.total} task${d.total === 1 ? "" : "s"} · page ${hPage} of ${pages}`;
   $("#hPrev").disabled = hPage <= 1; $("#hNext").disabled = hPage >= pages;
 }
 ["#hScope", "#hTask", "#hStatus", "#hDays"].forEach(s => $(s).onchange = () => { hPage = 1; loadHistory(); });

@@ -84,7 +84,7 @@ def _startup():
     TEMPLATES.mkdir(parents=True, exist_ok=True)
     db.init(DATA / "typist.db")
     for j in db.q("select id from jobs where status in ('queued','running')"):  # restarted mid-job
-        db.update_job(j["id"], status="failed", step="Failed", error="The server restarted during this job. Please upload again.")
+        db.update_job(j["id"], status="failed", step="Failed", error="The server restarted during this task. Please upload again.")
     cutoff = time.time() - KEEP_DAYS * 86400
     for j in db.q("select id from jobs where created < ?", (cutoff,)):
         shutil.rmtree(JOBS / j["id"], ignore_errors=True)
@@ -421,7 +421,7 @@ def typist_error(msg: str) -> str:
         return f"This month's limit for Notes and MCQ is reached. Please contact {CONTACT}."
     if re.search(r"api[ _-]?key|ANTHROPIC_API_KEY|authentication", msg, re.I):
         return f"Notes and MCQ generation are temporarily unavailable. Please contact {CONTACT}."
-    return f"The server could not finish this job. Please try again, or contact {CONTACT} if it keeps happening."
+    return f"The server could not finish this task. Please try again, or contact {CONTACT} if it keeps happening."
 
 
 def _public(j, rate, admin=False):
@@ -560,7 +560,7 @@ def admin_delete_job(jid: str, request: Request):
     need_admin(request)
     j = _own_job(request, jid)
     if j["status"] in ("queued", "running"):
-        raise HTTPException(400, "This job is still running.")
+        raise HTTPException(400, "This task is still running.")
     shutil.rmtree(JOBS / jid, ignore_errors=True)
     db.update_job(jid, outputs={}, error="Files deleted by admin", step=j["step"])
     return {"ok": True}
