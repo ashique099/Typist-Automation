@@ -1,0 +1,25 @@
+[{"name": "part1.pdf", "chapter_title": "ठोस अवस्था (Solid State)", "blocks": [
+ {"type":"h1","text":"# ठोस (Solid)"},
+ {"type":"para","text":"ठोस पदार्थ की वह अवस्था है, जिसका आयतन, आकार एवं द्रव्यमान निश्चित होता है।"},
+ {"type":"example","text":"ईंट, कलम, मकान, पत्थर, लकड़ी आदि।"},
+ {"type":"h2","text":"★ ठोस के सामान्य लक्षण"},
+ {"type":"item","marker":"(i)","text":"इसका आयतन, आकार एवं द्रव्यमान निश्चित होता है।"},
+ {"type":"item","marker":"(ii)","text":"इसके कणों के बीच प्रबल अंतराआण्विक बल कार्य करता है।"},
+ {"type":"item","marker":"(a)","text":"उप-बिंदु","level":1},
+ {"type":"note","text":"पारा ($Hg$) धातु है लेकिन यह द्रव अवस्था में पाया जाता है।"},
+ {"type":"para","text":"अभिक्रिया : $2H_2 + O_2 → 2H_2O$ तथा $CuSO_4.5H_2O$, $SO_4^{2-}$, $\\frac{a}{b}$","color":"blue"},
+ {"type":"figure","width":250,"height":120,"caption":"चित्र : पदार्थ का वर्गीकरण","shapes":[
+   {"shape":"rect","x":80,"y":4,"w":90,"h":28,"color":"red","text":"पदार्थ","size":12,"bold":true},
+   {"shape":"line","x1":125,"y1":32,"x2":125,"y2":48},{"shape":"line","x1":62,"y1":48,"x2":188,"y2":48},
+   {"shape":"arrow","x1":62,"y1":48,"x2":62,"y2":66},{"shape":"arrow","x1":188,"y1":48,"x2":188,"y2":66},
+   {"shape":"rect","x":2,"y":68,"w":120,"h":48,"color":"blue","text":"भौतिक वर्गीकरण\n(Physical\nClassification)","size":9.5},
+   {"shape":"rect","x":128,"y":68,"w":120,"h":48,"color":"blue","text":"रासायनिक वर्गीकरण\n(Chemical\nClassification)","size":9.5},
+   {"shape":"circle","cx":20,"cy":20,"r":9,"color":"green","fill":"white","text":"+"},
+   {"shape":"bogus"}, "junk"]}
+]},
+{"name": "part2.pdf", "chapter_title": "ठोस अवस्था (Solid State)", "blocks": [
+ {"type":"compare","a_title":"क्रिस्टलीय ठोस","b_title":"अक्रिस्टलीय ठोस","pairs":[["निश्चित आकार","अनिश्चित आकार"],["तीक्ष्ण गलनांक","गलनांक परास"]]},
+ {"type":"qa","q":"काँच को अतिशीतित द्रव कहा जाता है, क्यों?","a":"क्योंकि इसमें **प्रवाह** का गुण होता है।"},
+ {"type":"weird","text":"अज्ञात block भी para बन जाता है।"},
+ {"type":"item","marker":"(iii)","text":"टूटा हुआ $markup"}
+]}]

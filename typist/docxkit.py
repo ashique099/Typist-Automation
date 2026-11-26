@@ -143,8 +143,10 @@ def add_inline(p, text, bold=False, size=None, color=None):
         if tok.startswith("$"):
             m = omml(tok[1:-1])
             if color:  # equation text follows the surrounding colour
-                for rpr in m.iter(f"{{{NS['w']}}}rPr"):
-                    rpr.append(parse_xml(f'<w:color {_ns("w")} w:val="{color}"/>'))
+                for rpr in m.iter(f"{{{NS['w']}}}rPr"):  # schema order: color before sz
+                    el = parse_xml(f'<w:color {_ns("w")} w:val="{color}"/>')
+                    sz = rpr.find(f"{{{NS['w']}}}sz")
+                    sz.addprevious(el) if sz is not None else rpr.append(el)
             p._p.append(m)
         else:
             b = bold

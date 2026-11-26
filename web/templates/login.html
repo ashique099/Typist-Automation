@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Typist Automation – Login</title>
+<style>
+  :root { --red:#C00000; --blue:#1F4E9F; --bg:#f5f6f8; --card:#fff; --text:#1b1f24; --muted:#5b6470; --line:#dde1e6; }
+  * { box-sizing:border-box } body { margin:0; font-family:system-ui,"Segoe UI","Nirmala UI",sans-serif; background:var(--bg); color:var(--text); display:grid; place-items:center; min-height:100vh; padding:16px }
+  form { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:28px; width:100%; max-width:360px }
+  h1 { margin:0 0 4px; font-size:22px; color:var(--red) } p { margin:0 0 20px; color:var(--muted); font-size:14px }
+  label { display:block; font-size:13px; font-weight:600; margin:14px 0 6px }
+  input { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px }
+  button { margin-top:20px; width:100%; padding:11px; border:0; border-radius:8px; background:var(--blue); color:#fff; font-size:15px; font-weight:600; cursor:pointer }
+  .err { color:var(--red); font-size:13px; margin-top:10px; min-height:1em }
+</style>
+</head>
+<body>
+<form method="post" action="/login">
+  <h1>Typist Automation</h1>
+  <p>Panel PDF upload karein, Word notes download karein.</p>
+  <label for="name">Aapka naam</label>
+  <input id="name" name="name" placeholder="jaise: Rahul" autocomplete="name">
+  <label for="pw">Team password</label>
+  <input id="pw" name="password" type="password" autocomplete="current-password" autofocus>
+  <button type="submit">Login</button>
+  <div class="err">{{error}}</div>
+</form>
+</body>
+</html>

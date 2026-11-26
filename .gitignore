@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+data/
+settings.bat
+.venv/
+.env
