@@ -36,24 +36,91 @@
   .hero { background:linear-gradient(120deg, var(--navy), var(--blue)); color:#fff; border-radius:16px; padding:26px 28px; margin-bottom:22px; position:relative; overflow:hidden }
   .hero::after { content:""; position:absolute; right:-40px; top:-40px; width:200px; height:200px; border-radius:50%; border:26px solid rgba(158,35,48,.6) }
   .hero h1 { color:#fff } .hero .sub { color:#d6def3; margin:0 }
-  .tools { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:22px }
-  .tool { all:unset; cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px 22px 22px;
-          display:flex; flex-direction:column; gap:10px; transition:box-shadow .15s, transform .15s, border-color .15s }
-  .tool:hover, .tool:focus-visible { border-color:#c9d3e4; box-shadow:0 10px 28px rgba(25,40,80,.09); transform:translateY(-2px) }
-  .tool .ic { width:48px; height:48px; border-radius:12px; display:grid; place-items:center; font-size:22px; font-weight:800; color:#fff }
-  .tool h3 { margin:6px 0 0; font-size:18px } .tool p { margin:0; color:var(--muted); font-size:14px; line-height:1.45; flex:1 }
-  .flow { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--muted) }
-  .tag { padding:3px 8px; border-radius:6px; background:#f1f3f6 }
-  .go { color:var(--blue); font-weight:600; font-size:14px }
-  .t1 .ic { background:var(--red) } .t2 .ic { background:var(--blue) } .t3 .ic { background:var(--green) }
+  .tools { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px; perspective:1100px }
+  .tool { all:unset; box-sizing:border-box; cursor:pointer; position:relative; isolation:isolate; overflow:hidden; border-radius:22px; padding:14px 14px 20px;
+          display:flex; flex-direction:column; gap:10px; --rx:0deg; --ry:0deg; --mx:50%; --my:0%;
+          background:linear-gradient(160deg, rgba(255,255,255,.92), rgba(255,255,255,.72));
+          -webkit-backdrop-filter:blur(16px) saturate(160%); backdrop-filter:blur(16px) saturate(160%);
+          box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(25,40,80,.07), 0 14px 34px -14px rgba(var(--c1),.35);
+          transform:rotateX(var(--rx)) rotateY(var(--ry));
+          transition:transform .5s cubic-bezier(.3,1.4,.5,1), box-shadow .4s ease }
+  .tool::before { content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px; z-index:2; pointer-events:none;
+          background:conic-gradient(from var(--ang,0deg), rgba(var(--c1),.0), rgba(var(--c1),.9), rgba(var(--c2),.9), rgba(var(--c1),.0) 60%);
+          -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
+          opacity:.35; transition:opacity .4s; animation:tl-spin 6s linear infinite }
+  @property --ang { syntax:"<angle>"; inherits:false; initial-value:0deg }
+  @keyframes tl-spin { to { --ang:360deg } }
+  .tool::after { content:""; position:absolute; inset:0; z-index:3; pointer-events:none; border-radius:inherit; opacity:0; transition:opacity .3s;
+          background:radial-gradient(240px circle at var(--mx) var(--my), rgba(255,255,255,.55), transparent 60%) }
+  .tool:hover, .tool:focus-visible { box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(var(--c1),.25), 0 26px 50px -16px rgba(var(--c1),.55) }
+  .tool:hover::before, .tool:focus-visible::before { opacity:1 } .tool:hover::after { opacity:1 }
+  .tool:active { transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(.985) }
+  .t1 { --c1:192,32,42; --c2:255,122,130 } .t2 { --c1:26,46,108; --c2:96,140,255 } .t3 { --c1:0,112,60; --c2:70,210,140 }
+  .art { position:relative; height:150px; border-radius:16px; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:4px;
+         background:linear-gradient(135deg, rgba(var(--c1),.95), rgba(var(--c2),.85)); }
+  .art::before, .art::after { content:""; position:absolute; border-radius:50%; filter:blur(18px); opacity:.55; z-index:0 }
+  .art::before { width:150px; height:150px; left:-40px; top:-50px; background:rgba(255,255,255,.55); animation:tl-blob 9s ease-in-out infinite alternate }
+  .art::after { width:130px; height:130px; right:-30px; bottom:-60px; background:rgba(var(--c1),.9); animation:tl-blob 7s ease-in-out infinite alternate-reverse }
+  @keyframes tl-blob { 0% { transform:translate(0,0) scale(1) } 50% { transform:translate(40px,20px) scale(1.2) } 100% { transform:translate(10px,40px) scale(.9) } }
+  .art > * { position:relative; z-index:1 }
+  .art .fi { width:56px; height:68px; filter:drop-shadow(0 10px 14px rgba(0,0,0,.22)); transition:transform .5s cubic-bezier(.3,1.5,.5,1) }
+  .art .stack { position:relative; width:74px; height:76px }
+  .art .stack .fi { position:absolute; top:4px; left:9px }
+  .art .stack .fi:nth-child(1) { transform:rotate(-12deg) translate(-8px,4px); opacity:.75 }
+  .art .stack .fi:nth-child(2) { transform:rotate(-4deg) translate(-2px,1px); opacity:.9 }
+  .art .stack .fi:nth-child(3) { transform:rotate(6deg) translate(6px,0) }
+  .tool:hover .art .stack .fi:nth-child(1) { transform:rotate(-20deg) translate(-16px,6px) }
+  .tool:hover .art .stack .fi:nth-child(3) { transform:rotate(12deg) translate(12px,-2px) }
+  .tool:hover .art .out .fi { transform:translateY(-6px) rotate(3deg) scale(1.06) }
+  .art .out { animation:tl-float 3.2s ease-in-out infinite }
+  @keyframes tl-float { 50% { transform:translateY(-5px) } }
+  .pipe { width:64px; height:26px; position:relative; display:grid; place-items:center }
+  .pipe::before { content:""; position:absolute; left:4px; right:4px; top:50%; height:3px; margin-top:-1.5px; border-radius:3px;
+          background:repeating-linear-gradient(90deg, rgba(255,255,255,.9) 0 6px, transparent 6px 11px); background-size:22px 3px; animation:tl-dash .8s linear infinite }
+  .pipe::after { content:""; position:absolute; top:50%; left:2px; width:9px; height:9px; margin-top:-4.5px; border-radius:50%; background:#fff;
+          box-shadow:0 0 10px 3px rgba(255,255,255,.8); animation:tl-dot 1.8s cubic-bezier(.5,0,.5,1) infinite }
+  @keyframes tl-dash { to { background-position:22px 0 } }
+  @keyframes tl-dot { 0% { left:2px; opacity:0 } 15% { opacity:1 } 85% { opacity:1 } 100% { left:calc(100% - 11px); opacity:0 } }
+  .pipe b { position:relative; z-index:1; font-size:9.5px; letter-spacing:.06em; color:rgb(var(--c1)); background:#fff; padding:2px 6px; border-radius:99px;
+          box-shadow:0 4px 10px rgba(0,0,0,.18) }
+  .art .num { position:absolute; left:14px; top:10px; font-size:12px; font-weight:800; color:rgba(255,255,255,.9); letter-spacing:.1em }
+  .art .badge { position:absolute; right:12px; top:10px; font-size:11px; font-weight:700; color:#fff; padding:3px 10px; border-radius:99px;
+          background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px) }
+  .tool .body { padding:4px 8px 0; display:flex; flex-direction:column; gap:8px; flex:1 }
+  .tool h3 { margin:2px 0 0; font-size:18px; color:var(--navy) } .tool p { margin:0; color:var(--muted); font-size:14px; line-height:1.5; flex:1 }
+  .tool .foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:4px }
+  .tool .chips { display:flex; gap:6px; flex-wrap:wrap }
+  .tool .chips span { font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:99px; color:rgb(var(--c1)); background:rgba(var(--c1),.08); border:1px solid rgba(var(--c1),.15) }
+  .go { flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; color:#fff; font-size:17px; font-weight:700;
+        background:linear-gradient(135deg, rgb(var(--c1)), rgb(var(--c2))); box-shadow:0 8px 18px -6px rgba(var(--c1),.8); transition:transform .4s cubic-bezier(.3,1.6,.5,1), width .4s cubic-bezier(.3,1.4,.5,1) }
+  .tool:hover .go { transform:translateX(3px) scale(1.08) }
+  @media (prefers-reduced-motion: reduce) { .tool, .tool *, .tool::before, .art::before, .art::after { animation:none !important; transition:none !important } }
   .meter { display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:22px; font-size:14px }
   .meter .track { flex:1 1 200px; height:8px; background:#e8ebf0; border-radius:5px; overflow:hidden }
   .meter i { display:block; height:100%; background:var(--green) } .meter i.warn { background:var(--amber) } .meter i.over { background:var(--red) }
   .back { all:unset; cursor:pointer; color:var(--muted); font-size:14px; margin-bottom:12px; display:inline-block } .back:hover { color:var(--blue) }
-  #drop { border:2px dashed #cdd3dc; border-radius:12px; padding:38px 12px; text-align:center; color:var(--muted); cursor:pointer; background:#fafbfc }
-  #drop.over { border-color:var(--blue); background:var(--soft) } #drop b { color:var(--text); font-size:16px }
+  #tab-tool { --c1:192,32,42; --c2:255,122,130 } #tab-tool[data-task=ppt] { --c1:26,46,108; --c2:96,140,255 } #tab-tool[data-task=test] { --c1:0,112,60; --c2:70,210,140 }
+  #drop { position:relative; overflow:hidden; isolation:isolate; border-radius:18px; padding:30px 14px 26px; text-align:center; color:var(--muted); cursor:pointer;
+          background:linear-gradient(135deg, rgba(var(--c1),.06), rgba(var(--c2),.10)); border:2px dashed rgba(var(--c1),.35); transition:border-color .3s, background .3s, transform .4s cubic-bezier(.3,1.5,.5,1) }
+  #drop::before { content:""; position:absolute; width:220px; height:220px; border-radius:50%; left:-60px; top:-90px; z-index:-1; filter:blur(30px);
+          background:rgba(var(--c2),.35); animation:tl-blob 9s ease-in-out infinite alternate }
+  #drop:hover { border-color:rgba(var(--c1),.6) }
+  #drop.over { border-style:solid; border-color:rgb(var(--c1)); background:linear-gradient(135deg, rgba(var(--c1),.12), rgba(var(--c2),.2)); transform:scale(1.015);
+          box-shadow:0 0 0 6px rgba(var(--c1),.08), 0 20px 40px -18px rgba(var(--c1),.6) }
+  #drop b { color:var(--navy); font-size:17px; display:block; margin-top:10px } #drop small { display:block; margin-top:4px }
+  #drop .dz { display:flex; justify-content:center; align-items:flex-end; gap:6px; height:86px }
+  #drop .dz .fi { width:52px; height:64px; filter:drop-shadow(0 10px 14px rgba(var(--c1),.3)); animation:tl-float 3s ease-in-out infinite }
+  #drop .dz .fi:nth-child(2) { animation-delay:-.6s; width:60px; height:74px } #drop .dz .fi:nth-child(3) { animation-delay:-1.2s }
+  #drop .dz .up { position:absolute; left:50%; top:22px; margin-left:-16px; width:32px; height:32px; border-radius:50%; display:grid; place-items:center; color:#fff;
+          background:linear-gradient(135deg, rgb(var(--c1)), rgb(var(--c2))); box-shadow:0 8px 16px -4px rgba(var(--c1),.7); font-weight:800; z-index:2 }
+  #drop.over .dz .fi { animation-duration:.9s }
+  .pickbtn { display:inline-block; margin-top:12px; padding:8px 18px; border-radius:99px; color:#fff; font-weight:600; font-size:13px;
+          background:linear-gradient(135deg, rgb(var(--c1)), rgb(var(--c2))); box-shadow:0 8px 18px -8px rgba(var(--c1),.8) }
   #files { list-style:none; margin:12px 0 0; padding:0 }
-  #files li { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; font-size:14px }
+  #files li { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; font-size:14px;
+          background:linear-gradient(90deg, rgba(var(--c1),.04), #fff 40%); animation:tl-in .45s cubic-bezier(.3,1.5,.5,1) both }
+  @keyframes tl-in { from { opacity:0; transform:translateY(8px) scale(.97) } }
+  #files .fi { width:28px; height:34px; flex:none } #files .sz { color:var(--muted); font-size:12px; white-space:nowrap }
   #files .n { color:var(--muted); width:22px } #files .f { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
   .ib { border:1px solid var(--line); background:#fff; border-radius:6px; width:30px; height:28px; cursor:pointer }
   .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px }
@@ -125,22 +192,22 @@
     <div id="noKey" class="alert hide">The Claude API key is not set on the server, so tools 1 and 3 will not run. The admin should add it to <code>settings.bat</code> and restart.</div>
     <div class="tools">
       <button class="tool t1" data-task="notes">
-        <div class="ic">1</div><div class="flow"><span class="tag">PDF</span>→<span class="tag">DOCX</span></div>
-        <h3>Panel PDF to Notes DOCX</h3>
-        <p>Upload the live-class panel PDFs of a chapter. Get one combined Word file in the house style, with equations and diagrams.</p>
-        <span class="go">Open →</span>
+        <div class="art" data-art="notes"><span class="num">01</span><span class="badge">AI vision</span></div>
+        <div class="body"><h3>Panel PDF to Notes DOCX</h3>
+          <p>Upload the live-class panel PDFs of a chapter. Get one combined Word file in the house style, with equations and diagrams.</p>
+          <div class="foot"><div class="chips"><span>Many PDFs → 1 file</span><span>Vector figures</span></div><span class="go">→</span></div></div>
       </button>
       <button class="tool t2" data-task="ppt">
-        <div class="ic">2</div><div class="flow"><span class="tag">DOCX</span>→<span class="tag">PPT</span></div>
-        <h3>DOCX to PPT</h3>
-        <p>Upload the finished notes DOCX (after your corrections). Get class slides in the PPT design you pick. No API cost.</p>
-        <span class="go">Open →</span>
+        <div class="art" data-art="ppt"><span class="num">02</span><span class="badge">Free · seconds</span></div>
+        <div class="body"><h3>DOCX to PPT</h3>
+          <p>Upload the finished notes DOCX (after your corrections). Get class slides in the PPT design you pick. No API cost.</p>
+          <div class="foot"><div class="chips"><span>Your PPT designs</span><span>No API cost</span></div><span class="go">→</span></div></div>
       </button>
       <button class="tool t3" data-task="test">
-        <div class="ic">3</div><div class="flow"><span class="tag">PPT / DOCX</span>→<span class="tag">MCQ</span></div>
-        <h3>PPT or DOCX to MCQ Test</h3>
-        <p>Upload notes or slides. Get an MCQ test in the Word table format, plus an Objective PPT.</p>
-        <span class="go">Open →</span>
+        <div class="art" data-art="test"><span class="num">03</span><span class="badge">AI questions</span></div>
+        <div class="body"><h3>PPT or DOCX to MCQ Test</h3>
+          <p>Upload notes or slides. Get an MCQ test in the Word table format, plus an Objective PPT.</p>
+          <div class="foot"><div class="chips"><span>Word table</span><span>Objective PPT</span></div><span class="go">→</span></div></div>
       </button>
     </div>
     <div class="meter" id="meter"></div>
@@ -151,7 +218,7 @@
     <button class="back" id="back">← Dashboard</button>
     <h1 id="toolTitle"></h1><p class="sub" id="toolSub"></p>
     <div class="card">
-      <div id="drop"><b id="dropText"></b><br>or click to choose<br><small>Files are joined in the order shown; use ↑ ↓ to change it</small></div>
+      <div id="drop"><div class="dz" id="dz"></div><b id="dropText"></b><small>Files are joined in the order shown; use ↑ ↓ to change it</small><span class="pickbtn">Choose files</span></div>
       <input id="pick" type="file" multiple hidden>
       <ul id="files"></ul>
       <div class="grid">
@@ -236,6 +303,31 @@ function show(tab) {
   window.scrollTo(0, 0);
 }
 $("#nav").onclick = e => { const b = e.target.closest("button"); if (b) show(b.dataset.tab); };
+const FCOL = {PDF: "#C0202A", DOCX: "#2B5CD6", PPT: "#D9561E", PPTX: "#D9561E", MCQ: "#00703C"};
+function fileIcon(label, extra = "") {
+  const c = FCOL[label] || "#1A2E6C";
+  const body = label === "MCQ"
+    ? [0, 1, 2].map(i => `<circle cx="13" cy="${22 + i * 10}" r="3.2" fill="${i === 1 ? c : "none"}" stroke="${c}" stroke-width="1.6"/><rect x="20" y="${20.5 + i * 10}" width="${i === 1 ? 18 : 22}" height="3" rx="1.5" fill="#dde2ec"/>`).join("")
+    : `<rect x="9" y="20" width="26" height="3" rx="1.5" fill="#dde2ec"/><rect x="9" y="27" width="32" height="3" rx="1.5" fill="#dde2ec"/><rect x="9" y="34" width="20" height="3" rx="1.5" fill="#dde2ec"/>`;
+  return `<svg class="fi ${extra}" viewBox="0 0 54 66" aria-hidden="true"><path d="M7 1.5h28L52.5 19v40a5.5 5.5 0 0 1-5.5 5.5H7A5.5 5.5 0 0 1 1.5 59V7A5.5 5.5 0 0 1 7 1.5z" fill="#fff" stroke="rgba(20,30,60,.10)"/>
+    <path d="M35 1.5V14a5 5 0 0 0 5 5h12.5" fill="#eef1f7"/>${body}
+    <rect x="0" y="44" width="${label.length > 3 ? 40 : 34}" height="15" rx="4" fill="${c}"/><text x="${label.length > 3 ? 20 : 17}" y="55" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle" font-family="Poppins,sans-serif">${label}</text></svg>`;
+}
+const ART = {
+  notes: `<div class="stack">${fileIcon("PDF")}${fileIcon("PDF")}${fileIcon("PDF")}</div><div class="pipe"><b>AI</b></div><div class="out">${fileIcon("DOCX")}</div>`,
+  ppt:   `<div>${fileIcon("DOCX")}</div><div class="pipe"></div><div class="out">${fileIcon("PPT")}</div>`,
+  test:  `<div class="stack">${fileIcon("PPT")}${fileIcon("DOCX")}${fileIcon("DOCX")}</div><div class="pipe"><b>AI</b></div><div class="out">${fileIcon("MCQ")}</div>`,
+};
+const DZ = {notes: ["PDF", "PDF", "PDF"], ppt: ["DOCX"], test: ["DOCX", "PPT"]};
+$$(".art").forEach(a => a.insertAdjacentHTML("beforeend", ART[a.dataset.art]));
+if (matchMedia("(hover: hover) and (pointer: fine)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches)
+  $$(".tool").forEach(c => {
+    c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      c.style.setProperty("--rx", ((0.5 - y) * 9).toFixed(2) + "deg"); c.style.setProperty("--ry", ((x - 0.5) * 11).toFixed(2) + "deg");
+      c.style.setProperty("--mx", (x * 100).toFixed(1) + "%"); c.style.setProperty("--my", (y * 100).toFixed(1) + "%"); });
+    c.addEventListener("pointerleave", () => { c.style.setProperty("--rx", "0deg"); c.style.setProperty("--ry", "0deg"); });
+  });
+const fsize = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
 $$(".tool").forEach(c => c.onclick = () => openTool(c.dataset.task));
 $("#back").onclick = () => show("home");
 
@@ -244,6 +336,7 @@ function openTool(t) {
   if (!files.every(f => T.ext.test(f.name))) files = [];
   $("#toolTitle").textContent = T.title; $("#toolSub").textContent = T.sub; $("#toolHint").textContent = T.hint;
   $("#dropText").textContent = T.drop; $("#pick").accept = T.accept;
+  $("#tab-tool").dataset.task = t; $("#dz").innerHTML = (DZ[t] || []).map(l => fileIcon(l)).join("") + `<span class="up">↑</span>`;
   $("#tplBox").classList.toggle("hide", !T.tpl); $("#mcqBox").classList.toggle("hide", !T.mcq);
   drawFiles(); show("tool");
 }
@@ -276,7 +369,7 @@ function addFiles(fl) {
   files.sort(natural); drawFiles();
 }
 function drawFiles() {
-  $("#files").innerHTML = files.map((f, i) => `<li><span class="n">${i + 1}.</span><span class="f">${esc(f.name)}</span>
+  $("#files").innerHTML = files.map((f, i) => `<li><span class="n">${i + 1}.</span>${fileIcon(/\.pdf$/i.test(f.name) ? "PDF" : /\.pptx$/i.test(f.name) ? "PPT" : "DOCX")}<span class="f">${esc(f.name)}</span><span class="sz">${fsize(f.size)}</span>
     <button class="ib" data-a="up" data-i="${i}" title="Move up">↑</button><button class="ib" data-a="down" data-i="${i}" title="Move down">↓</button>
     <button class="ib" data-a="rm" data-i="${i}" title="Remove">✕</button></li>`).join("");
   $("#go").disabled = !files.length;
