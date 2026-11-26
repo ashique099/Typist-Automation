@@ -594,7 +594,8 @@ def delete_template(name: str, request: Request):
 
 
 # ----------------------------------------------------------------- pages --
-STATIC = {"disha-logo.png": "image/png", "favicon.png": "image/png"}
+STATIC = {"disha-logo.png": "image/png", "favicon.png": "image/png", "island.css": "text/css",
+          "island.js": "text/javascript"}
 
 
 @app.get("/static/{name}")

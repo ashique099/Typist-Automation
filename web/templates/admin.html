@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <title>Admin Panel – Disha Online Solution</title>
+<link rel="stylesheet" href="/static/island.css">
 <style>
   @font-face { font-family:"RupeeSign"; src:local("Segoe UI"), local("Nirmala UI"), local("Arial"), local("Noto Sans"), local("DejaVu Sans"); unicode-range:U+20B9; }
   :root { --red:#C0202A; --blue:#1A2E6C; --navy:#191A3E; --maroon:#9E2330; --green:#00703C; --amber:#9a6700; --bg:#F6F7FB; --card:#fff; --text:#1b1f24;
@@ -24,7 +25,8 @@
   nav svg, .side-link svg { width:18px; height:18px; flex:none }
   .side-foot { margin-top:auto; border-top:1px solid #2a2c5c; padding-top:12px; font-size:13px }
   .side-foot b { color:#fff; display:block; padding:0 12px 6px }
-  main { padding:28px 30px 60px; max-width:1180px; width:100% }
+  main { padding:70px 30px 60px; max-width:1180px; width:100%; margin:0 auto }
+  .island { --isl-x: calc(232px + (100vw - 232px) / 2); top:14px }
   .head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px }
   h1 { font-size:24px; margin:0 0 4px } .sub { color:var(--muted); margin:0; font-size:14px }
   .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:18px; min-width:0 }
@@ -73,15 +75,26 @@
   .hide { display:none !important }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:10 }
   @media (max-width:1000px) { .kpis { grid-template-columns:repeat(2,1fr) } .two { grid-template-columns:1fr } }
-  @media (max-width:760px) {
-    .layout { grid-template-columns:1fr; background:none } aside { position:static; height:auto; padding:12px 12px 8px }
-    nav { flex-direction:row; flex-wrap:wrap; margin-top:10px } nav button { width:auto; padding:8px 10px }
-    .side-foot { display:flex; align-items:center; gap:4px; border:0; padding:0; margin:6px 0 0 } .side-foot b { display:none } .side-link { width:auto }
-    main { padding:20px 16px 50px } .hm { display:none } .kpi .v { font-size:22px }
+  @media (max-width:1024px) {
+    .layout { grid-template-columns:1fr; background:none } aside { position:static; height:auto; padding:10px 12px 6px }
+    .brand { padding:0 } .brand > div { display:none } .island { --isl-x:50vw; top:12px }
+    nav { flex-direction:row; flex-wrap:nowrap; overflow-x:auto; margin-top:10px; scrollbar-width:none } nav::-webkit-scrollbar { display:none }
+    nav button { width:auto; padding:8px 10px; white-space:nowrap }
+    .side-foot { display:flex; align-items:center; gap:4px; border:0; padding:0; margin:4px 0 0 } .side-foot b { display:none } .side-link { width:auto; padding:6px 10px }
+    main { padding:20px 16px 50px; max-width:none } .hm { display:none } .kpi .v { font-size:22px } h1 { font-size:21px }
+    .kpis { gap:10px } .kpi { padding:14px } .card { padding:16px }
+    .head .btn { width:100%; justify-content:center }
+    .filters > * { flex:1 1 100% }
+    table.stack, table.stack tbody, table.stack tr, table.stack td { display:block; width:100% } table.stack thead { display:none }
+    table.stack tr { padding:12px 0; border-top:1px solid var(--line) } table.stack tr:first-child { border-top:0 }
+    table.stack td { border:0; padding:3px 0; text-align:left } table.stack td.hm { display:none }
+    table.stack .acts { justify-content:flex-start; margin-top:6px }
   }
+  @media (min-width:1025px) and (max-width:1200px) { main { padding:70px 20px 50px } }
+  main { min-width:0 }
 </style>
 </head>
-<body>
+<body data-island-scope="all">
 <div class="layout">
   <aside>
     <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div>Disha Online Solution<small>Admin panel</small></div></div>
@@ -131,7 +144,7 @@
         </form>
       </div>
       <div class="card"><h2>All accounts <span>numbers are for this month</span></h2>
-        <table><thead><tr><th>Name</th><th>Role</th><th class="n">Jobs</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last active</th><th></th></tr></thead><tbody id="users"></tbody></table>
+        <table class="stack"><thead><tr><th>Name</th><th>Role</th><th class="n">Jobs</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last active</th><th></th></tr></thead><tbody id="users"></tbody></table>
       </div>
     </section>
 
@@ -147,7 +160,7 @@
           <select id="hMonth"><option value="">All time</option></select>
           <input id="hQ" type="search" placeholder="Search chapter or file name">
         </div>
-        <table><thead><tr><th>Job</th><th class="hm">Typist / when</th><th>Status</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th>Files</th></tr></thead>
+        <table class="stack"><thead><tr><th>Job</th><th class="hm">Typist / when</th><th>Status</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th>Files</th></tr></thead>
           <tbody id="hist"></tbody></table>
         <div class="pager"><span id="hInfo"></span><button class="btn ghost sm" id="hPrev">‹ Prev</button><button class="btn ghost sm" id="hNext">Next ›</button></div>
       </div>
@@ -208,7 +221,10 @@ const STATUS = {queued:"Queued", running:"Running", done:"Ready", failed:"Failed
 const TASKS = {notes: "PDF to Notes", ppt: "DOCX to PPT", test: "MCQ Test"};
 const empty = (n, t) => `<tr><td colspan="${n}" class="empty">${t}</td></tr>`;
 let ME = null, USERS = [], hPage = 1;
-function toast(t) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 3500); }
+function toast(t, kind) {
+  if (window.Island) return Island.flash(t, {kind: kind || (/fail|wrong|not |error|cannot|must/i.test(t) ? "err" : "info")});
+  const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 3500);
+}
 async function api(url, opts) {
   const r = await fetch(url, opts);
   if (r.status === 401) { location.href = "/login"; throw new Error("login"); }
@@ -416,5 +432,7 @@ api("/api/me").then(me => {
 });
 let rT; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => { if (store("admintab") === "overview") loadOverview(); }, 200); });
 </script>
+<script src="/static/island.js"></script>
+<script>document.addEventListener("island:jobchange", () => { const on = store("admintab"); if (on === "overview") loadOverview(); else if (on === "history") loadHistory(); });</script>
 </body>
 </html>

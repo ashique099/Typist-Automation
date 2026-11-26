@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <title>Disha Online Solution</title>
+<link rel="stylesheet" href="/static/island.css">
 <style>
   @font-face { font-family:"RupeeSign"; src:local("Segoe UI"), local("Nirmala UI"), local("Arial"), local("Noto Sans"), local("DejaVu Sans"); unicode-range:U+20B9; }
   :root { --red:#C0202A; --blue:#1A2E6C; --navy:#191A3E; --maroon:#9E2330; --green:#00703C; --amber:#9a6700; --bg:#F6F7FB; --card:#fff; --text:#1b1f24;
@@ -14,13 +15,16 @@
   body { margin:0; font-family:"RupeeSign","Poppins",system-ui,"Segoe UI","Nirmala UI",sans-serif; background:var(--bg); color:var(--text); font-size:15px }
   a { color:var(--blue) }
   header { background:#fff; border-bottom:1px solid var(--line); border-top:4px solid var(--red); position:sticky; top:0; z-index:5 }
-  .bar { max-width:1120px; margin:0 auto; padding:0 20px; height:60px; display:flex; align-items:center; gap:22px }
+  .bar { max-width:1120px; margin:0 auto; padding:0 20px; height:64px; display:flex; align-items:center; gap:16px }
+  .spacer { flex:1 }
+  .tabs { border-top:1px solid var(--line) } .tabs nav { max-width:1120px; margin:0 auto; padding:0 12px }
   .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; white-space:nowrap }
   .logo { width:40px; height:40px; flex:none } .brand b { display:block; color:var(--navy); line-height:1.15 }
   .brand small { display:block; color:var(--red); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase }
-  nav { display:flex; gap:4px; flex:1; overflow-x:auto }
-  nav button { all:unset; padding:8px 12px; border-radius:8px; cursor:pointer; color:var(--muted); font-weight:500; white-space:nowrap }
-  nav button:hover { background:#f1f3f6 } nav button.on { background:var(--soft); color:var(--navy); box-shadow:inset 0 -3px 0 var(--red) }
+  nav { display:flex; gap:2px; overflow-x:auto; scrollbar-width:none } nav::-webkit-scrollbar { display:none }
+  nav button, nav a { all:unset; padding:12px 12px 11px; cursor:pointer; color:var(--muted); font-weight:500; font-size:14px; white-space:nowrap; border-bottom:3px solid transparent }
+  nav button:hover, nav a:hover { color:var(--navy) } nav button.on { color:var(--navy); border-bottom-color:var(--red); font-weight:600 }
+  .navadmin, .navout { display:none !important }
   .adminlink { padding:7px 12px; border-radius:8px; background:var(--navy); color:#fff; text-decoration:none; font-size:13px; font-weight:600; white-space:nowrap }
   .who { display:flex; align-items:center; gap:10px; font-size:14px; white-space:nowrap }
   .avatar { width:32px; height:32px; border-radius:50%; background:#e7ecf5; color:var(--blue); display:grid; place-items:center; font-weight:700 }
@@ -81,25 +85,40 @@
   .stat .k { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em } .stat .v { font-size:22px; font-weight:700; margin-top:4px }
   .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap } .row > div { flex:1 1 160px }
   .hide { display:none !important }
+  .island { top:18px }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:9 }
   @media (max-width:900px) { .tools { grid-template-columns:1fr } }
+  @media (max-width:900px) { .hero { padding:22px } .hero::after { width:150px; height:150px; border-width:20px } }
   @media (max-width:720px) {
-    .bar { height:auto; flex-wrap:wrap; padding:10px 16px; gap:8px } nav { order:3; flex-basis:100% } .who { margin-left:auto }
-    main { padding:20px 16px 50px } .hm { display:none }
+    .bar { padding:0 16px; height:64px } .bt, .adminlink, .so { display:none !important }
+    .tabs nav { padding:0 6px } .navadmin:not(.hide) { display:inline-block !important; color:var(--navy) } .navout { display:inline-block !important }
+    main { padding:18px 16px 50px } .hm { display:none } h1 { font-size:21px }
+    .hero { padding:20px 18px } .hero::after { display:none }
+    .card { padding:16px } .tool { padding:18px } .tool h3 { font-size:17px }
+    .filters > * { flex:1 1 100% } .meter { gap:8px 12px }
+    table, tbody, tr, td { display:block; width:100% } thead { display:none }
+    tr { padding:12px 0; border-top:1px solid var(--line) } tr:first-child { border-top:0 }
+    td { border:0; padding:3px 0 } td.hm { display:none }
+    .dls { margin-top:6px } #files li { flex-wrap:wrap }
   }
 </style>
 </head>
-<body>
-<header><div class="bar">
-  <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div><b>Disha Online Solution</b><small>Direction to Success</small></div></div>
-  <nav id="nav">
+<body data-island-scope="mine">
+<header>
+  <div class="bar">
+    <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div class="bt"><b>Disha Online Solution</b><small>Direction to Success</small></div></div>
+    <div class="spacer"></div>
+    <a href="/admin" class="adm hide adminlink">Admin panel</a>
+    <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout" class="so">Sign out</a></div>
+  </div>
+  <div class="tabs"><nav id="nav">
     <button data-tab="home" class="on">Dashboard</button>
     <button data-tab="history">Work history</button>
     <button data-tab="account">My account</button>
-  </nav>
-  <a href="/admin" class="adm hide adminlink">Admin panel</a>
-  <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout">Sign out</a></div>
-</div></header>
+    <a href="/admin" class="adm hide navadmin">Admin panel</a>
+    <a href="/logout" class="navout">Sign out</a>
+  </nav></div>
+</header>
 <main>
   <section id="tab-home">
     <div class="hero"><div><h1 id="hello">Welcome</h1><p class="sub">Choose what you want to make today.</p></div></div>
@@ -194,7 +213,10 @@ const TOOLS = {
           hint: "You get the MCQ test in the Word table format and an Objective PPT. About 1-2 minutes.", tpl: true, mcq: true},
 };
 let ME = null, files = [], hPage = 1, task = "notes";
-function toast(t) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 3500); }
+function toast(t, kind) {
+  if (window.Island) return Island.flash(t, {kind: kind || (/fail|wrong|not |error/i.test(t) ? "err" : "info")});
+  const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 3500);
+}
 async function api(url, opts) {
   const r = await fetch(url, opts);
   if (r.status === 401) { location.href = "/login"; throw new Error("login"); }
@@ -278,7 +300,7 @@ $("#go").onclick = async () => {
   files.forEach(f => fd.append("files", f, f.name));
   fd.append("task", task); fd.append("title", $("#title").value);
   fd.append("ppt_template", $("#tpl").value); fd.append("mcq_count", $("#mcq").value);
-  try { await api("/api/jobs", {method: "POST", body: fd}); files = []; $("#title").value = ""; drawFiles(); toast("Job started"); loadToolRecent(); }
+  try { await api("/api/jobs", {method: "POST", body: fd}); files = []; $("#title").value = ""; drawFiles(); toast("Job started", "ok"); loadToolRecent(); window.Island && Island.refresh(); }
   catch (err) { toast("Upload failed: " + err.message); }
   go.textContent = "Start"; go.disabled = !files.length;
 };
@@ -335,5 +357,7 @@ loadMe().then(() => {
   }, 5000);
 });
 </script>
+<script src="/static/island.js"></script>
+<script>document.addEventListener("island:jobchange", () => { const on = document.querySelector("main > section:not(.hide)")?.id; if (on === "tab-home") loadRecent(); else if (on === "tab-tool") loadToolRecent(); else if (on === "tab-history") loadHistory(); });</script>
 </body>
 </html>
