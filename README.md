@@ -1,6 +1,56 @@
-# Typist Automation
+# Disha Online Solution (Typist Automation)
 
 Turns live-class "panel" PDFs (handwritten slides exported as images) into clean, editable Word files.
+
+## Website (for the whole typist team)
+
+After signing in, each typist sees a dashboard with three tools:
+
+1. **Panel PDF to Notes DOCX**: drop a chapter's panel PDFs (order can be changed with ↑ ↓) and get
+   one combined `.docx` in the house style. Repeated slides are skipped, every slide is read by
+   Claude (vision, `typist/transcribe.py`) and laid out by `typist/blocks.py` on top of `docxkit`
+   (Word equations, vector figures, coloured points, 2 columns).
+2. **DOCX to PPT**: drop the (corrected) notes `.docx`; `typist/reader.py` reads it back into blocks
+   (colours, equations, and our figures from their alt text) and `typist/pptkit.py` builds slides in
+   the chosen PPT design. No API call, so it is free.
+3. **PPT or DOCX to MCQ Test**: drop notes or slides; Claude writes the MCQs (`typist/mcq.py`), answers
+   are spread evenly over options 1-4, output is the Word table test plus an Objective PPT.
+
+Accounts, history and the **Admin panel** at `/admin` (`web/templates/admin.html`, data in `web/db.py`, SQLite in `DATA_DIR/typist.db`):
+
+* The first visit creates the **admin** account. The admin adds a login for each typist, resets
+  passwords, and disables accounts (Typists page).
+* **Work history** keeps every job: who, when, which files, pages, MCQs, real API cost (from token
+  counts), and the downloads. Admins see everyone's work; typists see their own.
+* **Overview** (admin): spend vs budget, today's and this month's jobs, a 30-day spending chart, totals per tool and per typist, running and failed jobs (with Run again), system status. Work history can be filtered by typist/tool/status/month and exported as CSV.
+* **Settings** (admin): monthly budget in ₹ (AI jobs are blocked once it is used up), $→₹ rate,
+  model for notes and for MCQs, effort. **PPT designs** (admin): upload any class PPT; its master
+  background is kept and its slides are dropped.
+
+Forgot the admin password? On the server PC run `python -m web.manage users` (lists usernames) and
+`python -m web.manage reset USERNAME` (sets and prints a temporary password). Passwords are stored
+hashed, so they can only be replaced, never read back.
+
+Environment variables (never committed):
+
+| Variable | Meaning |
+|---|---|
+| `ANTHROPIC_API_KEY` | Claude API key (needed for tools 1 and 3) |
+| `DATA_DIR` | database, uploads, outputs, PPT designs (default `./data`) |
+| `KEEP_DAYS` | job files older than this are deleted; history rows stay (default 90) |
+| `JOB_WORKERS` | jobs running at the same time (default 2) |
+
+Run it:
+
+* **Office Windows PC** (typists on the same Wi-Fi/LAN): double-click `start-windows.bat`, put the API
+  key in the `settings.bat` it opens, run again, open `http://localhost:8000` and create the admin.
+  Other PCs open `http://<PC-IP>:8000`.
+* **Any server / cloud**: `docker build -t typist . && docker run -p 8000:8000
+  -e ANTHROPIC_API_KEY=... -v typist-data:/data typist`
+* **Dev**: `pip install -r requirements.txt && uvicorn web.app:app --reload`
+
+Command line, same pipeline: `python -m typist.convert p1.pdf p2.pdf -o Notes.docx --save-json b.json`
+(`--from-json b.json` re-renders without calling the API). Tests: `pytest tests` (offline).
 
 ## Pipeline (first job: Solid State, Parts 1-4)
 
@@ -24,3 +74,15 @@ Turns live-class "panel" PDFs (handwritten slides exported as images) into clean
 pip install python-docx
 python -m typist.solid_state out/
 ```
+
+## Hosting on Render
+
+1. On https://dashboard.render.com choose **New → Blueprint**, connect GitHub and pick this repository.
+   Render reads `render.yaml`: a Docker web service on the Free plan (Singapore). It asks for
+   `ANTHROPIC_API_KEY`; you can leave it empty and add it later under Environment.
+2. After the first deploy, open the service → **Environment** and copy `SETUP_KEY`.
+3. Open the `onrender.com` link, fill in First-Time Setup with that key, and create the admin account.
+4. On the Free plan, put the Claude key in Render's Environment (`ANTHROPIC_API_KEY`), not in Admin → Settings,
+   because the Free plan has no disk: every restart or redeploy wipes accounts, history and files.
+   For real use switch to `plan: starter` with a disk at `/data` (see the comment in render.yaml).
+Keep one instance only (SQLite).

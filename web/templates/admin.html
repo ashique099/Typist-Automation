@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<title>Admin Panel – Disha Online Solution</title>
+<link rel="stylesheet" href="/static/island.css">
+<style>
+  @font-face { font-family:"RupeeSign"; src:local("Segoe UI"), local("Nirmala UI"), local("Arial"), local("Noto Sans"), local("DejaVu Sans"); unicode-range:U+20B9; }
+  :root { --red:#C0202A; --blue:#1A2E6C; --navy:#191A3E; --maroon:#9E2330; --green:#00703C; --amber:#9a6700; --bg:#F6F7FB; --card:#fff; --text:#1b1f24;
+          --muted:#5d6672; --line:#e3e6eb; --soft:#F2F4F9; --side:#191A3E; --sidetext:#b8bdd6; }
+  * { box-sizing:border-box } button, input, select { font-family:inherit }
+  body { margin:0; font-family:"RupeeSign","Poppins",system-ui,"Segoe UI","Nirmala UI",sans-serif; background:var(--bg); color:var(--text); font-size:15px }
+  a { color:var(--blue) }
+  .layout { display:grid; grid-template-columns:232px 1fr; min-height:100vh; background:linear-gradient(to right, var(--side) 232px, transparent 232px) }
+  aside { background:var(--side); color:var(--sidetext); padding:20px 14px; display:flex; flex-direction:column; gap:4px; position:sticky; top:0; height:100vh }
+  .brand { display:flex; align-items:center; gap:10px; color:#fff; font-weight:700; font-size:15px; padding:0 8px 4px }
+  .brand small { display:block; color:var(--sidetext); font-weight:500; font-size:12px }
+  .logo { width:42px; height:42px; flex:none; background:#fff; border-radius:50% }
+  nav { display:flex; flex-direction:column; gap:2px; margin-top:18px }
+  nav button, .side-link { all:unset; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; color:var(--sidetext); font-size:14px; box-sizing:border-box; width:100% }
+  nav button:hover, .side-link:hover { background:#24264f; color:#fff } nav button.on { background:#2a2c5c; color:#fff; box-shadow:inset 3px 0 0 var(--red) }
+  nav svg, .side-link svg { width:18px; height:18px; flex:none }
+  .side-foot { margin-top:auto; border-top:1px solid #2a2c5c; padding-top:12px; font-size:13px }
+  .side-foot b { color:#fff; display:block; padding:0 12px 6px }
+  main { padding:70px 30px 60px; max-width:1180px; width:100%; margin:0 auto }
+  .island { --isl-x: calc(232px + (100vw - 232px) / 2); top:14px }
+  .head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px }
+  h1 { font-size:24px; margin:0 0 4px } .sub { color:var(--muted); margin:0; font-size:14px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:18px; min-width:0 }
+  .card h2 { margin:0 0 14px; font-size:15px; display:flex; justify-content:space-between; align-items:center; gap:8px }
+  .card h2 span { color:var(--muted); font-weight:500; font-size:13px }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px }
+  .kpi { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px }
+  .kpi .k { color:var(--muted); font-size:12px; font-weight:600; letter-spacing:.04em }
+  .kpi .v { font-size:26px; font-weight:700; margin-top:6px; font-variant-numeric:tabular-nums } .kpi .s { color:var(--muted); font-size:13px; margin-top:4px }
+  .track { height:8px; background:#e8ebf0; border-radius:5px; overflow:hidden; margin-top:10px }
+  .track i { display:block; height:100%; background:var(--green); border-radius:5px } .track i.warn { background:var(--amber) } .track i.over { background:var(--red) }
+  .two { display:grid; grid-template-columns:1.4fr 1fr; gap:18px }
+  .chart { width:100%; height:190px; display:block } .chart text { font-size:11px; fill:var(--muted) }
+  .chart .b { fill:var(--blue) } .chart .b:hover { fill:var(--red) } .chart .grid { stroke:#eceef2 }
+  #tip { position:fixed; pointer-events:none; background:#141a26; color:#fff; font-size:12px; padding:6px 9px; border-radius:6px; z-index:9; display:none; white-space:nowrap }
+  .alert { background:#fff6e5; border:1px solid #f1d8a6; color:#6b4a00; padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:14px }
+  .alert.err { background:#fff3f3; border-color:#f0c4c4; color:var(--red) }
+  table { width:100%; border-collapse:collapse; font-size:14px }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:12px; letter-spacing:.03em; padding:8px; white-space:nowrap }
+  td { padding:11px 8px; border-top:1px solid var(--line); vertical-align:top }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap }
+  .pill { display:inline-block; padding:3px 9px; border-radius:99px; font-size:12px; font-weight:600; white-space:nowrap }
+  .pill.done { background:#e5f4ec; color:var(--green) } .pill.failed { background:#fdecec; color:var(--red) } .pill.running, .pill.queued { background:var(--soft); color:var(--blue) }
+  .pill.admin { background:#f3e8fd; color:#6b21a8 } .pill.typist { background:#eef0f3; color:var(--muted) } .pill.off { background:#fdecec; color:var(--red) }
+  .kind { font-size:11px; font-weight:700; letter-spacing:.04em }
+  .kind.notes { color:var(--red) } .kind.ppt { color:var(--blue) } .kind.test { color:var(--green) }
+  .small { color:var(--muted); font-size:12px; margin-top:3px; word-break:break-word }
+  .dls { display:flex; flex-wrap:wrap; gap:6px }
+  .dl { font-size:12px; font-weight:600; padding:5px 9px; border-radius:6px; text-decoration:none; color:#fff; background:var(--red); white-space:nowrap }
+  .dl.ppt, .dl.objective { background:var(--blue) } .dl.test { background:var(--green) }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border:0; border-radius:8px; background:var(--navy); color:#fff; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; font-family:inherit; white-space:nowrap }
+  .btn:hover { background:var(--blue) } .btn.ghost:hover { background:var(--soft) } .btn.danger:hover { background:#fdecec }
+  .btn:disabled { opacity:.5; cursor:default } .btn.ghost { background:#fff; color:var(--text); border:1px solid var(--line) } .btn.sm { padding:5px 10px; font-size:12px }
+  .btn.danger { background:#fff; color:var(--red); border:1px solid #f0c4c4 }
+  .acts { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end }
+  label { display:block; font-size:13px; font-weight:600; margin:14px 0 6px }
+  input[type=text], input[type=password], input[type=number], input[type=search], select { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; background:#fff; color:var(--text) }
+  input:focus, select:focus { outline:2px solid #c5cfe6; border-color:var(--blue) }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px }
+  .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap } .row > div { flex:1 1 160px }
+  .filters { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px } .filters > * { width:auto; flex:0 1 auto } .filters input { flex:1 1 200px }
+  .pager { display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:12px; color:var(--muted); font-size:13px }
+  .hint { color:var(--muted); font-size:13px; margin-top:10px }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:8px 16px; font-size:14px } .kv dt { color:var(--muted) } .kv dd { margin:0; font-weight:600 }
+  .empty { color:var(--muted); font-size:13px; padding:8px 0 }
+  .hide { display:none !important }
+  .ntc-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start }
+  textarea { width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:14px; resize:vertical; line-height:1.5 }
+  textarea:focus { outline:2px solid #c5cfe6; border-color:var(--blue) }
+  .swatches { display:flex; flex-wrap:wrap; gap:8px }
+  .sw { display:inline-flex; align-items:center; gap:8px; margin:0; padding:8px 12px; border:1px solid var(--line); border-radius:99px; cursor:pointer; font-weight:500; font-size:13px }
+  .sw { position:relative } .sw input { position:absolute; opacity:0; pointer-events:none } .sw:has(input:focus-visible) { outline:2px solid var(--blue); outline-offset:2px } .sw i { width:14px; height:14px; border-radius:50%; background:var(--nc) }
+  .sw:has(input:checked) { border-color:var(--nc); background:var(--nbg); font-weight:600 }
+  .checks { display:flex; gap:18px; flex-wrap:wrap; margin-top:14px }
+  .chk { display:flex; align-items:center; gap:8px; margin:0; font-weight:500 } .chk input { margin:0; accent-color:var(--navy) }
+  .c-blue { --nc:#1A2E6C; --nbg:#eef2fb } .c-red { --nc:#C0202A; --nbg:#fdf0f0 } .c-green { --nc:#00703C; --nbg:#ebf7f0 } .c-amber { --nc:#b7791f; --nbg:#fdf6e7 }
+  .notice { border-left:4px solid var(--nc); background:var(--nbg); border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.55 }
+  .notice b.t { display:block; color:var(--nc); font-size:15px; margin-bottom:2px }
+  .notice ul { margin:4px 0; padding-left:20px } .notice a { color:var(--nc) }
+  .nrow { display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--line); align-items:flex-start } .nrow:first-child { border-top:0 }
+  .nrow .bar { width:4px; align-self:stretch; border-radius:4px; background:var(--nc); flex:none }
+  .nrow .mid { flex:1; min-width:0 } .nrow .mid b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .nrow.off { opacity:.6 }
+  @media (max-width:1100px) { .ntc-grid { grid-template-columns:1fr } }
+  input[type=file] { width:100%; font-size:13px; color:var(--muted); border:1px dashed #c9d0dc; border-radius:8px; padding:6px; background:#fafbfc }
+  input[type=file]::file-selector-button { font-family:inherit; font-weight:600; font-size:13px; border:0; border-radius:6px; padding:7px 12px; margin-right:10px; background:var(--navy); color:#fff; cursor:pointer }
+  :focus-visible { outline:2px solid var(--blue); outline-offset:2px }
+  .apistat { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; background:var(--soft); font-size:14px }
+  .apistat i { width:10px; height:10px; border-radius:50%; background:var(--red); flex:none } .apistat.on i { background:#1f9d55 }
+  .apistat code { background:#fff; border:1px solid var(--line); padding:2px 7px; border-radius:6px; font-size:13px }
+  .models { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+  .mcol { border:1px solid var(--line); border-radius:12px; padding:12px }
+  .mcol b { display:block; font-size:13px; margin-bottom:8px; color:var(--navy) }
+  .mopt { display:flex; align-items:center; gap:10px; padding:9px 10px; border:1px solid var(--line); border-radius:9px; margin-top:6px; cursor:pointer; font-size:14px; font-weight:500 }
+  .mopt input { accent-color:var(--red); margin:0 } .mopt small { color:var(--muted); display:block; font-size:12px; font-weight:400 }
+  .mopt:has(input:checked) { border-color:var(--red); background:#fff5f5 }
+  @media (max-width:720px) { .models { grid-template-columns:1fr } }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:10 }
+  @media (max-width:1000px) { .kpis { grid-template-columns:repeat(2,1fr) } .two { grid-template-columns:1fr } }
+  .menu { display:none }
+  @media (max-width:1024px) and (min-width:721px) {
+    .layout { grid-template-columns:200px 1fr; background:linear-gradient(to right, var(--side) 200px, transparent 200px) }
+    .island { --isl-x: calc(200px + (100vw - 200px) / 2) } .brand { font-size:13px } main { padding-top:66px !important }
+  }
+  @media (max-width:720px) {
+    .layout { grid-template-columns:1fr; background:none }
+    aside { position:sticky; top:0; z-index:20; height:auto; padding:10px 14px; flex-direction:row; flex-wrap:wrap; align-items:center; gap:0 }
+    .brand { padding:0; flex:1 } .brand > div { font-size:13px } .brand small { font-size:11px } .logo { width:36px; height:36px }
+    .island { --isl-x:50vw; top:12px } aside .brand > div { display:none }
+    .menu { all:unset; display:grid; place-items:center; width:40px; height:40px; border-radius:10px; color:#fff; cursor:pointer; background:#24264f }
+    .menu svg { width:22px; height:22px }
+    nav, .side-foot { display:none; flex-basis:100% }
+    aside.open nav { display:flex; margin-top:12px } aside.open .side-foot { display:block; margin-top:8px }
+    main { padding:20px 16px 50px; max-width:none } h1 { font-size:21px }
+  }
+  @media (max-width:1024px) {
+    main { padding:24px 16px 50px; max-width:none } .hm { display:none } .kpi .v { font-size:22px } h1 { font-size:21px }
+    .kpis { gap:10px } .kpi { padding:14px } .card { padding:16px }
+    .head .btn { width:100%; justify-content:center }
+    .filters > * { flex:1 1 100% }
+    table.stack, table.stack tbody, table.stack tr, table.stack td { display:block; width:100% } table.stack thead { display:none }
+    table.stack tr { padding:12px 0; border-top:1px solid var(--line) } table.stack tr:first-child { border-top:0 }
+    table.stack td { border:0; padding:3px 0; text-align:left } table.stack td.hm { display:none }
+    table.stack .acts { justify-content:flex-start; margin-top:6px }
+    table.stack td.n { display:inline-block; width:auto; margin-right:14px } table.stack td.n[data-l]::before { content:attr(data-l) " "; color:var(--muted); font-size:12px }
+  }
+  @media (min-width:1025px) and (max-width:1200px) { main { padding:70px 20px 50px } }
+  main { min-width:0 }
+</style>
+</head>
+<body data-island-scope="all">
+<div class="layout">
+  <aside>
+    <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div>Disha Online Solution<small>Admin Panel</small></div></div>
+    <button class="menu" id="menu" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <nav id="nav">
+      <button data-tab="overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Overview</button>
+      <button data-tab="typists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-2-5-4-5.5"/></svg>Typists</button>
+      <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Work History</button>
+      <button data-tab="notices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>Notices</button>
+      <button data-tab="designs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>PPT Designs</button>
+      <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+    </nav>
+    <div class="side-foot">
+      <b id="whoName"></b>
+      <a class="side-link" href="/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Open Typist Site ↗</a>
+      <a class="side-link" href="/admin/logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign Out</a>
+    </div>
+  </aside>
+  <main>
+    <!-- OVERVIEW -->
+    <section id="tab-overview">
+      <div class="head"><div><h1>Overview</h1><p class="sub" id="ovSub">Today and this month at a glance.</p></div>
+        <a class="btn ghost" href="#" id="ovCsv">⬇ This Month's Report (CSV)</a></div>
+      <div id="ovAlerts"></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="two">
+        <div class="card"><h2>Spending, Last 30 Days <span>₹ per day</span></h2><svg class="chart" id="chart"></svg></div>
+        <div class="card"><h2>By Tool <span>This Month</span></h2><table><thead><tr><th>Tool</th><th class="n">Jobs</th><th class="n">Output</th><th class="n">Cost</th></tr></thead><tbody id="byTool"></tbody></table></div>
+      </div>
+      <div class="card"><h2>Typists <span>This Month</span></h2>
+        <table><thead><tr><th>Typist</th><th class="n">Jobs</th><th class="n hm">PDF Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last Job</th></tr></thead><tbody id="ovUsers"></tbody></table></div>
+      <div class="two">
+        <div class="card"><h2>Running Now <span id="runCount"></span></h2><table><tbody id="running"></tbody></table></div>
+        <div class="card"><h2>Failed in the Last 7 Days</h2><table><tbody id="failed"></tbody></table></div>
+      </div>
+      <div class="card"><h2>System</h2><dl class="kv" id="system"></dl></div>
+    </section>
+
+    <!-- TYPISTS -->
+    <section id="tab-typists" class="hide">
+      <div class="head"><div><h1>Typists</h1><p class="sub">Each typist has their own login. A disabled account cannot sign in.</p></div></div>
+      <div class="card"><h2>Add a Typist</h2>
+        <form id="addUser" class="row">
+          <div><label>Name</label><input type="text" name="name" required></div>
+          <div><label>Username</label><input type="text" name="username" required pattern="[a-zA-Z0-9_.\-]{3,30}" title="3-30 letters, numbers, _ . -"></div>
+          <div><label>Password</label><input type="text" name="password" required minlength="6"></div>
+          <div><label>Role</label><select name="role"><option value="typist">Typist</option><option value="admin">Admin</option></select></div>
+          <div style="flex:0 0 auto"><button class="btn">Add</button></div>
+        </form>
+      </div>
+      <div class="card"><h2>All Accounts <span>Numbers Are for This Month</span></h2>
+        <table class="stack"><thead><tr><th>Name</th><th>Role</th><th class="n">Jobs</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th class="hm">Last Active</th><th></th></tr></thead><tbody id="users"></tbody></table>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="tab-history" class="hide">
+      <div class="head"><div><h1>Work History</h1><p class="sub">Every job by every typist. Filter, download outputs, re-run failed jobs, or export to Excel (CSV).</p></div>
+        <a class="btn" href="#" id="csv">⬇ Export CSV</a></div>
+      <div class="card">
+        <div class="filters">
+          <select id="hUser"><option value="0">All Typists</option></select>
+          <select id="hTask"><option value="">All Tools</option><option value="notes">PDF to Notes</option><option value="ppt">DOCX to PPT</option><option value="test">MCQ Test</option></select>
+          <select id="hStatus"><option value="">Any Status</option><option value="done">Ready</option><option value="running">Running</option><option value="failed">Failed</option></select>
+          <select id="hMonth"><option value="">All Time</option></select>
+          <input id="hQ" type="search" placeholder="Search chapter or file name">
+        </div>
+        <table class="stack"><thead><tr><th>Job</th><th class="hm">Typist / When</th><th>Status</th><th class="n hm">Pages</th><th class="n hm">MCQs</th><th class="n">Cost</th><th>Files</th></tr></thead>
+          <tbody id="hist"></tbody></table>
+        <div class="pager"><span id="hInfo"></span><button class="btn ghost sm" id="hPrev">‹ Prev</button><button class="btn ghost sm" id="hNext">Next ›</button></div>
+      </div>
+    </section>
+
+    <!-- DESIGNS -->
+    <section id="tab-notices" class="hide">
+      <div class="head"><div><h1>Notices</h1><p class="sub">Write notices for the typists. Switched-on notices show on every typist's dashboard in the Notice Board.</p></div></div>
+      <div class="ntc-grid">
+        <div class="card"><h2 id="nFormTitle">New Notice</h2>
+          <form id="nForm" autocomplete="off">
+            <input type="hidden" name="id" value="0">
+            <label for="nTitle">Title</label><input type="text" id="nTitle" name="title" maxlength="120" required placeholder="e.g. Office Closed on Monday">
+            <label for="nBody">Message</label>
+            <textarea id="nBody" name="body" rows="6" maxlength="4000" placeholder="Write the notice here. New lines are kept.&#10;- Start a line with a dash for a bullet point&#10;**Two stars** around words make them bold"></textarea>
+            <label>Colour</label>
+            <div class="swatches" id="nColor">
+              <label class="sw c-blue"><input type="radio" name="color" value="blue" checked><i></i>Info</label>
+              <label class="sw c-red"><input type="radio" name="color" value="red"><i></i>Important</label>
+              <label class="sw c-green"><input type="radio" name="color" value="green"><i></i>Good News</label>
+              <label class="sw c-amber"><input type="radio" name="color" value="amber"><i></i>Reminder</label>
+            </div>
+            <div class="checks">
+              <label class="chk"><input type="checkbox" name="visible" value="1" checked> Show to Typists</label>
+              <label class="chk"><input type="checkbox" name="pinned" value="1"> Pin to Top</label>
+            </div>
+            <div class="row" style="margin-top:16px"><div style="flex:0 0 auto"><button class="btn" id="nSave">Post Notice</button></div>
+              <div style="flex:0 0 auto"><button class="btn ghost" type="button" id="nClear">Clear</button></div></div>
+          </form>
+          <label style="margin-top:22px">Preview</label>
+          <div id="nPreview"></div>
+        </div>
+        <div class="card"><h2>All Notices <span id="nCount"></span></h2><div id="nList"></div></div>
+      </div>
+    </section>
+
+    <section id="tab-designs" class="hide">
+      <div class="head"><div><h1>PPT Designs</h1><p class="sub">Upload any class PPT. Its background and header strip are reused; its slides are dropped.</p></div></div>
+      <div class="card"><h2>New Design</h2>
+        <form id="addTpl" class="row">
+          <div><label>Name (e.g. Class 12 Chemistry)</label><input type="text" name="name" required></div>
+          <div><label>PPT File (.pptx)</label><input type="file" name="pptx" accept=".pptx" required></div>
+          <div><label>Logo (.png, for Topic Slides)</label><input type="file" name="logo" accept="image/png,image/jpeg"></div>
+          <div style="flex:0 0 auto"><button class="btn">Upload</button></div>
+        </form>
+      </div>
+      <div class="card"><h2>Designs</h2><table><tbody id="tpls"></tbody></table></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="hide">
+      <div class="head"><div><h1>Settings</h1><p class="sub">API connection, budget and models. Changes apply to new jobs.</p></div></div>
+      <div class="card"><h2>API Integration <span id="apiState"></span></h2>
+        <div class="apibox">
+          <div class="apistat" id="apiStat"></div>
+          <form id="keyForm" class="row" autocomplete="off">
+            <div><label for="apiKey">Claude API Key</label><input type="password" id="apiKey" name="key" placeholder="sk-ant-…" autocomplete="off" spellcheck="false"></div>
+            <div style="flex:0 0 auto"><button class="btn">Save Key</button></div>
+          </form>
+          <div class="row" style="margin-top:12px">
+            <div style="flex:0 0 auto"><button class="btn ghost" id="keyTest" type="button">Test Connection</button></div>
+            <div style="flex:0 0 auto"><button class="btn danger" id="keyDel" type="button">Remove Key</button></div>
+          </div>
+          <label>Model for Each Tool</label>
+          <div class="models" id="modelPick"></div>
+          <div class="hint">The key is saved only on this server PC (in the data folder), never in GitHub, and is never shown again in full. Get a key from console.anthropic.com → API keys. "Test connection" spends no tokens.</div>
+        </div>
+      </div>
+      <div class="card"><h2>Budget &amp; Advanced</h2>
+        <form id="settings">
+          <div class="grid">
+            <div><label>Monthly Budget (₹)</label><input type="number" name="monthly_budget_inr" min="0" step="100"></div>
+            <div><label>$1 = ₹ (Including Bank Charges)</label><input type="number" name="usd_to_inr" min="1" step="0.5"></div>
+            <div><label>Model for Notes (PDF Reading)</label><select name="model"></select></div>
+            <div><label>Model for MCQs</label><select name="mcq_model"></select></div>
+            <div><label>Effort</label><select name="effort"><option value="low">Low (Cheapest)</option><option value="medium">Medium</option><option value="high">High (Best)</option></select></div>
+            <div><label>Default Number of MCQs</label><input type="number" name="default_mcq_count" min="5" max="150"></div>
+          </div>
+          <div style="margin-top:18px"><button class="btn">Save Settings</button></div>
+          <div class="hint">When the budget is used up, PDF and MCQ jobs are blocked until next month (DOCX to PPT still works). Costs come from the real API token counts of each job.</div>
+        </form>
+      </div>
+      <div class="card" style="max-width:480px"><h2>My Password</h2>
+        <form id="pwForm">
+          <label>Current Password</label><input type="password" name="old" required autocomplete="current-password">
+          <label>New Password</label><input type="password" name="new" required minlength="6" autocomplete="new-password">
+          <div style="margin-top:16px"><button class="btn">Change Password</button></div>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="tip"></div>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inr = v => "₹" + Math.round(v || 0).toLocaleString("en-IN");
+const num = v => (v || 0).toLocaleString("en-IN");
+const when = t => t ? new Date(t * 1000).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"}) : "";
+const ago = t => { if (!t) return "never"; const s = Date.now() / 1000 - t;
+  return s < 120 ? "just now" : s < 3600 ? Math.round(s / 60) + " min ago" : s < 86400 ? Math.round(s / 3600) + " h ago" : Math.round(s / 86400) + " days ago"; };
+const dur = j => !(j.finished && j.started) ? "" : j.finished - j.started < 60 ? "under 1 min" : Math.round((j.finished - j.started) / 60) + " min";
+const STATUS = {queued:"Queued", running:"Running", done:"Ready", failed:"Failed"};
+const TASKS = {notes: "PDF to Notes", ppt: "DOCX to PPT", test: "MCQ Test"};
+const empty = (n, t) => `<tr><td colspan="${n}" class="empty">${t}</td></tr>`;
+let ME = null, USERS = [], hPage = 1;
+function toast(t, kind) {
+  if (window.Island) return Island.flash(t, {kind: kind || (/fail|wrong|not |error|cannot|must/i.test(t) ? "err" : "info")});
+  const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 3500);
+}
+async function api(url, opts) {
+  opts = Object.assign({}, opts); opts.headers = Object.assign({"X-Panel": "admin"}, opts.headers || {});
+  const r = await fetch(url, opts);
+  if (r.status === 401 || r.status === 403) { location.href = "/admin/login"; throw new Error("login"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+}
+const post = (url, data) => { const fd = new FormData(); Object.entries(data || {}).forEach(([k, v]) => fd.append(k, v)); return api(url, {method: "POST", body: fd}); };
+const form = el => ({method: "POST", body: new FormData(el)});
+const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; };
+
+function show(tab) {
+  $$("#nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  $$("main > section").forEach(s => s.classList.toggle("hide", s.id !== "tab-" + tab));
+  store("admintab", tab);
+  ({overview: loadOverview, typists: loadUsers, history: loadHistory, designs: loadDesigns, settings: loadSettings, notices: loadNotices}[tab])();
+}
+$("#nav").onclick = e => { const b = e.target.closest("button"); if (b) show(b.dataset.tab); };
+
+// -------------------------------------------------------------- notices --
+// simple formatting: new lines, "- " bullets, **bold**, and web links
+function noticeHtml(t) {
+  const lines = esc(t || "").split(/\r?\n/); let html = "", list = false;
+  for (const l of lines) {
+    const m = l.match(/^\s*[-•]\s+(.*)/);
+    if (m && !list) { html += "<ul>"; list = true; } else if (!m && list) { html += "</ul>"; list = false; }
+    html += m ? `<li>${m[1]}</li>` : l.trim() ? l + "<br>" : "<br>";
+  }
+  if (list) html += "</ul>";
+  return html.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(<br>)+$/, "");
+}
+let NOTICES = [];
+function nPreview() {
+  const f = $("#nForm"), c = f.color.value;
+  $("#nPreview").innerHTML = `<div class="notice c-${c}"><b class="t">${esc(f.title.value || "Notice Title")}</b>${noticeHtml(f.body.value) || '<span class="small">Your message will appear here.</span>'}</div>`;
+}
+function nReset() {
+  const f = $("#nForm"); f.reset(); f.id.value = 0; $("#nFormTitle").textContent = "New Notice"; $("#nSave").textContent = "Post Notice"; nPreview();
+}
+async function loadNotices() {
+  NOTICES = await api("/api/admin/notices");
+  const on = NOTICES.filter(n => n.visible).length;
+  $("#nCount").textContent = `${on} shown · ${NOTICES.length - on} hidden`;
+  $("#nList").innerHTML = NOTICES.map(n => `<div class="nrow c-${n.color}${n.visible ? "" : " off"}"><span class="bar"></span>
+      <div class="mid"><b>${n.pinned ? "📌 " : ""}${esc(n.title)}</b>
+        <div class="small">${n.visible ? "Shown to typists" : "Hidden"} · updated ${when(n.updated)}${n.by_name ? " by " + esc(n.by_name) : ""}</div>
+        <div class="acts" style="justify-content:flex-start;margin-top:8px">
+          <button class="btn ghost sm" data-nedit="${n.id}">Edit</button>
+          <button class="btn ghost sm" data-ntog="${n.id}">${n.visible ? "Hide" : "Show"}</button>
+          <button class="btn danger sm" data-ndel="${n.id}">Delete</button></div></div></div>`).join("")
+    || `<div class="empty">No notices yet. Write one on the left and press Post Notice.</div>`;
+  nPreview();
+}
+$("#nForm").oninput = nPreview;
+$("#nClear").onclick = nReset;
+$("#nForm").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, fd = new FormData(f);
+  fd.set("visible", f.visible.checked ? "1" : "0"); fd.set("pinned", f.pinned.checked ? "1" : "0");
+  try { await api("/api/admin/notices", {method: "POST", body: fd}); toast(+f.id.value ? "Notice updated" : "Notice posted", "ok"); nReset(); loadNotices(); }
+  catch (err) { toast(err.message, "err"); }
+};
+$("#nList").onclick = async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.nedit) {
+    const n = NOTICES.find(x => x.id == b.dataset.nedit), f = $("#nForm");
+    f.id.value = n.id; f.title.value = n.title; f.body.value = n.body; f.color.value = n.color;
+    f.visible.checked = !!n.visible; f.pinned.checked = !!n.pinned;
+    $("#nFormTitle").textContent = "Edit Notice"; $("#nSave").textContent = "Save Changes"; nPreview(); f.title.focus();
+    return;
+  }
+  if (b.dataset.ntog) { await api(`/api/admin/notices/${b.dataset.ntog}/toggle`, {method: "POST"}); toast("Notice updated", "ok"); return loadNotices(); }
+  if (b.dataset.ndel) {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Sure? Click Again"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "Delete"; }, 4000); return; }
+    await api(`/api/admin/notices/${b.dataset.ndel}/delete`, {method: "POST"}); toast("Notice deleted", "ok"); loadNotices();
+  }
+};
+
+// ------------------------------------------------------------- overview --
+function thisMonth() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
+async function loadOverview() {
+  const o = await api("/api/admin/overview");
+  const m = o.month, t = o.today, pct = o.budget_inr ? 100 * m.inr / o.budget_inr : 0;
+  const alerts = [];
+  if (!o.api_key) alerts.push(`<div class="alert err">The Claude API key is not set, so PDF and MCQ jobs cannot run. Add it in <a href="#" onclick="show('settings');return false">Settings → API Integration</a>.</div>`);
+  if (pct >= 100) alerts.push(`<div class="alert err">This month's budget is used up. PDF and MCQ jobs are blocked. Raise it in Settings if needed.</div>`);
+  else if (pct >= 80) alerts.push(`<div class="alert">${Math.round(pct)}% of this month's budget is used.</div>`);
+  $("#ovAlerts").innerHTML = alerts.join("");
+  $("#kpis").innerHTML = `
+    <div class="kpi"><div class="k">Spent This Month</div><div class="v">${inr(m.inr)}</div>
+      <div class="track"><i class="${pct >= 100 ? "over" : pct >= 80 ? "warn" : ""}" style="width:${Math.min(100, pct)}%"></i></div>
+      <div class="s">of ${inr(o.budget_inr)} · ${inr(Math.max(0, o.budget_inr - m.inr))} left</div></div>
+    <div class="kpi"><div class="k">Today</div><div class="v">${num(t.jobs)} job${t.jobs === 1 ? "" : "s"}</div><div class="s">${inr(t.inr)} spent · ${num(t.failed)} failed</div></div>
+    <div class="kpi"><div class="k">Jobs This Month</div><div class="v">${num(m.jobs)}</div><div class="s">${num(m.done)} ready · ${num(m.failed)} failed</div></div>
+    <div class="kpi"><div class="k">Output This Month</div><div class="v">${num(m.pages)} <small style="font-size:14px;font-weight:600">pages</small></div>
+      <div class="s">${num(m.pages - m.sent)} repeats skipped · ${num(m.mcqs)} MCQs</div></div>`;
+  drawChart(o.series);
+  const tools = {notes: {}, ppt: {}, test: {}}; o.by_tool.forEach(r => tools[r.task] = r);
+  const rate = m.usd ? m.inr / m.usd : 0;
+  $("#byTool").innerHTML = Object.entries(tools).map(([k, r]) => `<tr><td><span class="kind ${k}">${esc(o.labels[k])}</span></td>
+    <td class="n">${num(r.jobs)}</td><td class="n small">${k === "notes" ? num(r.pages) + " pages" : k === "test" ? num(r.mcqs) + " MCQs" : "–"}</td>
+    <td class="n">${k === "ppt" ? "Free" : inr((r.usd || 0) * rate)}</td></tr>`).join("");
+  $("#ovUsers").innerHTML = o.users.map(u => `<tr><td><b>${esc(u.name)}</b> ${u.active ? "" : '<span class="pill off">Disabled</span>'}<div class="small">${esc(u.username)}</div></td>
+    <td class="n">${num(u.jobs)}</td><td class="n hm">${num(u.pages)}</td><td class="n hm">${num(u.mcqs)}</td><td class="n">${inr(u.inr)}</td>
+    <td class="hm small">${u.last_job ? ago(u.last_job) : "–"}</td></tr>`).join("") || empty(6, "No typists yet.");
+  $("#runCount").textContent = o.running.length ? o.running.length + " job" + (o.running.length > 1 ? "s" : "") : "";
+  $("#running").innerHTML = o.running.map(j => `<tr><td><b>${esc(j.title || j.chapter || j.files[0])}</b>
+    <div class="small">${esc(j.by_name)} · started ${ago(j.created)}</div><div class="small" style="color:var(--blue)">${esc(j.step || "")}</div></td></tr>`).join("") || empty(1, "Nothing running.");
+  $("#failed").innerHTML = o.failed.map(j => `<tr><td><b>${esc(j.title || j.chapter || j.files[0])}</b>
+    <div class="small">${esc(j.by_name)} · ${when(j.created)}</div><div class="small" style="color:var(--red)">${esc(j.error || "")}</div></td>
+    <td class="n"><button class="btn ghost sm" data-retry="${j.id}">Run Again</button></td></tr>`).join("") || empty(2, "No failures. 👍");
+  $("#system").innerHTML = `<dt>Claude API Key</dt><dd>${o.api_key ? "Set" : '<span style="color:var(--red)">Not set</span>'}</dd>
+    <dt>Notes Model</dt><dd>${esc(o.models.notes)} · effort ${esc(o.models.effort)}</dd><dt>MCQ Model</dt><dd>${esc(o.models.mcq)}</dd>
+    <dt>PDF Reader</dt><dd>${esc(o.pdf_engine)}</dd><dt>Job Files</dt><dd>${o.storage.jobs_mb} MB, kept ${o.storage.keep_days} days · ${o.storage.free_gb} GB free on disk</dd>`;
+  $("#ovSub").textContent = new Date().toLocaleDateString("en-IN", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+  $("#ovCsv").href = "/api/admin/jobs.csv?month=" + thisMonth();
+}
+function drawChart(series) {
+  const svg = $("#chart"), W = svg.clientWidth || 600, H = 190, L = 44, B = 22, T = 8;
+  const max = Math.max(10, ...series.map(d => d.inr)), step = niceStep(max / 3), top = Math.ceil(max / step) * step;
+  const bw = (W - L) / series.length, y = v => T + (H - T - B) * (1 - v / top);
+  const every = Math.max(5, Math.ceil(48 / bw / 5) * 5);
+  let g = "";
+  for (let v = 0; v <= top + 0.01; v += step)
+    g += `<line class="grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">₹${Math.round(v).toLocaleString("en-IN")}</text>`;
+  series.forEach((d, i) => {
+    const h = Math.max(d.inr > 0 ? 2 : 0, (H - T - B) - (y(d.inr) - T));
+    g += `<rect class="b" x="${L + i * bw + bw * 0.18}" y="${H - B - h}" width="${bw * 0.64}" height="${h}" rx="2" data-i="${i}"/>`;
+    g += `<rect x="${L + i * bw}" y="${T}" width="${bw}" height="${H - T - B}" fill="transparent" data-i="${i}"/>`;
+    if ((i % every === 0 && i < series.length - every * 0.7) || i === series.length - 1)
+      g += `<text x="${i === series.length - 1 ? W - 2 : L + i * bw + bw / 2}" y="${H - 6}" text-anchor="${i === series.length - 1 ? "end" : "middle"}">${new Date(d.date + "T12:00").toLocaleDateString("en-IN", {day: "numeric", month: "short"})}</text>`;
+  });
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+  const tip = $("#tip");
+  svg.onmousemove = e => { const i = e.target.dataset.i; if (i === undefined) { tip.style.display = "none"; return; }
+    const d = series[i]; tip.style.display = "block"; tip.style.left = e.clientX + 12 + "px"; tip.style.top = e.clientY - 30 + "px";
+    tip.textContent = `${new Date(d.date + "T12:00").toLocaleDateString("en-IN", {day: "numeric", month: "short"})}: ${inr(d.inr)} · ${d.jobs} job${d.jobs === 1 ? "" : "s"}`; };
+  svg.onmouseleave = () => tip.style.display = "none";
+}
+function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x))); return [1, 2, 2.5, 5, 10].map(k => k * p).find(s => s >= x); }
+
+document.addEventListener("click", async e => {
+  const r = e.target.closest("[data-retry]"), d = e.target.closest("[data-delfiles]");
+  try {
+    if (r) { r.disabled = true; await post(`/api/admin/jobs/${r.dataset.retry}/retry`); toast("Job queued again"); }
+    else if (d) { if (!confirm("Delete this job's uploaded and output files? The history row stays.")) return;
+      await post(`/api/admin/jobs/${d.dataset.delfiles}/delete`); toast("Files deleted"); }
+    else return;
+    const on = store("admintab"); on === "history" ? loadHistory() : loadOverview();
+  } catch (err) { toast(err.message); if (r) r.disabled = false; }
+});
+
+// -------------------------------------------------------------- typists --
+async function loadUsers() {
+  USERS = await api("/api/admin/users");
+  $("#users").innerHTML = USERS.map(u => `<tr>
+    <td><b>${esc(u.name)}</b><div class="small">${esc(u.username)} · ${num(u.all_jobs)} jobs in total</div></td>
+    <td><span class="pill ${u.role}">${u.role === "admin" ? "Admin" : "Typist"}</span> ${u.active ? "" : '<span class="pill off">Disabled</span>'}</td>
+    <td class="n">${num(u.jobs)}</td><td class="n hm">${num(u.pages)}</td><td class="n hm">${num(u.mcqs)}</td><td class="n">${inr(u.cost_inr)}</td>
+    <td class="hm small">${ago(u.last_seen)}</td>
+    <td><div class="acts">
+      <button class="btn ghost sm" data-work="${u.id}">Work</button>
+      <button class="btn ghost sm" data-rename="${u.id}">Rename</button>
+      <button class="btn ghost sm" data-pw="${u.id}">Reset Password</button>
+      ${u.id === ME.user.id ? "" : `<button class="btn ghost sm" data-role="${u.id}" data-v="${u.role === "admin" ? "typist" : "admin"}">${u.role === "admin" ? "Make typist" : "Make admin"}</button>
+      <button class="btn ${u.active ? "danger" : "ghost"} sm" data-act="${u.id}" data-v="${u.active ? 0 : 1}">${u.active ? "Disable" : "Enable"}</button>`}
+    </div></td></tr>`).join("");
+}
+$("#users").onclick = async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.work) { fillUserFilter(); $("#hUser").value = b.dataset.work; hPage = 1; show("history"); return; }
+  const id = b.dataset.rename || b.dataset.pw || b.dataset.role || b.dataset.act, u = USERS.find(x => x.id == id), data = {};
+  if (b.dataset.rename) { const n = prompt("New name", u.name); if (!n) return; data.name = n; }
+  if (b.dataset.pw) { const p = prompt(`New password for ${u.name} (at least 6 characters)`); if (!p) return; data.password = p; }
+  if (b.dataset.role) { if (!confirm(`Make ${u.name} ${b.dataset.v === "admin" ? "an admin" : "a typist"}?`)) return; data.role = b.dataset.v; }
+  if (b.dataset.act) data.active = b.dataset.v;
+  try { await post(`/api/admin/users/${id}`, data); toast("Saved"); loadUsers(); } catch (err) { toast(err.message); }
+};
+$("#addUser").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/admin/users", form(e.target)); e.target.reset(); toast("Typist added"); loadUsers(); } catch (err) { toast(err.message); }
+};
+
+// -------------------------------------------------------------- history --
+async function fillUserFilter() {
+  if (!USERS.length) USERS = await api("/api/admin/users");
+  const sel = $("#hUser"), keep = sel.value; sel.length = 1;
+  USERS.forEach(u => sel.insertAdjacentHTML("beforeend", `<option value="${u.id}">${esc(u.name)}</option>`)); sel.value = keep;
+}
+function fillMonths() {
+  const sel = $("#hMonth"); if (sel.length > 1) return; const d = new Date();
+  for (let i = 0; i < 12; i++) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    sel.insertAdjacentHTML("beforeend", `<option value="${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}">${x.toLocaleDateString("en-IN", {month: "long", year: "numeric"})}</option>`); }
+}
+function histParams() {
+  return new URLSearchParams({scope: "all", user: $("#hUser").value, task: $("#hTask").value, status: $("#hStatus").value,
+                              month: $("#hMonth").value, q: $("#hQ").value});
+}
+async function loadHistory() {
+  await fillUserFilter(); fillMonths();
+  const p = histParams(); p.set("page", hPage); p.set("per", 50);
+  $("#csv").href = "/api/admin/jobs.csv?" + histParams();
+  const d = await api("/api/jobs?" + p);
+  $("#hist").innerHTML = d.jobs.map(j => `<tr>
+    <td><div class="kind ${j.task}">${esc(j.task_label)}</div><b>${esc(j.title || j.chapter || j.files[0])}</b>
+      <div class="small">${j.files.length} file${j.files.length > 1 ? "s" : ""}: ${esc(j.files.join(", "))}</div>
+      ${j.status === "running" || j.status === "queued" ? `<div class="small" style="color:var(--blue)">${esc(j.step || "")}</div>` : ""}
+      ${j.error ? `<div class="small" style="color:var(--red)">${esc(j.error)}</div>` : ""}</td>
+    <td class="hm small">${esc(j.by_name || "")}<br>${when(j.created)}${dur(j) ? " · " + dur(j) : ""}</td>
+    <td><span class="pill ${j.status}">${STATUS[j.status] || j.status}</span></td>
+    <td class="n hm">${j.pages ? num(j.pages) : "–"}</td><td class="n hm">${j.mcqs ? num(j.mcqs) : "–"}</td>
+    <td class="n">${j.task === "ppt" ? "Free" : inr(j.cost_inr)}</td>
+    <td><div class="dls">${j.downloads.map(x => `<a class="dl ${x.kind}" href="/api/jobs/${j.id}/download?kind=${x.kind}&panel=admin">⬇ ${esc(x.label)}</a>`).join("")}
+      ${j.status === "failed" ? `<button class="btn ghost sm" data-retry="${j.id}">Run Again</button>` : ""}
+      ${(j.status === "done" || j.status === "failed") && j.downloads.length ? `<button class="btn danger sm" data-delfiles="${j.id}" title="Delete files">🗑</button>` : ""}</div></td></tr>`).join("")
+    || empty(7, "Nothing found.");
+  const pages = Math.max(1, Math.ceil(d.total / d.per));
+  $("#hInfo").textContent = `${num(d.total)} job${d.total === 1 ? "" : "s"} · page ${hPage} of ${pages}`;
+  $("#hPrev").disabled = hPage <= 1; $("#hNext").disabled = hPage >= pages;
+}
+["#hUser", "#hTask", "#hStatus", "#hMonth"].forEach(s => $(s).onchange = () => { hPage = 1; loadHistory(); });
+let qT; $("#hQ").oninput = () => { clearTimeout(qT); qT = setTimeout(() => { hPage = 1; loadHistory(); }, 300); };
+$("#hPrev").onclick = () => { hPage--; loadHistory(); }; $("#hNext").onclick = () => { hPage++; loadHistory(); };
+
+// -------------------------------------------------------------- designs --
+async function loadDesigns() {
+  const d = await api("/api/admin/settings");
+  $("#tpls").innerHTML = d.templates.map(t => `<tr><td><b>${esc(t)}</b></td>
+    <td class="n"><button class="btn danger sm" data-del="${esc(t)}">Delete</button></td></tr>`).join("")
+    || empty(2, "No designs yet. Upload one of your class PPTs above.");
+}
+$("#tpls").onclick = async e => {
+  const b = e.target.closest("button[data-del]"); if (!b || !confirm(`Delete the design "${b.dataset.del}"?`)) return;
+  try { await post(`/api/admin/templates/${encodeURIComponent(b.dataset.del)}/delete`); loadDesigns(); } catch (err) { toast(err.message); }
+};
+$("#addTpl").onsubmit = async e => {
+  e.preventDefault(); const btn = e.target.querySelector("button"); btn.disabled = true; btn.textContent = "Uploading…";
+  try { await api("/api/admin/templates", form(e.target)); e.target.reset(); toast("Design added"); loadDesigns(); } catch (err) { toast(err.message); }
+  btn.disabled = false; btn.textContent = "Upload";
+};
+
+// ------------------------------------------------------------- settings --
+const MDESC = {"claude-opus-5-5": "Best quality, about 2× the cost", "claude-sonnet-5-5": "Good quality, half the cost of Opus", "claude-haiku-5-5": "Cheapest, for simple pages"};
+function drawApi(a) {
+  $("#apiStat").className = "apistat" + (a.set ? " on" : "");
+  $("#apiStat").innerHTML = a.set ? `<i></i><span>Key saved · <code>${esc(a.masked)}</code> from ${esc(a.source)}</span>`
+    : `<i></i><span>No API key yet. PDF to Notes and MCQ Test will not run until you add one.</span>`;
+  $("#apiState").textContent = a.set ? "Key Set" : "Not Connected";
+  $("#keyDel").classList.toggle("hide", a.source !== "admin panel");
+}
+function drawModels(d) {
+  const s = d.settings, col = (name, title) => `<div class="mcol"><b>${title}</b>` + ["claude-sonnet-5-5", "claude-opus-5-5"].filter(k => d.models[k]).map(k =>
+    `<label class="mopt"><input type="radio" name="${name}" value="${k}" ${s[name] === k ? "checked" : ""}><span>${esc(d.models[k].split(" (")[0])}<small>${esc(MDESC[k] || "")}</small></span></label>`).join("") + `</div>`;
+  $("#modelPick").innerHTML = col("model", "Panel PDF to Notes") + col("mcq_model", "MCQ Test");
+}
+$("#modelPick").onchange = async e => {
+  const fd = new FormData(); fd.append(e.target.name, e.target.value);
+  try { await api("/api/admin/settings", {method: "POST", body: fd}); $("#settings")[e.target.name].value = e.target.value;
+    toast(`${e.target.name === "model" ? "Notes" : "MCQ"} model: ${e.target.value.includes("opus") ? "Opus" : "Sonnet"}`, "ok"); } catch (err) { toast(err.message); }
+};
+$("#keyForm").onsubmit = async e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try { const r = await api("/api/admin/apikey", {method: "POST", body: fd}); e.target.reset(); drawApi(r.api); toast("API key saved", "ok");
+    window.Island && Island.refresh(); $("#keyTest").click(); } catch (err) { toast(err.message, "err"); }
+};
+$("#keyTest").onclick = async () => {
+  const b = $("#keyTest"); b.disabled = true; b.textContent = "Testing…";
+  try { const r = await api("/api/admin/apikey/test", {method: "POST"}); toast("API connected · " + r.models.join(", "), "ok"); }
+  catch (err) { toast(err.message, "err"); }
+  b.disabled = false; b.textContent = "Test connection";
+};
+$("#keyDel").onclick = async () => {
+  try { const r = await api("/api/admin/apikey/delete", {method: "POST"}); drawApi(r.api); toast(r.note || "API key removed", r.note ? "warn" : "ok"); } catch (err) { toast(err.message); }
+};
+async function loadSettings() {
+  const d = await api("/api/admin/settings"), s = d.settings, f = $("#settings");
+  drawApi(d.api); drawModels(d);
+  ["model", "mcq_model"].forEach(n => { f[n].innerHTML = Object.entries(d.models).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join(""); });
+  Object.entries(s).forEach(([k, v]) => { if (f[k]) f[k].value = v; });
+}
+$("#settings").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/admin/settings", form(e.target)); toast("Settings saved"); } catch (err) { toast(err.message); }
+};
+$("#pwForm").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/password", form(e.target)); e.target.reset(); toast("Password changed"); } catch (err) { toast(err.message); }
+};
+
+// ---------------------------------------------------------------- start --
+api("/api/me").then(me => {
+  ME = me; $("#whoName").textContent = me.user.name;
+  const t = store("admintab"); show(["overview", "typists", "history", "notices", "designs", "settings"].includes(t) ? t : "overview");
+  setInterval(() => { if (document.hidden) return; const on = store("admintab");
+    if (on === "overview") loadOverview(); else if (on === "history") loadHistory(); }, 10000);
+});
+let rT; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => { if (store("admintab") === "overview") loadOverview(); }, 200); });
+</script>
+<script src="/static/island.js"></script>
+<script>document.addEventListener("island:jobchange", () => { const on = store("admintab"); if (on === "overview") loadOverview(); else if (on === "history") loadHistory(); });</script>
+<script>
+(() => { const a = document.querySelector("aside"), m = document.getElementById("menu");
+  m.onclick = () => m.setAttribute("aria-expanded", a.classList.toggle("open"));
+  document.getElementById("nav").addEventListener("click", e => { if (e.target.closest("button")) { a.classList.remove("open"); m.setAttribute("aria-expanded", "false"); } });
+})();
+</script>
+<script>
+// label numbers in stacked (phone/tablet) tables with their column name
+new MutationObserver(() => document.querySelectorAll("table.stack").forEach(t => {
+  const h = [...t.querySelectorAll("thead th")].map(th => th.textContent.trim());
+  t.querySelectorAll("tbody tr").forEach(tr => [...tr.children].forEach((td, i) => { if (h[i] && !td.dataset.l) td.dataset.l = h[i]; }));
+})).observe(document.querySelector("main"), {childList: true, subtree: true});
+</script>
+</body>
+</html>
