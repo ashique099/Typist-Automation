@@ -31,7 +31,8 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
 from typist.convert import build_docx, transcribe_all
-from typist.pptkit import render_deck, render_template_deck
+from typist import mcq as mcqmod
+from typist.pptkit import render_deck, render_mcq_deck, render_template_deck
 
 DATA = Path(os.environ.get("DATA_DIR", "data")).resolve()
 JOBS = DATA / "jobs"
@@ -158,8 +159,24 @@ def run_job(jid):
                 render_deck(parts, d / "output.pptx", m.get("title") or None)
         except Exception:  # notes are still useful without the deck
             traceback.print_exc()
+        extra = {}
+        if m.get("mcq_count"):
+            update(jid, step=f"{m['mcq_count']} MCQ ban rahe hain")
+            try:
+                qs = mcqmod.generate_mcqs(parts, m["mcq_count"])
+                (d / "mcq.json").write_text(json.dumps(qs, ensure_ascii=False, indent=1), encoding="utf-8")
+                mcqmod.write_mcq_docx(qs, d / "test.docx")
+                tpl = TEMPLATES / f"{m.get('ppt_template') or ''}.pptx"
+                use = m.get("ppt_template") and tpl.exists()
+                logo = tpl.with_suffix(".png")
+                render_mcq_deck(qs, d / "objective.pptx", str(tpl) if use else None,
+                                str(logo) if use and logo.exists() else None, title or None)
+                extra["mcqs"] = len(qs)
+            except Exception as e:  # notes + PPT are still delivered
+                traceback.print_exc()
+                extra["mcq_error"] = str(e)[:300]
         update(jid, status="done", step="Taiyar hai", output=out_name, chapter=title,
-               has_ppt=(d / "output.pptx").exists())
+               has_ppt=(d / "output.pptx").exists(), **extra)
     except Exception as e:  # report every failure to the page
         traceback.print_exc()
         update(jid, status="failed", step="Fail", error=str(e)[:500])
@@ -183,7 +200,7 @@ def _startup():
 
 @app.post("/api/jobs")
 async def create_job(request: Request, files: list[UploadFile] = File(...), title: str = Form(""),
-                     ppt_template: str = Form("")):
+                     ppt_template: str = Form(""), mcq_count: int = Form(0)):
     need_auth(request)
     if not files or len(files) > MAX_FILES:
         raise HTTPException(400, f"1 se {MAX_FILES} PDF tak upload karein.")
@@ -206,6 +223,7 @@ async def create_job(request: Request, files: list[UploadFile] = File(...), titl
     now = time.time()
     meta = {"id": jid, "files": names, "title": title.strip()[:120], "status": "queued",
             "ppt_template": ppt_template if ppt_template in ppt_templates() else "",
+            "mcq_count": max(0, min(int(mcq_count or 0), 150)),
             "step": "Line me hai", "by": request.cookies.get("ta_name", "Typist"),
             "created": now, "updated": now}
     save(meta)
@@ -230,8 +248,11 @@ def get_job(jid: str, request: Request):
     return m
 
 
-KINDS = {"docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-         "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation"}
+DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+# kind -> (file in job dir, suffix for the download name, media type)
+KINDS = {"docx": ("output.docx", "", DOCX), "pptx": ("output.pptx", "", PPTX),
+         "test": ("test.docx", " - MCQ Test", DOCX), "objective": ("objective.pptx", " - Objective", PPTX)}
 
 
 @app.get("/api/jobs/{jid}/download")
@@ -240,11 +261,12 @@ def download(jid: str, request: Request, kind: str = "docx"):
     m = get_job(jid, request)
     if kind not in KINDS:
         raise HTTPException(404)
-    out = JOBS / jid / f"output.{kind}"
+    fname, suffix, media = KINDS[kind]
+    out = JOBS / jid / fname
     if m.get("status") != "done" or not out.exists():
         raise HTTPException(404, "File abhi taiyar nahi hai")
-    name = Path(m.get("output") or "Notes.docx").stem + f".{kind}"
-    return FileResponse(out, filename=name, media_type=KINDS[kind])
+    name = Path(m.get("output") or "Notes.docx").stem + suffix + Path(fname).suffix
+    return FileResponse(out, filename=name, media_type=media)
 
 
 @app.get("/api/templates")

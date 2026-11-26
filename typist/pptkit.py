@@ -415,7 +415,7 @@ class TemplateDeck:
         p = self._para(self._cost(text) + (1 if self.units else 0))
         self._runs(p, text + " :-", color or self.pal.heading, True)
 
-    def line(self, text, label=None, label_color=None, color=None, marker=None, indent=0):
+    def line(self, text, label=None, label_color=None, color=None, marker=None, indent=0, bold=False):
         p = self._para(self._cost(text, label, marker))
         if indent:
             pPr = p._p.get_or_add_pPr()
@@ -424,7 +424,7 @@ class TemplateDeck:
             self._runs(p, marker + " ", color, True)
         if label:
             self._runs(p, label + " ", label_color or self.pal.label, True)
-        self._runs(p, text, color)
+        self._runs(p, text, color, bold)
 
     def figure(self, b):
         s = self._content_slide()
@@ -538,3 +538,30 @@ def render_template_deck(parts, out_path, template, logo=None, title=None):
 def _roman(n):
     from .docxkit import _roman as r
     return r(n)
+
+
+def render_mcq_deck(mcqs, out_path, template=None, logo=None, title=None):
+    """Objective deck like the team's 'CHEMISTRY OBJECTIVE' PPT: one question per slide,
+    question green + bold, options (A)-(D) white.  Without a template a plain deck is made."""
+    if template:
+        d = TemplateDeck(template, logo)
+        if title:
+            d.divider(title, big=True)
+        d.divider("वस्तुनिष्ठ प्रश्न", big=True)
+        for n, m in enumerate(mcqs, 1):
+            d.body = None
+            d.line(f"{n}. {m.get('q', '')}", color=d.pal.heading, bold=True)
+            for letter, o in zip("ABCD", m.get("options") or []):
+                d.line(f"({letter}) {o}")
+        d.save(out_path)
+        return out_path
+    d = Deck()
+    if title:
+        d.title_slide(title)
+    for n, m in enumerate(mcqs, 1):
+        d.new_slide(f"प्रश्न {n}")
+        d.point(str(m.get("q", "")), color=Style.red)
+        for letter, o in zip("ABCD", m.get("options") or []):
+            d.point(str(o), marker=f"({letter})")
+    d.save(out_path)
+    return out_path

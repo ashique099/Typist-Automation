@@ -44,6 +44,10 @@ def client(tmp_path, monkeypatch):
     calls = iter(PARTS)
     monkeypatch.setattr(tr, "transcribe_pdf_pages",
                         lambda images, ctx, progress=None, label="": (lambda p: (p["chapter_title"], p["blocks"]))(next(calls)))
+    import typist.mcq as mq
+    monkeypatch.setattr(mq, "generate_mcqs", lambda parts, n, **k: [
+        {"q": f"प्रश्न {i} $H_2O$?", "options": ["a", "b", "c", "d"], "answer": 1 + i % 4, "solution": ""}
+        for i in range(n)])
     import web.app as appmod
     importlib.reload(appmod)
     from fastapi.testclient import TestClient
@@ -65,7 +69,7 @@ def test_web_flow(client):
     client.post("/login", data={"password": "pw", "name": "Rahul"})
     assert "Namaste Rahul" in client.get("/").text
     r = client.post("/api/jobs", files=[("files", ("Part-1.pdf", _pdf_bytes())),
-                                        ("files", ("Part-2.pdf", _pdf_bytes()))])
+                                        ("files", ("Part-2.pdf", _pdf_bytes()))], data={"mcq_count": "8"})
     jid = r.json()["id"]
     for _ in range(100):
         m = client.get(f"/api/jobs/{jid}").json()
@@ -79,6 +83,10 @@ def test_web_flow(client):
     p = client.get(f"/api/jobs/{jid}/download?kind=pptx")
     assert p.status_code == 200 and p.content[:2] == b"PK" and m["has_ppt"]
     assert client.get(f"/api/jobs/{jid}/download?kind=exe").status_code == 404
+    assert m["mcqs"] == 8
+    t = client.get(f"/api/jobs/{jid}/download?kind=test")
+    assert t.status_code == 200 and "MCQ%20Test" in t.headers["content-disposition"]
+    assert client.get(f"/api/jobs/{jid}/download?kind=objective").status_code == 200
     assert client.post("/api/jobs", files=[("files", ("x.pdf", b"not a pdf"))]).status_code == 400
 
 
@@ -103,3 +111,17 @@ def test_template_deck(tmp_path):
     prs = Presentation(out)
     text = " ".join(sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.has_text_frame)
     assert "ठोस (Solid) :-" in text and "Hg" in text
+
+
+def test_mcq_docx(tmp_path):
+    from docx import Document
+    from typist.mcq import balance_answers, write_mcq_docx
+    qs = balance_answers([{"q": f"Q{i} $NaCl$", "options": ["w", "x", "y", "z"], "answer": 1} for i in range(8)])
+    assert sorted(q["answer"] for q in qs) == [1, 1, 2, 2, 3, 3, 4, 4]
+    assert all(q["options"][q["answer"] - 1] == "w" for q in qs)
+    d = Document(write_mcq_docx(qs, tmp_path / "t.docx"))
+    assert len(d.tables) == 8
+    assert [r.cells[0].text for r in d.tables[0].rows] == [
+        "Question", "Type", "Option", "Option", "Option", "Option", "Answer", "Solution", "Positive Marks",
+        "Negative Marks"]
+    assert d.tables[0].rows[1].cells[1].text == "Multiple Choice"
