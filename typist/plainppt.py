@@ -37,8 +37,10 @@ FONT = "Utsaah"            # Windows' Hindi font (the user calls it "Utsah")
 SIZE = 120                 # pt, every text
 YELLOW, GREEN, WHITE, BLACK = "FFFF00", "00FF00", "FFFFFF", "000000"
 W, H = Emu(36576000), Emu(20577175)   # 40 in x 22.504 in, as in the team's decks
-MX, MY = Inches(1.0), Inches(0.8)     # side / top-bottom margins
-BOX_W = Emu(W - 2 * MX)
+# margins as on the user's ruler screenshot (2026-11-27): text starts ~4.2 in from the left, ~2 in from the top
+ML, MR, MT, MB = Inches(4.2), Inches(2.0), Inches(2.0), Inches(1.2)
+MX, MY = ML, MT
+BOX_W = Emu(W - ML - MR)
 LINE_IN = SIZE * 1.2 / 72             # one line of 120 pt text, in inches (refined from the font below)
 GAP_PT = 18                           # space after each paragraph
 HANG = Inches(1.6)                    # hanging indent for "(i)", "•", "(A)" ...
@@ -50,6 +52,9 @@ NS_A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 
 SUB = str.maketrans("0123456789+-=()naeoxhklmnpst", "₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₙₐₑₒₓₕₖₗₘₙₚₛₜ")
 SUP = str.maketrans("0123456789+-=()ni", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ")
+SUB.update({ord("−"): "₋", ord("–"): "₋", ord("¯"): "₋"})
+SUP.update({ord("−"): "⁻", ord("–"): "⁻", ord("¯"): "⁻", ord("∘"): "°", ord("°"): "°", ord("o"): "°"})
+Q_COLOR = "00FF00"   # MCQ question colour (user rule: green)
 _TOK = re.compile(r"(\$[^$]+\$|\*\*[^*]+\*\*)")
 _OPTION = re.compile(r"^\(?([A-Da-d]|[क-घ]|i{1,3}|iv)[.)]$")
 _QNUM = re.compile(r"^(?:Q\.?\s*)?\(?\d{1,3}[.)]$", re.I)
@@ -149,8 +154,8 @@ def unicode_math(s):
     out = []
     for t, kind in runs:
         if kind:
-            conv = t.replace("−", "-").translate(SUB if kind == "sub" else SUP)
-            if any(a == b and not a.isspace() for a, b in zip(conv, t.replace("−", "-"))):
+            conv = t.translate(SUB if kind == "sub" else SUP)
+            if any(a == b and not a.isspace() and a != "°" for a, b in zip(conv, t)):
                 return None
             out.append(conv)
         else:
@@ -286,7 +291,7 @@ class PlainDeck:
         if self.slide is None or top is None:
             self._new()
             top = MY
-        height = H - top - MY
+        height = H - top - MB
         self.body = self._box(top, height)
         self.body.text_frame.vertical_anchor = MSO_ANCHOR.TOP
         self.used, self.avail, self._first = 0.0, Emu(height).inches, True
@@ -405,7 +410,7 @@ class PlainDeck:
             top = MY + Inches(n * LINE_IN + 0.4)
         fw = max(20.0, float(b.get("width") or 250))
         fh = max(20.0, float(b.get("height") or 150))
-        avail_w, avail_h = BOX_W, H - top - MY
+        avail_w, avail_h = BOX_W, H - top - MB
         k = min(avail_w / fw, avail_h / fh)
         ox, oy = MX + (avail_w - fw * k) / 2, top + (avail_h - fh * k) / 2
         E = lambda v: Emu(int(v))
@@ -517,12 +522,12 @@ def _is_question(blocks, i):
 def _mcq(d, q, options, answer="", solution="", number=None):
     """One question per slide: question green, options white."""
     d._cont() if d.slide is not None else d._open_body()
-    qa = atoms(q, GREEN, True)
+    qa = atoms(q.replace("**", ""), Q_COLOR, True)
     if number is not None:
-        qa = [(f"{number}. ", GREEN, True, "")] + qa
+        qa = [(f"{number}. ", Q_COLOR, True, "")] + qa
     d.add(qa)
     for letter, o in options:
-        d.add([(f"({letter})", YELLOW, True, ""), (" ", WHITE, False, "")] + atoms(o, WHITE), hang=True)
+        d.add([(f"({letter})", WHITE, False, ""), (" ", WHITE, False, "")] + atoms(o, WHITE), hang=True)
     if str(answer).strip():
         d.add([("उत्तर – ", YELLOW, True, "")] + atoms(str(answer), WHITE))
     if str(solution).strip():
@@ -551,7 +556,8 @@ def render_plain_deck(parts, out_path, title=None):
                 elif ty == "h2":
                     d.add(atoms(text, GREEN, True), keep_with_next=1)
                 elif ty == "mcq":
-                    opts = list(zip("ABCD", b.get("options") or []))
+                    letters = b.get("letters") or list("ABCD")
+                    opts = list(zip(letters, [str(o).replace("**", "") for o in b.get("options") or []]))
                     _mcq(d, str(b.get("q") or ""), opts, b.get("answer", ""), b.get("solution", ""))
                 elif _is_question(blocks, i):
                     mk = str(b.get("marker") or "").strip()
@@ -563,9 +569,9 @@ def render_plain_deck(parts, out_path, title=None):
                         j += 1
                     d.body = None
                     d._cont() if d.slide is not None else d._open_body()
-                    d.add(atoms(q, GREEN, True))
+                    d.add(atoms(q.replace("**", ""), Q_COLOR, True))
                     for letter, o in opts:
-                        d.add([(f"({letter})", YELLOW, True, ""), (" ", WHITE, False, "")] + atoms(o, WHITE),
+                        d.add([(f"({letter})", WHITE, False, ""), (" ", WHITE, False, "")] + atoms(o, WHITE),
                               hang=True)
                     d.body = None
                     i = j

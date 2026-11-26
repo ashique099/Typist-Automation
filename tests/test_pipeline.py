@@ -285,3 +285,25 @@ def test_mcq_docx(tmp_path):
         "Question", "Type", "Option", "Option", "Option", "Option", "Answer", "Solution", "Positive Marks",
         "Negative Marks"]
     assert d.tables[0].rows[1].cells[1].text == "Multiple Choice"
+
+
+def test_docx_mcq_lines(tmp_path):
+    """MCQ notes typed by hand: options split by line breaks or on one line, markers split
+    across bold runs, and '(C) दोनों (A) तथा (B)' must stay one option."""
+    from docx import Document
+    from docx.shared import RGBColor
+    from typist.reader import docx_blocks
+    d = Document()
+    r = d.add_paragraph().add_run("2. आवेश का विमा होता है [2020A]"); r.bold = True; r.font.color.rgb = RGBColor(0xC0, 0, 0)
+    p = d.add_paragraph()
+    for t in ["(", "A)", " ", "AT"]:
+        p.add_run(t).bold = True
+    p.add_run().add_break()
+    p.add_run("(B) AT2(C) A")
+    p = d.add_paragraph()
+    for t in ["(", "D", ")", " दोनों (", "A", ") तथा (", "B", ")"]:
+        p.add_run(t).bold = True
+    d.save(tmp_path / "m.docx")
+    _, blocks = docx_blocks(str(tmp_path / "m.docx"))
+    assert blocks == [{"type": "mcq", "q": "2. आवेश का विमा होता है [2020A]", "letters": list("ABCD"),
+                       "options": ["AT", "AT2", "A", "दोनों (A) तथा (B)"]}]
