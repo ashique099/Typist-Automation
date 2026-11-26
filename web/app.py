@@ -31,6 +31,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
 from typist.convert import build_docx, transcribe_all
+from typist.pptkit import render_deck
 
 DATA = Path(os.environ.get("DATA_DIR", "data")).resolve()
 JOBS = DATA / "jobs"
@@ -137,7 +138,13 @@ def run_job(jid):
         title = m.get("title") or next((p["chapter_title"] for p in parts if p["chapter_title"]), "")
         out_name = _safe_name(m.get("title") or title or Path(m["files"][0]).stem) + ".docx"
         build_docx(parts, d / "output.docx", m.get("title") or None)
-        update(jid, status="done", step="Taiyar hai", output=out_name, chapter=title)
+        update(jid, step="PPT ban rahi hai")
+        try:
+            render_deck(parts, d / "output.pptx", m.get("title") or None)
+        except Exception:  # notes are still useful without the deck
+            traceback.print_exc()
+        update(jid, status="done", step="Taiyar hai", output=out_name, chapter=title,
+               has_ppt=(d / "output.pptx").exists())
     except Exception as e:  # report every failure to the page
         traceback.print_exc()
         update(jid, status="failed", step="Fail", error=str(e)[:500])
@@ -206,15 +213,21 @@ def get_job(jid: str, request: Request):
     return m
 
 
+KINDS = {"docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+         "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation"}
+
+
 @app.get("/api/jobs/{jid}/download")
-def download(jid: str, request: Request):
+def download(jid: str, request: Request, kind: str = "docx"):
     need_auth(request)
     m = get_job(jid, request)
-    out = JOBS / jid / "output.docx"
+    if kind not in KINDS:
+        raise HTTPException(404)
+    out = JOBS / jid / f"output.{kind}"
     if m.get("status") != "done" or not out.exists():
         raise HTTPException(404, "File abhi taiyar nahi hai")
-    return FileResponse(out, filename=m.get("output") or "Notes.docx",
-                        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    name = Path(m.get("output") or "Notes.docx").stem + f".{kind}"
+    return FileResponse(out, filename=name, media_type=KINDS[kind])
 
 
 @app.get("/healthz")

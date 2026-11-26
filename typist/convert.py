@@ -57,6 +57,7 @@ def main(argv=None):
     ap.add_argument("--title")
     ap.add_argument("--save-json")
     ap.add_argument("--from-json")
+    ap.add_argument("--ppt", help="also write a .pptx deck to this path")
     a = ap.parse_args(argv)
     if a.from_json:
         parts = json.loads(Path(a.from_json).read_text(encoding="utf-8"))
@@ -68,6 +69,10 @@ def main(argv=None):
             Path(a.save_json).write_text(json.dumps(parts, ensure_ascii=False, indent=1), encoding="utf-8")
     build_docx(parts, a.out, a.title)
     print("wrote", a.out)
+    if a.ppt:
+        from .pptkit import render_deck
+        render_deck(parts, a.ppt, a.title)
+        print("wrote", a.ppt)
 
 
 if __name__ == "__main__":

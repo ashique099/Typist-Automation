@@ -76,4 +76,17 @@ def test_web_flow(client):
     assert m["output"] == "ठोस अवस्था (Solid State).docx"
     d = client.get(f"/api/jobs/{jid}/download")
     assert d.status_code == 200 and d.content[:2] == b"PK"
+    p = client.get(f"/api/jobs/{jid}/download?kind=pptx")
+    assert p.status_code == 200 and p.content[:2] == b"PK" and m["has_ppt"]
+    assert client.get(f"/api/jobs/{jid}/download?kind=exe").status_code == 404
     assert client.post("/api/jobs", files=[("files", ("x.pdf", b"not a pdf"))]).status_code == 400
+
+
+def test_ppt_deck(tmp_path):
+    from pptx import Presentation
+    from typist.pptkit import render_deck
+    out = render_deck(PARTS, tmp_path / "d.pptx")
+    prs = Presentation(out)
+    assert len(prs.slides) >= 3
+    text = " ".join(sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.has_text_frame)
+    assert "ठोस अवस्था (Solid State)" in text and "उदाहरण" in text

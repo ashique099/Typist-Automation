@@ -28,6 +28,8 @@
   td { padding:10px 6px; border-top:1px solid var(--line); vertical-align:top }
   .st { font-weight:600; white-space:nowrap } .done { color:var(--green) } .failed { color:var(--red) } .running,.queued { color:var(--blue) }
   .small { color:var(--muted); font-size:12px; margin-top:2px; word-break:break-word }
+  .dls { display:flex; flex-direction:column; gap:6px; align-items:flex-start }
+  .dl.ppt { background:var(--blue) }
   .dl { color:#fff; background:var(--green); padding:6px 12px; border-radius:6px; text-decoration:none; white-space:nowrap }
   @media (max-width:560px) { td.when { display:none } }
 </style>
@@ -44,7 +46,7 @@
     <label for="title">Chapter ka naam (optional)</label>
     <input id="title" type="text" placeholder="khaali chhodein to slides se apne aap le lega, jaise: ठोस अवस्था (Solid State)">
     <button id="go" class="go" disabled>Word file banayein</button>
-    <div class="hint">Saare PDFs order me jud kar ek .docx banegi (Sanskrit Text 13, A4, 2 column). Har PDF me 1-3 minute lagte hain.</div>
+    <div class="hint">Saare PDFs order me jud kar ek Word notes (.docx) aur ek PPT banegi. Har PDF me 1-3 minute lagte hain.</div>
   </section>
   <section class="card">
     <h2>2. Aapki files</h2>
@@ -104,7 +106,8 @@ async function refresh() {
         <div class="small">${esc(j.status === "failed" ? j.error : j.step)}</div></td>
       <td class="when small">${esc(j.by)}<br>${new Date(j.created * 1000).toLocaleString()}</td>
       <td class="st ${j.status}">${label[j.status] || j.status}</td>
-      <td>${j.status === "done" ? `<a class="dl" href="/api/jobs/${j.id}/download">Download</a>` : ""}</td></tr>`).join("");
+      <td class="dls">${j.status === "done" ? `<a class="dl" href="/api/jobs/${j.id}/download?kind=docx">Notes (Word)</a>` +
+        (j.has_ppt ? `<a class="dl ppt" href="/api/jobs/${j.id}/download?kind=pptx">PPT</a>` : "") : ""}</td></tr>`).join("");
   } catch (e) {}
 }
 refresh(); setInterval(refresh, 4000);
