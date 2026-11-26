@@ -2,23 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin Panel – Typist Automation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<title>Admin Panel – Disha Online Solution</title>
 <style>
-  :root { --red:#C00000; --blue:#1F4E9F; --green:#00703C; --amber:#9a6700; --bg:#f4f5f8; --card:#fff; --text:#1b1f24;
-          --muted:#5d6672; --line:#e3e6eb; --soft:#eef3fb; --side:#141a26; --sidetext:#aeb8c8; }
-  * { box-sizing:border-box }
-  body { margin:0; font-family:system-ui,"Segoe UI","Nirmala UI",sans-serif; background:var(--bg); color:var(--text); font-size:15px }
+  @font-face { font-family:"RupeeSign"; src:local("Segoe UI"), local("Nirmala UI"), local("Arial"), local("Noto Sans"), local("DejaVu Sans"); unicode-range:U+20B9; }
+  :root { --red:#C0202A; --blue:#1A2E6C; --navy:#191A3E; --maroon:#9E2330; --green:#00703C; --amber:#9a6700; --bg:#F6F7FB; --card:#fff; --text:#1b1f24;
+          --muted:#5d6672; --line:#e3e6eb; --soft:#F2F4F9; --side:#191A3E; --sidetext:#b8bdd6; }
+  * { box-sizing:border-box } button, input, select { font-family:inherit }
+  body { margin:0; font-family:"RupeeSign","Poppins",system-ui,"Segoe UI","Nirmala UI",sans-serif; background:var(--bg); color:var(--text); font-size:15px }
   a { color:var(--blue) }
   .layout { display:grid; grid-template-columns:232px 1fr; min-height:100vh; background:linear-gradient(to right, var(--side) 232px, transparent 232px) }
   aside { background:var(--side); color:var(--sidetext); padding:20px 14px; display:flex; flex-direction:column; gap:4px; position:sticky; top:0; height:100vh }
   .brand { display:flex; align-items:center; gap:10px; color:#fff; font-weight:700; font-size:15px; padding:0 8px 4px }
   .brand small { display:block; color:var(--sidetext); font-weight:500; font-size:12px }
-  .logo { width:34px; height:34px; border-radius:9px; background:var(--red); color:#fff; display:grid; place-items:center; font-weight:800; flex:none }
+  .logo { width:42px; height:42px; flex:none; background:#fff; border-radius:50% }
   nav { display:flex; flex-direction:column; gap:2px; margin-top:18px }
   nav button, .side-link { all:unset; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; color:var(--sidetext); font-size:14px; box-sizing:border-box; width:100% }
-  nav button:hover, .side-link:hover { background:#1f2738; color:#fff } nav button.on { background:#263049; color:#fff }
+  nav button:hover, .side-link:hover { background:#24264f; color:#fff } nav button.on { background:#2a2c5c; color:#fff; box-shadow:inset 3px 0 0 var(--red) }
   nav svg, .side-link svg { width:18px; height:18px; flex:none }
-  .side-foot { margin-top:auto; border-top:1px solid #263049; padding-top:12px; font-size:13px }
+  .side-foot { margin-top:auto; border-top:1px solid #2a2c5c; padding-top:12px; font-size:13px }
   .side-foot b { color:#fff; display:block; padding:0 12px 6px }
   main { padding:28px 30px 60px; max-width:1180px; width:100% }
   .head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px }
@@ -34,7 +38,7 @@
   .track i { display:block; height:100%; background:var(--green); border-radius:5px } .track i.warn { background:var(--amber) } .track i.over { background:var(--red) }
   .two { display:grid; grid-template-columns:1.4fr 1fr; gap:18px }
   .chart { width:100%; height:190px; display:block } .chart text { font-size:11px; fill:var(--muted) }
-  .chart .b { fill:var(--blue) } .chart .b:hover { fill:#163a78 } .chart .grid { stroke:#eceef2 }
+  .chart .b { fill:var(--blue) } .chart .b:hover { fill:var(--red) } .chart .grid { stroke:#eceef2 }
   #tip { position:fixed; pointer-events:none; background:#141a26; color:#fff; font-size:12px; padding:6px 9px; border-radius:6px; z-index:9; display:none; white-space:nowrap }
   .alert { background:#fff6e5; border:1px solid #f1d8a6; color:#6b4a00; padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:14px }
   .alert.err { background:#fff3f3; border-color:#f0c4c4; color:var(--red) }
@@ -51,13 +55,14 @@
   .dls { display:flex; flex-wrap:wrap; gap:6px }
   .dl { font-size:12px; font-weight:600; padding:5px 9px; border-radius:6px; text-decoration:none; color:#fff; background:var(--red); white-space:nowrap }
   .dl.ppt, .dl.objective { background:var(--blue) } .dl.test { background:var(--green) }
-  .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border:0; border-radius:8px; background:var(--blue); color:#fff; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; white-space:nowrap }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border:0; border-radius:8px; background:var(--navy); color:#fff; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; font-family:inherit; white-space:nowrap }
+  .btn:hover { background:var(--blue) } .btn.ghost:hover { background:var(--soft) } .btn.danger:hover { background:#fdecec }
   .btn:disabled { opacity:.5; cursor:default } .btn.ghost { background:#fff; color:var(--text); border:1px solid var(--line) } .btn.sm { padding:5px 10px; font-size:12px }
   .btn.danger { background:#fff; color:var(--red); border:1px solid #f0c4c4 }
   .acts { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end }
   label { display:block; font-size:13px; font-weight:600; margin:14px 0 6px }
   input[type=text], input[type=password], input[type=number], input[type=search], select { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; background:#fff; color:var(--text) }
-  input:focus, select:focus { outline:2px solid #c9d6ef; border-color:var(--blue) }
+  input:focus, select:focus { outline:2px solid #c5cfe6; border-color:var(--blue) }
   .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px }
   .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap } .row > div { flex:1 1 160px }
   .filters { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px } .filters > * { width:auto; flex:0 1 auto } .filters input { flex:1 1 200px }
@@ -79,7 +84,7 @@
 <body>
 <div class="layout">
   <aside>
-    <div class="brand"><div class="logo">T</div><div>Typist Automation<small>Admin panel</small></div></div>
+    <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div>Disha Online Solution<small>Admin panel</small></div></div>
     <nav id="nav">
       <button data-tab="overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Overview</button>
       <button data-tab="typists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-2-5-4-5.5"/></svg>Typists</button>

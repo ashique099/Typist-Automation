@@ -76,7 +76,7 @@ async def lifespan(_app):
     yield
 
 
-app = FastAPI(title="Typist Automation", lifespan=lifespan)
+app = FastAPI(title="Disha Online Solution", lifespan=lifespan)
 pool = ThreadPoolExecutor(max_workers=WORKERS)
 
 
@@ -594,6 +594,22 @@ def delete_template(name: str, request: Request):
 
 
 # ----------------------------------------------------------------- pages --
+STATIC = {"disha-logo.png": "image/png", "favicon.png": "image/png"}
+
+
+@app.get("/static/{name}")
+def static(name: str):
+    if name not in STATIC:
+        raise HTTPException(404)
+    return FileResponse(HERE / "static" / name, media_type=STATIC[name],
+                        headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/favicon.ico")
+def favicon():
+    return FileResponse(HERE / "static" / "favicon.png", media_type="image/png")
+
+
 @app.get("/healthz")
 def health():
     return {"ok": True, "api_key": bool(os.environ.get("ANTHROPIC_API_KEY", "").strip())}

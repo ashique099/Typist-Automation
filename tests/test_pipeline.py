@@ -91,7 +91,9 @@ def test_web_flow(client, tmp_path):
     r = c.post("/setup", data={"name": "Ashique", "username": "admin", "password": "secret1", "password2": "secret1"},
                follow_redirects=False)
     assert r.status_code == 303 and "ta_session" in r.cookies
-    assert "Panel PDF to Notes DOCX" in c.get("/").text
+    assert "Panel PDF to Notes DOCX" in c.get("/").text and "Disha Online Solution" in c.get("/").text
+    assert c.get("/static/disha-logo.png").content[:4] == b"\x89PNG"
+    assert c.get("/static/../app.py").status_code == 404
     assert c.get("/setup", follow_redirects=False).headers["location"] == "/login"
     # admin adds a typist
     assert c.post("/api/admin/users", data={"username": "rahul", "name": "Rahul", "password": "abc123"}).status_code == 200

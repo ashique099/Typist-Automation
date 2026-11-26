@@ -1,4 +1,4 @@
-# Typist Automation
+# Disha Online Solution (Typist Automation)
 
 Turns live-class "panel" PDFs (handwritten slides exported as images) into clean, editable Word files.
 
