@@ -259,7 +259,7 @@ async function loadOverview() {
     <td class="n"><button class="btn ghost sm" data-retry="${j.id}">Run again</button></td></tr>`).join("") || empty(2, "No failures. 👍");
   $("#system").innerHTML = `<dt>Claude API key</dt><dd>${o.api_key ? "Set" : '<span style="color:var(--red)">Not set</span>'}</dd>
     <dt>Notes model</dt><dd>${esc(o.models.notes)} · effort ${esc(o.models.effort)}</dd><dt>MCQ model</dt><dd>${esc(o.models.mcq)}</dd>
-    <dt>Job files</dt><dd>${o.storage.jobs_mb} MB, kept ${o.storage.keep_days} days · ${o.storage.free_gb} GB free on disk</dd>`;
+    <dt>PDF reader</dt><dd>${esc(o.pdf_engine)}</dd><dt>Job files</dt><dd>${o.storage.jobs_mb} MB, kept ${o.storage.keep_days} days · ${o.storage.free_gb} GB free on disk</dd>`;
   $("#ovSub").textContent = new Date().toLocaleDateString("en-IN", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
   $("#ovCsv").href = "/api/admin/jobs.csv?month=" + thisMonth();
 }

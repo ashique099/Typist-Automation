@@ -1,4 +1,5 @@
 """Offline tests: no API key needed (the vision call is replaced by a fixture)."""
+import io
 import json
 import time
 import zipfile
@@ -33,6 +34,18 @@ def test_pdf_pages(tmp_path):
     doc.save(tmp_path / "a.pdf")
     imgs = pdf_pages(str(tmp_path / "a.pdf"))
     assert len(imgs) == 1 and imgs[0][:2] == b"\xff\xd8"
+
+
+def test_pdf_pages_without_pymupdf(tmp_path, monkeypatch):
+    from PIL import Image
+    import typist.pages as pg
+    imgs = [Image.new("RGB", (1920, 1080), c) for c in ("white", "black")]
+    imgs[0].save(tmp_path / "s.pdf", save_all=True, append_images=imgs[1:])
+    monkeypatch.setattr(pg, "pymupdf", None)
+    out = pg.pdf_pages(str(tmp_path / "s.pdf"))
+    assert len(out) == 2 and out[0][:2] == b"\xff\xd8"
+    assert Image.open(io.BytesIO(out[0])).size == (1600, 900)
+    assert len(pg.pdf_pages((tmp_path / "s.pdf").read_bytes())) == 2
 
 
 @pytest.fixture

@@ -393,6 +393,8 @@ def admin_overview(request: Request):
     o["labels"] = {k: v["label"] for k, v in TASKS.items()}
     du = shutil.disk_usage(DATA)
     used = sum(f.stat().st_size for f in JOBS.rglob("*") if f.is_file())
+    from typist.pages import PDF_ENGINE
+    o["pdf_engine"] = PDF_ENGINE
     o["storage"] = {"jobs_mb": round(used / 2 ** 20, 1), "free_gb": round(du.free / 2 ** 30, 1),
                     "keep_days": KEEP_DAYS}
     return o
