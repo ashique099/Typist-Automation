@@ -4,3 +4,4 @@ data/
 settings.bat
 .venv/
 .env
+api_key.txt

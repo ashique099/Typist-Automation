@@ -149,7 +149,7 @@
         seen.welcome = 1;
         flash(`Welcome, ${(d.user.name || d.user.username || "").split(" ")[0]}`, {kind: "ok", sub: "Signed in to Disha Online Solution", wait: true});
       }
-      if (!d.api_key && !seen.key) { seen.key = 1; flash("API key missing", {kind: "warn", sub: "Notes and MCQ jobs need the key in settings.bat", wait: true}); }
+      if (!d.api_key && !seen.key) { seen.key = 1; flash("API key missing", {kind: "warn", sub: "Admin panel → Settings → API integration", wait: true}); }
       const lvl = pc >= 1 ? 2 : pc >= 0.8 ? 1 : 0;
       if (lvl > (seen.budget || 0)) flash(lvl === 2 ? "Monthly budget used up" : `Budget ${Math.round(pc * 100)}% used`,
         {kind: lvl === 2 ? "err" : "warn", sub: lvl === 2 ? "New AI jobs are paused until the admin raises it" : `₹${b.spent_inr} of ₹${Math.round(b.limit_inr)} this month`, wait: true});

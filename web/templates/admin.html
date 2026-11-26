@@ -73,6 +73,16 @@
   .kv { display:grid; grid-template-columns:auto 1fr; gap:8px 16px; font-size:14px } .kv dt { color:var(--muted) } .kv dd { margin:0; font-weight:600 }
   .empty { color:var(--muted); font-size:13px; padding:8px 0 }
   .hide { display:none !important }
+  .apistat { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; background:var(--soft); font-size:14px }
+  .apistat i { width:10px; height:10px; border-radius:50%; background:var(--red); flex:none } .apistat.on i { background:#1f9d55 }
+  .apistat code { background:#fff; border:1px solid var(--line); padding:2px 7px; border-radius:6px; font-size:13px }
+  .models { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+  .mcol { border:1px solid var(--line); border-radius:12px; padding:12px }
+  .mcol b { display:block; font-size:13px; margin-bottom:8px; color:var(--navy) }
+  .mopt { display:flex; align-items:center; gap:10px; padding:9px 10px; border:1px solid var(--line); border-radius:9px; margin-top:6px; cursor:pointer; font-size:14px; font-weight:500 }
+  .mopt input { accent-color:var(--red); margin:0 } .mopt small { color:var(--muted); display:block; font-size:12px; font-weight:400 }
+  .mopt:has(input:checked) { border-color:var(--red); background:#fff5f5 }
+  @media (max-width:720px) { .models { grid-template-columns:1fr } }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:10 }
   @media (max-width:1000px) { .kpis { grid-template-columns:repeat(2,1fr) } .two { grid-template-columns:1fr } }
   .menu { display:none }
@@ -194,8 +204,24 @@
 
     <!-- SETTINGS -->
     <section id="tab-settings" class="hide">
-      <div class="head"><div><h1>Settings</h1><p class="sub">Budget and models. Changes apply to new jobs.</p></div></div>
-      <div class="card"><h2>Budget &amp; models</h2>
+      <div class="head"><div><h1>Settings</h1><p class="sub">API connection, budget and models. Changes apply to new jobs.</p></div></div>
+      <div class="card"><h2>API integration <span id="apiState"></span></h2>
+        <div class="apibox">
+          <div class="apistat" id="apiStat"></div>
+          <form id="keyForm" class="row" autocomplete="off">
+            <div><label for="apiKey">Claude API key</label><input type="password" id="apiKey" name="key" placeholder="sk-ant-…" autocomplete="off" spellcheck="false"></div>
+            <div style="flex:0 0 auto"><button class="btn">Save key</button></div>
+          </form>
+          <div class="row" style="margin-top:12px">
+            <div style="flex:0 0 auto"><button class="btn ghost" id="keyTest" type="button">Test connection</button></div>
+            <div style="flex:0 0 auto"><button class="btn danger" id="keyDel" type="button">Remove key</button></div>
+          </div>
+          <label>Model for each tool</label>
+          <div class="models" id="modelPick"></div>
+          <div class="hint">The key is saved only on this server PC (in the data folder), never in GitHub, and is never shown again in full. Get a key from console.anthropic.com → API keys. "Test connection" spends no tokens.</div>
+        </div>
+      </div>
+      <div class="card"><h2>Budget &amp; advanced</h2>
         <form id="settings">
           <div class="grid">
             <div><label>Monthly budget (₹)</label><input type="number" name="monthly_budget_inr" min="0" step="100"></div>
@@ -263,7 +289,7 @@ async function loadOverview() {
   const o = await api("/api/admin/overview");
   const m = o.month, t = o.today, pct = o.budget_inr ? 100 * m.inr / o.budget_inr : 0;
   const alerts = [];
-  if (!o.api_key) alerts.push(`<div class="alert err">The Claude API key is not set, so PDF and MCQ jobs cannot run. Add it to <code>settings.bat</code> and restart the server.</div>`);
+  if (!o.api_key) alerts.push(`<div class="alert err">The Claude API key is not set, so PDF and MCQ jobs cannot run. Add it in <a href="#" onclick="show('settings');return false">Settings → API integration</a>.</div>`);
   if (pct >= 100) alerts.push(`<div class="alert err">This month's budget is used up. PDF and MCQ jobs are blocked. Raise it in Settings if needed.</div>`);
   else if (pct >= 80) alerts.push(`<div class="alert">${Math.round(pct)}% of this month's budget is used.</div>`);
   $("#ovAlerts").innerHTML = alerts.join("");
@@ -421,8 +447,42 @@ $("#addTpl").onsubmit = async e => {
 };
 
 // ------------------------------------------------------------- settings --
+const MDESC = {"claude-opus-5-5": "Best quality, about 2× the cost", "claude-sonnet-5-5": "Good quality, half the cost of Opus", "claude-haiku-5-5": "Cheapest, for simple pages"};
+function drawApi(a) {
+  $("#apiStat").className = "apistat" + (a.set ? " on" : "");
+  $("#apiStat").innerHTML = a.set ? `<i></i><span>Key saved · <code>${esc(a.masked)}</code> from ${esc(a.source)}</span>`
+    : `<i></i><span>No API key yet. PDF to Notes and MCQ Test will not run until you add one.</span>`;
+  $("#apiState").textContent = a.set ? "Key set" : "Not connected";
+  $("#keyDel").classList.toggle("hide", a.source !== "admin panel");
+}
+function drawModels(d) {
+  const s = d.settings, col = (name, title) => `<div class="mcol"><b>${title}</b>` + ["claude-sonnet-5-5", "claude-opus-5-5"].filter(k => d.models[k]).map(k =>
+    `<label class="mopt"><input type="radio" name="${name}" value="${k}" ${s[name] === k ? "checked" : ""}><span>${esc(d.models[k].split(" (")[0])}<small>${esc(MDESC[k] || "")}</small></span></label>`).join("") + `</div>`;
+  $("#modelPick").innerHTML = col("model", "Panel PDF to Notes") + col("mcq_model", "MCQ Test");
+}
+$("#modelPick").onchange = async e => {
+  const fd = new FormData(); fd.append(e.target.name, e.target.value);
+  try { await api("/api/admin/settings", {method: "POST", body: fd}); $("#settings")[e.target.name].value = e.target.value;
+    toast(`${e.target.name === "model" ? "Notes" : "MCQ"} model: ${e.target.value.includes("opus") ? "Opus" : "Sonnet"}`, "ok"); } catch (err) { toast(err.message); }
+};
+$("#keyForm").onsubmit = async e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try { const r = await api("/api/admin/apikey", {method: "POST", body: fd}); e.target.reset(); drawApi(r.api); toast("API key saved", "ok");
+    window.Island && Island.refresh(); $("#keyTest").click(); } catch (err) { toast(err.message, "err"); }
+};
+$("#keyTest").onclick = async () => {
+  const b = $("#keyTest"); b.disabled = true; b.textContent = "Testing…";
+  try { const r = await api("/api/admin/apikey/test", {method: "POST"}); toast("API connected · " + r.models.join(", "), "ok"); }
+  catch (err) { toast(err.message, "err"); }
+  b.disabled = false; b.textContent = "Test connection";
+};
+$("#keyDel").onclick = async () => {
+  try { const r = await api("/api/admin/apikey/delete", {method: "POST"}); drawApi(r.api); toast(r.note || "API key removed", r.note ? "warn" : "ok"); } catch (err) { toast(err.message); }
+};
 async function loadSettings() {
   const d = await api("/api/admin/settings"), s = d.settings, f = $("#settings");
+  drawApi(d.api); drawModels(d);
   ["model", "mcq_model"].forEach(n => { f[n].innerHTML = Object.entries(d.models).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join(""); });
   Object.entries(s).forEach(([k, v]) => { if (f[k]) f[k].value = v; });
 }

@@ -173,6 +173,14 @@ def test_web_flow(client, tmp_path):
     assert r.status_code == 400 and "budget" in r.json()["detail"]
     r = c.post("/api/jobs", data={"task": "ppt"}, files=[("files", ("Notes.docx", notes))])
     assert r.status_code == 200  # PPT costs nothing, so it still runs
+    # API key from the admin panel: saved on the server, shown masked, removable
+    assert c.post("/api/admin/apikey", data={"key": "hello"}).status_code == 400
+    key = "sk-ant-api03-" + "x" * 30 + "ab12"
+    r = c.post("/api/admin/apikey", data={"key": key}).json()
+    assert r["api"]["set"] and r["api"]["source"] == "admin panel" and key not in str(r) and r["api"]["masked"].endswith("ab12")
+    assert key not in c.get("/api/admin/settings").text
+    c.post("/api/admin/apikey/delete")
+    assert c.get("/api/admin/settings").json()["api"]["source"] != "admin panel"
 
 
 def test_docx_round_trip(tmp_path):

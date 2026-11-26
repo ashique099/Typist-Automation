@@ -99,7 +99,7 @@ class TranscribeError(RuntimeError):
 def _client():
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not key:
-        raise TranscribeError("ANTHROPIC_API_KEY is not set (put the API key in settings.bat on the server).")
+        raise TranscribeError("ANTHROPIC_API_KEY is not set (add it in Admin panel > Settings > API integration).")
     return anthropic.Anthropic(api_key=key, max_retries=4, timeout=900)
 
 

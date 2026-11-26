@@ -58,8 +58,28 @@ KINDS = {"notes": ("notes.docx", "", DOCX, "Notes DOCX"),
          "objective": ("objective.pptx", " - Objective", PPTX, "Objective PPT")}
 
 
+KEYFILE = DATA / "api_key.txt"   # saved from Admin > Settings; lives only on the server, never in git
+BAT_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()  # key that came from settings.bat (if any)
+
+
+def _load_key_file():
+    try:
+        k = KEYFILE.read_text(encoding="utf-8").strip()
+    except OSError:
+        return
+    if k:
+        os.environ["ANTHROPIC_API_KEY"] = k
+
+
+def _key_info():
+    k = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    src = "admin panel" if KEYFILE.exists() and k else "settings.bat" if k else ""
+    return {"set": bool(k), "source": src, "masked": (k[:7] + "…" + k[-4:]) if len(k) > 14 else ("set" if k else "")}
+
+
 def _startup():
     JOBS.mkdir(parents=True, exist_ok=True)
+    _load_key_file()
     TEMPLATES.mkdir(parents=True, exist_ok=True)
     db.init(DATA / "typist.db")
     for j in db.q("select id from jobs where status in ('queued','running')"):  # restarted mid-job
@@ -527,7 +547,62 @@ def get_settings(request: Request):
     notes = db.q("select coalesce(sum(cost_usd),0) usd from jobs where created>=? and "
                  "coalesce(json_extract(options,'$.task'),'notes')='notes'", (since,), one=True)
     month["notes_inr"] = notes["usd"] * rate
-    return {"settings": s, "models": usage.MODELS, "month": month, "templates": ppt_templates()}
+    return {"settings": s, "models": usage.MODELS, "month": month, "templates": ppt_templates(), "api": _key_info()}
+
+
+@app.post("/api/admin/apikey")
+def save_api_key(request: Request, key: str = Form("")):
+    need_admin(request)
+    key = key.strip()
+    if not key.startswith("sk-ant-") or len(key) < 30 or any(c.isspace() for c in key):
+        raise HTTPException(400, "That does not look like a Claude API key (it starts with sk-ant-).")
+    DATA.mkdir(parents=True, exist_ok=True)
+    KEYFILE.write_text(key, encoding="utf-8")
+    try:
+        os.chmod(KEYFILE, 0o600)
+    except OSError:
+        pass
+    os.environ["ANTHROPIC_API_KEY"] = key
+    return {"ok": True, "api": _key_info()}
+
+
+@app.post("/api/admin/apikey/delete")
+def delete_api_key(request: Request):
+    need_admin(request)
+    if KEYFILE.exists():
+        KEYFILE.unlink()
+        if BAT_KEY:
+            os.environ["ANTHROPIC_API_KEY"] = BAT_KEY
+        else:
+            os.environ.pop("ANTHROPIC_API_KEY", None)
+    return {"ok": True, "api": _key_info(),
+            "note": "Removed. The key from settings.bat is in use again." if BAT_KEY else ""}
+
+
+@app.post("/api/admin/apikey/test")
+def test_api_key(request: Request):
+    """Checks the key and each chosen model with a free models lookup (no tokens are spent)."""
+    need_admin(request)
+    k = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not k:
+        raise HTTPException(400, "No API key is set yet.")
+    import anthropic
+    s = db.all_settings()
+    try:
+        c = anthropic.Anthropic(api_key=k, max_retries=1, timeout=20)
+        for m in {s["model"], s["mcq_model"]}:
+            c.models.retrieve(m)
+    except anthropic.AuthenticationError:
+        raise HTTPException(400, "The key was rejected by Anthropic (wrong or revoked key).")
+    except anthropic.PermissionDeniedError:
+        raise HTTPException(400, "The key works but has no access to the chosen model.")
+    except anthropic.NotFoundError:
+        raise HTTPException(400, "The key works but a chosen model was not found for this account.")
+    except anthropic.APIConnectionError:
+        raise HTTPException(400, "Could not reach api.anthropic.com. Check the PC's internet connection.")
+    except anthropic.APIError as e:
+        raise HTTPException(400, f"Anthropic error: {str(e)[:200]}")
+    return {"ok": True, "models": [usage.MODELS.get(m, m) for m in {s["model"], s["mcq_model"]}]}
 
 
 @app.post("/api/admin/settings")
