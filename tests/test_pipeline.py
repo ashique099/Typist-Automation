@@ -184,7 +184,10 @@ def test_web_flow(client, tmp_path):
     assert c.get(f"/api/jobs/{jid}").json()["downloads"] == []
     c.post("/api/admin/settings", data={"monthly_budget_inr": "0"})
     r = c.post("/api/jobs", data={"task": "notes"}, files=[("files", ("a.pdf", _pdf_bytes()))])
-    assert r.status_code == 400 and "budget" in r.json()["detail"]
+    assert r.status_code == 400 and "Ashique Sir" in r.json()["detail"] and "budget" not in r.json()["detail"].lower()
+    import web.app as appmod
+    assert "Claude" not in appmod.typist_error("ANTHROPIC_API_KEY is not set") and "Ashique Sir" in appmod.typist_error("anthropic.RateLimitError 429")
+    assert appmod.typist_error("PDF is password protected") == "PDF is password protected"
     r = c.post("/api/jobs", data={"task": "ppt"}, files=[("files", ("Notes.docx", notes))])
     assert r.status_code == 200  # PPT costs nothing, so it still runs
     # API key from the admin panel: saved on the server, shown masked, removable

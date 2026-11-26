@@ -376,9 +376,9 @@ async def create_job(request: Request, files: list[UploadFile] = File(...), task
     spec = TASKS[task]
     if spec["ai"]:
         if not os.environ.get("ANTHROPIC_API_KEY", "").strip():
-            raise HTTPException(400, "The Claude API key is not set on the server. Ask the admin.")
+            raise HTTPException(400, f"Notes and MCQ generation are temporarily unavailable. Please contact {CONTACT}.")
         if _budget_left_inr() <= 0:
-            raise HTTPException(400, "This month's budget is used up. The admin can raise it in Settings.")
+            raise HTTPException(400, f"This month's limit for Notes and MCQ is reached. Please contact {CONTACT}.")
     if not files or len(files) > MAX_FILES:
         raise HTTPException(400, f"Upload 1 to {MAX_FILES} files.")
     jid = time.strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:6]
@@ -408,8 +408,26 @@ async def create_job(request: Request, files: list[UploadFile] = File(...), task
     return {"id": jid}
 
 
-def _public(j, rate):
+CONTACT = "Ashique Sir"   # who typists should contact when something needs the admin
+_TECH = re.compile(r"claude|anthropic|api[ _-]?key|ANTHROPIC|model|token|rate.?limit|overloaded|credit|billing|"
+                   r"authentication|permission|status code|\b40[0-9]\b|\b5[0-9]{2}\b|budget", re.I)
+
+
+def typist_error(msg: str) -> str:
+    """Typists never see technical wording (API, Claude, model, budget...)."""
+    if not msg or not _TECH.search(msg):
+        return msg
+    if re.search(r"budget|credit|billing", msg, re.I):
+        return f"This month's limit for Notes and MCQ is reached. Please contact {CONTACT}."
+    if re.search(r"api[ _-]?key|ANTHROPIC_API_KEY|authentication", msg, re.I):
+        return f"Notes and MCQ generation are temporarily unavailable. Please contact {CONTACT}."
+    return f"The server could not finish this job. Please try again, or contact {CONTACT} if it keeps happening."
+
+
+def _public(j, rate, admin=False):
     j = dict(j)
+    if not admin and j.get("error"):
+        j["error"] = typist_error(j["error"])
     j["cost_inr"] = round((j.get("cost_usd") or 0) * rate, 1)
     j["task"] = (j.get("options") or {}).get("task", "notes")
     j["task_label"] = TASKS.get(j["task"], TASKS["notes"])["label"]
@@ -441,7 +459,8 @@ def list_jobs(request: Request, scope: str = "mine", status: str = "", q: str = 
     f = _job_filters(u, scope, status, q, days, task, user, month)
     rows, total = db.list_jobs(limit=per, offset=(max(page, 1) - 1) * per, **f)
     rate = float(db.setting("usd_to_inr"))
-    return {"jobs": [_public(r, rate) for r in rows], "total": total, "page": page, "per": per}
+    adm = _panel(request) == "admin"
+    return {"jobs": [_public(r, rate, adm) for r in rows], "total": total, "page": page, "per": per}
 
 
 def _own_job(request, jid):
@@ -454,7 +473,7 @@ def _own_job(request, jid):
 
 @app.get("/api/jobs/{jid}")
 def get_job(jid: str, request: Request):
-    return _public(_own_job(request, jid), float(db.setting("usd_to_inr")))
+    return _public(_own_job(request, jid), float(db.setting("usd_to_inr")), _panel(request) == "admin")
 
 
 @app.get("/api/jobs/{jid}/download")

@@ -23,7 +23,7 @@
   document.body.appendChild(el);
   const V = n => el.querySelector(".isl-" + n);
   const scope = document.body.dataset.islandScope || "mine";
-  const HDR = scope === "all" ? {"X-Panel": "admin"} : {};  // admin panel uses its own login
+  const ADMIN = scope === "all", HDR = ADMIN ? {"X-Panel": "admin"} : {};  // admin panel uses its own login
   let state = "idle", kind = "ok", active = [], recent = [], known = null, steps = {};
   let health = {online: true, api_key: true, budget: null, user: null}, fails = 0;
   let flashTimer = null, openTimer = null, queue = [];
@@ -51,12 +51,12 @@
   // what the resting pill says when no job is running
   function idleInfo() {
     if (!health.online) return ["off", "Offline · retrying"];
-    if (!health.api_key) return ["warn", "API key missing"];
+    if (!health.api_key) return ["warn", ADMIN ? "API key missing" : "Notes & MCQ paused"];
     const b = health.budget;
     if (b && b.limit_inr > 0) {
       const pc = b.spent_inr / b.limit_inr;
-      if (pc >= 1) return ["err", "Budget used up"];
-      if (pc >= 0.8) return ["warn", `Budget ${Math.round(pc * 100)}% used`];
+      if (pc >= 1) return ["err", ADMIN ? "Budget used up" : "Monthly limit reached"];
+      if (pc >= 0.8 && ADMIN) return ["warn", `Budget ${Math.round(pc * 100)}% used`];
     }
     return ["ok", "All clear"];
   }
@@ -108,8 +108,9 @@
     const b = health.budget, pc = b && b.limit_inr > 0 ? Math.round(b.spent_inr / b.limit_inr * 100) : null;
     const sys = `<div class="isl-sys">
       ${chip(health.online ? "ok" : "off", health.online ? "Server online" : "Server offline")}
-      ${chip(health.api_key ? "ok" : "warn", health.api_key ? "API key set" : "API key missing")}
-      ${pc === null ? "" : chip(pc >= 100 ? "err" : pc >= 80 ? "warn" : "ok", `Budget ${pc}% · ₹${b.spent_inr.toLocaleString("en-IN")} of ₹${Math.round(b.limit_inr).toLocaleString("en-IN")}`)}</div>`;
+      ${ADMIN ? chip(health.api_key ? "ok" : "warn", health.api_key ? "API key set" : "API key missing")
+        : chip(health.api_key && !(pc >= 100) ? "ok" : "warn", health.api_key && !(pc >= 100) ? "All tools ready" : "Notes & MCQ paused · contact Ashique Sir")}
+      ${pc === null || !ADMIN ? "" : chip(pc >= 100 ? "err" : pc >= 80 ? "warn" : "ok", `Budget ${pc}% · ₹${b.spent_inr.toLocaleString("en-IN")} of ₹${Math.round(b.limit_inr).toLocaleString("en-IN")}`)}</div>`;
     const jobs = active.length ? active.slice(0, 4).map(j => { const p = progress(j), q = j.status === "queued";
         return `<div class="isl-job"><div class="row"><b>${esc(tool(j))} · ${esc(name(j))}</b>${chip(q ? "queue" : "run", q ? "Queued" : p === null ? "Running" : Math.round(p * 100) + "%")}</div>
           <small>${scope === "all" && j.by_name ? esc(j.by_name) + " · " : ""}${esc(q ? "Waiting in line" : j.step || "")}</small>
@@ -150,10 +151,11 @@
         seen.welcome = 1;
         flash(`Welcome, ${(d.user.name || d.user.username || "").split(" ")[0]}`, {kind: "ok", sub: "Signed in to Disha Online Solution", wait: true});
       }
-      if (!d.api_key && !seen.key) { seen.key = 1; flash("API key missing", {kind: "warn", sub: "Admin panel → Settings → API integration", wait: true}); }
+      if (!d.api_key && !seen.key) { seen.key = 1;
+        flash(ADMIN ? "API key missing" : "Notes & MCQ paused", {kind: "warn", sub: ADMIN ? "Settings → API integration" : "Please contact Ashique Sir to resolve this", wait: true}); }
       const lvl = pc >= 1 ? 2 : pc >= 0.8 ? 1 : 0;
-      if (lvl > (seen.budget || 0)) flash(lvl === 2 ? "Monthly budget used up" : `Budget ${Math.round(pc * 100)}% used`,
-        {kind: lvl === 2 ? "err" : "warn", sub: lvl === 2 ? "New AI jobs are paused until the admin raises it" : `₹${b.spent_inr} of ₹${Math.round(b.limit_inr)} this month`, wait: true});
+      if (lvl > (seen.budget || 0) && (ADMIN || lvl === 2)) flash(!ADMIN ? "Monthly limit reached" : lvl === 2 ? "Monthly budget used up" : `Budget ${Math.round(pc * 100)}% used`,
+        {kind: lvl === 2 ? "err" : "warn", sub: !ADMIN ? "Notes and MCQ are paused. Please contact Ashique Sir" : lvl === 2 ? "New AI jobs are paused until the limit is raised" : `₹${b.spent_inr} of ₹${Math.round(b.limit_inr)} this month`, wait: true});
       seen.budget = lvl;
       ss.set("seen", seen);
     } catch (e) {}
