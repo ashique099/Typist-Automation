@@ -23,6 +23,7 @@
   document.body.appendChild(el);
   const V = n => el.querySelector(".isl-" + n);
   const scope = document.body.dataset.islandScope || "mine";
+  const HDR = scope === "all" ? {"X-Panel": "admin"} : {};  // admin panel uses its own login
   let state = "idle", kind = "ok", active = [], recent = [], known = null, steps = {};
   let health = {online: true, api_key: true, budget: null, user: null}, fails = 0;
   let flashTimer = null, openTimer = null, queue = [];
@@ -140,7 +141,7 @@
 
   async function checkHealth(first) {
     try {
-      const r = await fetch("/api/me");
+      const r = await fetch("/api/me", {headers: HDR});
       if (!r.ok) return;
       const d = await r.json(), seen = ss.get("seen") || {};
       health.api_key = !!d.api_key; health.budget = d.budget; health.user = d.user;
@@ -162,7 +163,7 @@
     if (document.hidden) return;
     let d;
     try {
-      const r = await fetch(`/api/jobs?scope=${scope}&per=15`);
+      const r = await fetch(`/api/jobs?scope=${scope}&per=15`, {headers: HDR});
       if (r.status === 401) return;
       if (!r.ok) throw new Error(r.status);
       d = await r.json();
@@ -185,7 +186,7 @@
           if (!was && !(Date.now() / 1000 - (j.finished || 0) < 60)) continue;
           if (j.status === "done") {
             const dl = j.downloads && j.downloads[0];
-            flash(`${tool(j)} ready`, {kind: "ok", sub: who + name(j), href: dl && `/api/jobs/${j.id}/download?kind=${dl.kind}`, link: dl && dl.label});
+            flash(`${tool(j)} ready`, {kind: "ok", sub: who + name(j), href: dl && `/api/jobs/${j.id}/download?kind=${dl.kind}${scope === "all" ? "&panel=admin" : ""}`, link: dl && dl.label});
           } else flash(`${tool(j)} failed`, {kind: "err", sub: (j.error || name(j)) + (scope === "all" ? "" : " · Retry from Work history")});
           document.dispatchEvent(new CustomEvent("island:jobchange", {detail: j}));
         } else if (j.status === "running" && steps[j.id] && steps[j.id] !== j.step) {

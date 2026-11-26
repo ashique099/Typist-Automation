@@ -90,15 +90,20 @@ def test_web_flow(client, tmp_path):
     assert c.get("/", follow_redirects=False).headers["location"] == "/setup"
     r = c.post("/setup", data={"name": "Ashique", "username": "admin", "password": "secret1", "password2": "secret1"},
                follow_redirects=False)
-    assert r.status_code == 303 and "ta_session" in r.cookies
-    assert "Panel PDF to Notes DOCX" in c.get("/").text and "Disha Online Solution" in c.get("/").text
+    assert r.status_code == 303 and "ta_admin" in r.cookies and r.headers["location"] == "/admin"
+    assert c.get("/admin").status_code == 200
+    # the typist site has its own login; the admin panel button is gone
+    assert c.get("/", follow_redirects=False).headers["location"] == "/login"
+    c.post("/login", data={"username": "admin", "password": "secret1"})
+    assert "Panel PDF to Notes DOCX" in c.get("/").text and "Admin panel" not in c.get("/").text and "Disha Online Solution" in c.get("/").text
     assert c.get("/static/disha-logo.png").content[:4] == b"\x89PNG"
     assert c.get("/static/../app.py").status_code == 404
     assert c.get("/setup", follow_redirects=False).headers["location"] == "/login"
     # admin adds a typist
     assert c.post("/api/admin/users", data={"username": "rahul", "name": "Rahul", "password": "abc123"}).status_code == 200
     assert c.post("/api/admin/users", data={"username": "rahul", "name": "X", "password": "abc123"}).status_code == 400
-    c.get("/logout")
+    c.get("/logout"); c.get("/admin/logout")
+    assert c.get("/admin", follow_redirects=False).headers["location"] == "/admin/login"
     assert c.post("/api/jobs", data={"task": "ppt"}, files=[("files", ("a.docx", b"PK"))]).status_code == 401
     assert "error" in c.post("/login", data={"username": "rahul", "password": "nope"},
                              follow_redirects=False).headers["location"]
@@ -106,7 +111,11 @@ def test_web_flow(client, tmp_path):
     me = c.get("/api/me").json()
     assert me["user"]["name"] == "Rahul" and me["user"]["role"] == "typist" and me["api_key"]
     assert c.get("/api/admin/users").status_code == 403
-    assert c.get("/admin", follow_redirects=False).headers["location"] == "/"
+    assert c.get("/admin", follow_redirects=False).headers["location"] == "/admin/login"
+    # typist passwords never open the admin panel
+    assert "error" in c.post("/admin/login", data={"username": "rahul", "password": "abc123"},
+                             follow_redirects=False).headers["location"]
+    assert c.get("/api/admin/users").status_code == 403
 
     # 1. PDFs -> notes
     r = c.post("/api/jobs", data={"task": "notes"},
@@ -143,7 +152,12 @@ def test_web_flow(client, tmp_path):
 
     # admin sees everyone's work and the month's spend; budget blocks AI jobs
     c.get("/logout")
-    c.post("/login", data={"username": "admin", "password": "secret1"})
+    c.post("/login", data={"username": "admin", "password": "secret1"})  # typist site: own jobs only
+    assert c.get("/api/admin/users").status_code == 403
+    assert c.get("/api/jobs?scope=all").json()["total"] == 0
+    r = c.post("/admin/login", data={"username": "admin", "password": "secret1"}, follow_redirects=False)
+    assert r.headers["location"] == "/admin"
+    c.headers["X-Panel"] = "admin"
     assert c.get("/api/jobs?scope=all").json()["total"] == 3
     assert c.get("/api/jobs?scope=mine").json()["total"] == 0
     assert c.get("/api/admin/settings").json()["month"]["jobs"] == 3

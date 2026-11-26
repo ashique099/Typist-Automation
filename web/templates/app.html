@@ -133,21 +133,19 @@
   <div class="bar">
     <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div class="bt"><b>Disha Online Solution</b><small>Direction to Success</small></div></div>
     <div class="spacer"></div>
-    <a href="/admin" class="adm hide adminlink">Admin panel</a>
     <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout" class="so">Sign out</a></div>
   </div>
   <div class="tabs"><nav id="nav">
     <button data-tab="home" class="on">Dashboard</button>
     <button data-tab="history">Work history</button>
     <button data-tab="account">My account</button>
-    <a href="/admin" class="adm hide navadmin">Admin panel</a>
     <a href="/logout" class="navout">Sign out</a>
   </nav></div>
 </header>
 <main>
   <section id="tab-home">
     <div class="hero"><div><h1 id="hello">Welcome</h1><p class="sub">Choose what you want to make today.</p></div></div>
-    <div id="noKey" class="alert hide">The Claude API key is not set on the server, so tools 1 and 3 will not run. The admin can add it in Admin panel → Settings → API integration.</div>
+    <div id="noKey" class="alert hide">The Claude API key is not set on the server, so tools 1 and 3 will not run. Please tell the admin.</div>
     <div class="tools">
       <button class="tool t1" data-task="notes">
         <div class="art" data-art="notes"><span class="num">01</span></div>
@@ -291,7 +289,7 @@ async function loadMe() {
   const u = ME.user;
   $("#whoName").textContent = u.name; $("#avatar").textContent = (u.name || "?").trim()[0].toUpperCase();
   $("#hello").textContent = "Welcome, " + u.name;
-  $("#accInfo").textContent = `${u.name} · username: ${u.username} · ${u.role === "admin" ? "Admin" : "Typist"}`;
+  $("#accInfo").textContent = `${u.name} · username: ${u.username} · ${u.is_admin ? "Admin account" : "Typist"}`;
   $$(".adm").forEach(e => e.classList.toggle("hide", u.role !== "admin"));
   $("#noKey").classList.toggle("hide", ME.api_key);
   const b = ME.budget, pct = b.limit_inr ? Math.min(100, 100 * b.spent_inr / b.limit_inr) : 0;

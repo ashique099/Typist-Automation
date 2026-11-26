@@ -46,7 +46,8 @@ TEMPLATES = Path(os.environ.get("TEMPLATE_DIR", DATA / "templates")).resolve()
 WORKERS = int(os.environ.get("JOB_WORKERS", "2"))
 KEEP_DAYS = float(os.environ.get("KEEP_DAYS", "90"))
 MAX_FILES, MAX_MB = 20, 60
-COOKIE = "ta_session"
+COOKIE = "ta_session"        # typist website login
+ADMIN_COOKIE = "ta_admin"    # admin panel login (separate page, separate session)
 HERE = Path(__file__).parent
 
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -101,20 +102,35 @@ pool = ThreadPoolExecutor(max_workers=WORKERS)
 
 
 # ------------------------------------------------------------------ auth --
+def _panel(req: Request) -> str:
+    """Which login a request uses: the admin panel sends X-Panel: admin (or ?panel=admin on links)."""
+    return "admin" if (req.headers.get("x-panel") or req.query_params.get("panel")) == "admin" else "site"
+
+
+def admin_user(req: Request):
+    u = db.session_user(req.cookies.get(ADMIN_COOKIE))
+    return u if u and u["role"] == "admin" else None
+
+
 def current_user(req: Request):
-    return db.session_user(req.cookies.get(COOKIE))
+    """The typist-website user.  An admin account signed in on the typist login works there
+    as a normal typist (own jobs only); admin powers come only from the admin login."""
+    u = db.session_user(req.cookies.get(COOKIE))
+    if u and u["role"] == "admin":
+        u = dict(u, role="typist", is_admin=True)
+    return u
 
 
 def need_user(req: Request):
-    u = current_user(req)
+    u = admin_user(req) if _panel(req) == "admin" else current_user(req)
     if not u:
         raise HTTPException(401, "Please log in")
     return u
 
 
 def need_admin(req: Request):
-    u = need_user(req)
-    if u["role"] != "admin":
+    u = admin_user(req)
+    if not u:
         raise HTTPException(403, "Admins only")
     return u
 
@@ -126,10 +142,11 @@ def _page(name, **subs):
     return HTMLResponse(html)
 
 
-def _login_response(tok, request: Request | None = None):
-    r = RedirectResponse("/", status_code=303)
+def _login_response(tok, request: Request | None = None, admin=False):
+    r = RedirectResponse("/admin" if admin else "/", status_code=303)
     secure = bool(request and request.url.scheme == "https")  # behind nginx + HTTPS on the VPS
-    r.set_cookie(COOKIE, tok, max_age=60 * 86400, httponly=True, samesite="lax", secure=secure)
+    r.set_cookie(ADMIN_COOKIE if admin else COOKIE, tok, max_age=(7 if admin else 60) * 86400,
+                 httponly=True, samesite="strict" if admin else "lax", secure=secure)
     return r
 
 
@@ -184,7 +201,7 @@ def setup(request: Request, name: str = Form(""), username: str = Form(""), pass
     if len(password) < 6 or password != password2 or not re.fullmatch(r"[a-zA-Z0-9_.-]{3,30}", username.strip()):
         return RedirectResponse("/setup?error=1", status_code=303)
     db.create_user(username, name, password, role="admin")
-    return _login_response(db.login(username, password), request)
+    return _login_response(db.login(username, password), request, admin=True)
 
 
 @app.get("/logout")
@@ -192,6 +209,38 @@ def logout(request: Request):
     db.logout(request.cookies.get(COOKIE))
     r = RedirectResponse("/login", status_code=303)
     r.delete_cookie(COOKIE)
+    return r
+
+
+@app.get("/admin/login")
+def admin_login_page(request: Request, error: str = ""):
+    if db.user_count() == 0:
+        return RedirectResponse("/setup", status_code=303)
+    if admin_user(request):
+        return RedirectResponse("/admin", status_code=303)
+    msg = {"1": "Wrong admin username or password.", "2": "Too many wrong tries. Wait 15 minutes and try again."}
+    return _page("admin-login.html", error=msg.get(error, msg["1"]) if error else "")
+
+
+@app.post("/admin/login")
+def admin_login(request: Request, username: str = Form(""), password: str = Form("")):
+    key = "admin|" + _client_ip(request) + "|" + username.strip().lower()
+    if _too_many(key):
+        return RedirectResponse("/admin/login?error=2", status_code=303)
+    u = db.q("select role, active from users where username=?", (username.strip().lower(),), one=True)
+    tok = db.login(username, password) if u and u["role"] == "admin" and u["active"] else None
+    if not tok:  # typist accounts never get in here, and we don't say which part was wrong
+        _FAILS.setdefault(key, []).append(time.time())
+        return RedirectResponse("/admin/login?error=1", status_code=303)
+    _FAILS.pop(key, None)
+    return _login_response(tok, request, admin=True)
+
+
+@app.get("/admin/logout")
+def admin_logout(request: Request):
+    db.logout(request.cookies.get(ADMIN_COOKIE))
+    r = RedirectResponse("/admin/login", status_code=303)
+    r.delete_cookie(ADMIN_COOKIE)
     return r
 
 
@@ -714,11 +763,10 @@ def health():
 
 @app.get("/admin")
 def admin_page(request: Request):
-    u = current_user(request)
-    if not u:
-        return RedirectResponse("/login", status_code=303)
-    if u["role"] != "admin":
-        return RedirectResponse("/", status_code=303)
+    if db.user_count() == 0:
+        return RedirectResponse("/setup", status_code=303)
+    if not admin_user(request):
+        return RedirectResponse("/admin/login", status_code=303)
     return _page("admin.html")
 
 
@@ -733,6 +781,7 @@ def home(request: Request):
 
 @app.exception_handler(HTTPException)
 def http_err(request: Request, exc: HTTPException):
-    if exc.status_code == 401 and not request.url.path.startswith("/api/"):
-        return RedirectResponse("/login", status_code=303)
+    if exc.status_code in (401, 403) and not request.url.path.startswith("/api/") or (
+            exc.status_code in (401, 403) and request.method == "GET" and "download" in request.url.path):
+        return RedirectResponse("/admin/login" if _panel(request) == "admin" else "/login", status_code=303)
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)

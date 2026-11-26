@@ -129,8 +129,8 @@
     </nav>
     <div class="side-foot">
       <b id="whoName"></b>
-      <a class="side-link" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to tools</a>
-      <a class="side-link" href="/logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</a>
+      <a class="side-link" href="/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Open typist site ↗</a>
+      <a class="side-link" href="/admin/logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</a>
     </div>
   </aside>
   <main>
@@ -264,9 +264,9 @@ function toast(t, kind) {
   const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 3500);
 }
 async function api(url, opts) {
+  opts = Object.assign({}, opts); opts.headers = Object.assign({"X-Panel": "admin"}, opts.headers || {});
   const r = await fetch(url, opts);
-  if (r.status === 401) { location.href = "/login"; throw new Error("login"); }
-  if (r.status === 403) { location.href = "/"; throw new Error("admin"); }
+  if (r.status === 401 || r.status === 403) { location.href = "/admin/login"; throw new Error("login"); }
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.detail || r.statusText);
   return data;
@@ -417,7 +417,7 @@ async function loadHistory() {
     <td><span class="pill ${j.status}">${STATUS[j.status] || j.status}</span></td>
     <td class="n hm">${j.pages ? num(j.pages) : "–"}</td><td class="n hm">${j.mcqs ? num(j.mcqs) : "–"}</td>
     <td class="n">${j.task === "ppt" ? "Free" : inr(j.cost_inr)}</td>
-    <td><div class="dls">${j.downloads.map(x => `<a class="dl ${x.kind}" href="/api/jobs/${j.id}/download?kind=${x.kind}">⬇ ${esc(x.label)}</a>`).join("")}
+    <td><div class="dls">${j.downloads.map(x => `<a class="dl ${x.kind}" href="/api/jobs/${j.id}/download?kind=${x.kind}&panel=admin">⬇ ${esc(x.label)}</a>`).join("")}
       ${j.status === "failed" ? `<button class="btn ghost sm" data-retry="${j.id}">Run again</button>` : ""}
       ${(j.status === "done" || j.status === "failed") && j.downloads.length ? `<button class="btn danger sm" data-delfiles="${j.id}" title="Delete files">🗑</button>` : ""}</div></td></tr>`).join("")
     || empty(7, "Nothing found.");
