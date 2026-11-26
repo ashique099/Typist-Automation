@@ -190,6 +190,18 @@ def test_web_flow(client, tmp_path):
     assert appmod.typist_error("PDF is password protected") == "PDF is password protected"
     r = c.post("/api/jobs", data={"task": "ppt"}, files=[("files", ("Notes.docx", notes))])
     assert r.status_code == 200  # PPT costs nothing, so it still runs
+    # notices: admin writes, typists see only switched-on ones
+    assert c.post("/api/admin/notices", data={"title": " "}).status_code == 400
+    nid = c.post("/api/admin/notices", data={"title": "Office closed Monday", "body": "- **Holiday**", "color": "red"}).json()["id"]
+    c.post("/api/admin/notices", data={"title": "Draft", "visible": "0"})
+    del c.headers["X-Panel"]
+    assert [n["title"] for n in c.get("/api/notices").json()] == ["Office closed Monday"]
+    c.headers["X-Panel"] = "admin"
+    c.post(f"/api/admin/notices/{nid}/toggle")
+    assert c.get("/api/notices").json() == []
+    assert len(c.get("/api/admin/notices").json()) == 2
+    c.post(f"/api/admin/notices/{nid}/delete")
+    assert len(c.get("/api/admin/notices").json()) == 1
     # API key from the admin panel: saved on the server, shown masked, removable
     assert c.post("/api/admin/apikey", data={"key": "hello"}).status_code == 400
     key = "sk-ant-api03-" + "x" * 30 + "ab12"

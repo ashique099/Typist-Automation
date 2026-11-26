@@ -639,6 +639,47 @@ def get_settings(request: Request):
     return {"settings": s, "models": usage.MODELS, "month": month, "templates": ppt_templates(), "api": _key_info()}
 
 
+# --------------------------------------------------------------- notices --
+@app.get("/api/notices")
+def notices(request: Request):
+    """Notice Board on the typist dashboard (only the notices the admin has switched on)."""
+    need_user(request)
+    return [{k: n[k] for k in ("id", "title", "body", "color", "pinned", "updated")} for n in db.list_notices(True)]
+
+
+@app.get("/api/admin/notices")
+def admin_notices(request: Request):
+    need_admin(request)
+    return db.list_notices()
+
+
+@app.post("/api/admin/notices")
+def admin_save_notice(request: Request, id: int = Form(0), title: str = Form(""), body: str = Form(""),
+                      color: str = Form("blue"), visible: str = Form("1"), pinned: str = Form("0")):
+    u = need_admin(request)
+    title, body = title.strip()[:120], body.strip()[:4000]
+    if not title:
+        raise HTTPException(400, "Please write a title for the notice.")
+    if id and not db.q("select 1 from notices where id=?", (id,), one=True):
+        raise HTTPException(404, "Notice not found.")
+    nid = db.save_notice(id, title, body, color, visible == "1", pinned == "1", u["name"])
+    return {"ok": True, "id": nid}
+
+
+@app.post("/api/admin/notices/{nid}/toggle")
+def admin_toggle_notice(nid: int, request: Request):
+    need_admin(request)
+    db.x("update notices set visible=1-visible, updated=? where id=?", (time.time(), nid))
+    return {"ok": True}
+
+
+@app.post("/api/admin/notices/{nid}/delete")
+def admin_delete_notice(nid: int, request: Request):
+    need_admin(request)
+    db.x("delete from notices where id=?", (nid,))
+    return {"ok": True}
+
+
 @app.post("/api/admin/apikey")
 def save_api_key(request: Request, key: str = Form("")):
     need_admin(request)

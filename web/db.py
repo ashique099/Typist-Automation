@@ -29,6 +29,10 @@ create table if not exists jobs (
   finished real, updated real);
 create index if not exists jobs_created on jobs(created);
 create table if not exists settings (key text primary key, value text not null);
+create table if not exists notices (
+  id integer primary key, title text not null, body text not null default '', color text not null default 'blue',
+  visible integer not null default 1, pinned integer not null default 0,
+  created real not null, updated real not null, by_name text);
 """
 
 DEFAULTS = {
@@ -251,3 +255,24 @@ def overview(rate, days=30):
         r["inr"] = round(r.pop("usd") * rate)
     return {"today": t, "month": m, "by_tool": by_tool, "series": series, "running": running,
             "failed": failed, "users": users}
+
+
+# ------------------------------------------------------------- notices --
+NOTICE_COLORS = ("blue", "red", "green", "amber")
+
+
+def list_notices(only_visible=False):
+    return q("select * from notices " + ("where visible=1 " if only_visible else "") +
+             "order by pinned desc, updated desc")
+
+
+def save_notice(nid, title, body, color, visible, pinned, by_name):
+    now = time.time()
+    color = color if color in NOTICE_COLORS else "blue"
+    if nid:
+        x("update notices set title=?, body=?, color=?, visible=?, pinned=?, updated=? where id=?",
+          (title, body, color, int(visible), int(pinned), now, nid))
+        return nid
+    x("insert into notices(title, body, color, visible, pinned, created, updated, by_name) values(?,?,?,?,?,?,?,?)",
+      (title, body, color, int(visible), int(pinned), now, now, by_name))
+    return q("select max(id) id from notices", one=True)["id"]

@@ -73,6 +73,24 @@
   .kv { display:grid; grid-template-columns:auto 1fr; gap:8px 16px; font-size:14px } .kv dt { color:var(--muted) } .kv dd { margin:0; font-weight:600 }
   .empty { color:var(--muted); font-size:13px; padding:8px 0 }
   .hide { display:none !important }
+  .ntc-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start }
+  textarea { width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:14px; resize:vertical; line-height:1.5 }
+  textarea:focus { outline:2px solid #c5cfe6; border-color:var(--blue) }
+  .swatches { display:flex; flex-wrap:wrap; gap:8px }
+  .sw { display:inline-flex; align-items:center; gap:8px; margin:0; padding:8px 12px; border:1px solid var(--line); border-radius:99px; cursor:pointer; font-weight:500; font-size:13px }
+  .sw { position:relative } .sw input { position:absolute; opacity:0; pointer-events:none } .sw:has(input:focus-visible) { outline:2px solid var(--blue); outline-offset:2px } .sw i { width:14px; height:14px; border-radius:50%; background:var(--nc) }
+  .sw:has(input:checked) { border-color:var(--nc); background:var(--nbg); font-weight:600 }
+  .checks { display:flex; gap:18px; flex-wrap:wrap; margin-top:14px }
+  .chk { display:flex; align-items:center; gap:8px; margin:0; font-weight:500 } .chk input { margin:0; accent-color:var(--navy) }
+  .c-blue { --nc:#1A2E6C; --nbg:#eef2fb } .c-red { --nc:#C0202A; --nbg:#fdf0f0 } .c-green { --nc:#00703C; --nbg:#ebf7f0 } .c-amber { --nc:#b7791f; --nbg:#fdf6e7 }
+  .notice { border-left:4px solid var(--nc); background:var(--nbg); border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.55 }
+  .notice b.t { display:block; color:var(--nc); font-size:15px; margin-bottom:2px }
+  .notice ul { margin:4px 0; padding-left:20px } .notice a { color:var(--nc) }
+  .nrow { display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--line); align-items:flex-start } .nrow:first-child { border-top:0 }
+  .nrow .bar { width:4px; align-self:stretch; border-radius:4px; background:var(--nc); flex:none }
+  .nrow .mid { flex:1; min-width:0 } .nrow .mid b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .nrow.off { opacity:.6 }
+  @media (max-width:1100px) { .ntc-grid { grid-template-columns:1fr } }
   input[type=file] { width:100%; font-size:13px; color:var(--muted); border:1px dashed #c9d0dc; border-radius:8px; padding:6px; background:#fafbfc }
   input[type=file]::file-selector-button { font-family:inherit; font-weight:600; font-size:13px; border:0; border-radius:6px; padding:7px 12px; margin-right:10px; background:var(--navy); color:#fff; cursor:pointer }
   :focus-visible { outline:2px solid var(--blue); outline-offset:2px }
@@ -128,6 +146,7 @@
       <button data-tab="overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Overview</button>
       <button data-tab="typists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-2-5-4-5.5"/></svg>Typists</button>
       <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>Work History</button>
+      <button data-tab="notices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>Notices</button>
       <button data-tab="designs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>PPT Designs</button>
       <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
     </nav>
@@ -193,6 +212,36 @@
     </section>
 
     <!-- DESIGNS -->
+    <section id="tab-notices" class="hide">
+      <div class="head"><div><h1>Notices</h1><p class="sub">Write notices for the typists. Switched-on notices show on every typist's dashboard in the Notice Board.</p></div></div>
+      <div class="ntc-grid">
+        <div class="card"><h2 id="nFormTitle">New Notice</h2>
+          <form id="nForm" autocomplete="off">
+            <input type="hidden" name="id" value="0">
+            <label for="nTitle">Title</label><input type="text" id="nTitle" name="title" maxlength="120" required placeholder="e.g. Office Closed on Monday">
+            <label for="nBody">Message</label>
+            <textarea id="nBody" name="body" rows="6" maxlength="4000" placeholder="Write the notice here. New lines are kept.&#10;- Start a line with a dash for a bullet point&#10;**Two stars** around words make them bold"></textarea>
+            <label>Colour</label>
+            <div class="swatches" id="nColor">
+              <label class="sw c-blue"><input type="radio" name="color" value="blue" checked><i></i>Info</label>
+              <label class="sw c-red"><input type="radio" name="color" value="red"><i></i>Important</label>
+              <label class="sw c-green"><input type="radio" name="color" value="green"><i></i>Good News</label>
+              <label class="sw c-amber"><input type="radio" name="color" value="amber"><i></i>Reminder</label>
+            </div>
+            <div class="checks">
+              <label class="chk"><input type="checkbox" name="visible" value="1" checked> Show to Typists</label>
+              <label class="chk"><input type="checkbox" name="pinned" value="1"> Pin to Top</label>
+            </div>
+            <div class="row" style="margin-top:16px"><div style="flex:0 0 auto"><button class="btn" id="nSave">Post Notice</button></div>
+              <div style="flex:0 0 auto"><button class="btn ghost" type="button" id="nClear">Clear</button></div></div>
+          </form>
+          <label style="margin-top:22px">Preview</label>
+          <div id="nPreview"></div>
+        </div>
+        <div class="card"><h2>All Notices <span id="nCount"></span></h2><div id="nList"></div></div>
+      </div>
+    </section>
+
     <section id="tab-designs" class="hide">
       <div class="head"><div><h1>PPT Designs</h1><p class="sub">Upload any class PPT. Its background and header strip are reused; its slides are dropped.</p></div></div>
       <div class="card"><h2>New Design</h2>
@@ -283,9 +332,68 @@ function show(tab) {
   $$("#nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
   $$("main > section").forEach(s => s.classList.toggle("hide", s.id !== "tab-" + tab));
   store("admintab", tab);
-  ({overview: loadOverview, typists: loadUsers, history: loadHistory, designs: loadDesigns, settings: loadSettings}[tab])();
+  ({overview: loadOverview, typists: loadUsers, history: loadHistory, designs: loadDesigns, settings: loadSettings, notices: loadNotices}[tab])();
 }
 $("#nav").onclick = e => { const b = e.target.closest("button"); if (b) show(b.dataset.tab); };
+
+// -------------------------------------------------------------- notices --
+// simple formatting: new lines, "- " bullets, **bold**, and web links
+function noticeHtml(t) {
+  const lines = esc(t || "").split(/\r?\n/); let html = "", list = false;
+  for (const l of lines) {
+    const m = l.match(/^\s*[-•]\s+(.*)/);
+    if (m && !list) { html += "<ul>"; list = true; } else if (!m && list) { html += "</ul>"; list = false; }
+    html += m ? `<li>${m[1]}</li>` : l.trim() ? l + "<br>" : "<br>";
+  }
+  if (list) html += "</ul>";
+  return html.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(<br>)+$/, "");
+}
+let NOTICES = [];
+function nPreview() {
+  const f = $("#nForm"), c = f.color.value;
+  $("#nPreview").innerHTML = `<div class="notice c-${c}"><b class="t">${esc(f.title.value || "Notice Title")}</b>${noticeHtml(f.body.value) || '<span class="small">Your message will appear here.</span>'}</div>`;
+}
+function nReset() {
+  const f = $("#nForm"); f.reset(); f.id.value = 0; $("#nFormTitle").textContent = "New Notice"; $("#nSave").textContent = "Post Notice"; nPreview();
+}
+async function loadNotices() {
+  NOTICES = await api("/api/admin/notices");
+  const on = NOTICES.filter(n => n.visible).length;
+  $("#nCount").textContent = `${on} shown · ${NOTICES.length - on} hidden`;
+  $("#nList").innerHTML = NOTICES.map(n => `<div class="nrow c-${n.color}${n.visible ? "" : " off"}"><span class="bar"></span>
+      <div class="mid"><b>${n.pinned ? "📌 " : ""}${esc(n.title)}</b>
+        <div class="small">${n.visible ? "Shown to typists" : "Hidden"} · updated ${when(n.updated)}${n.by_name ? " by " + esc(n.by_name) : ""}</div>
+        <div class="acts" style="justify-content:flex-start;margin-top:8px">
+          <button class="btn ghost sm" data-nedit="${n.id}">Edit</button>
+          <button class="btn ghost sm" data-ntog="${n.id}">${n.visible ? "Hide" : "Show"}</button>
+          <button class="btn danger sm" data-ndel="${n.id}">Delete</button></div></div></div>`).join("")
+    || `<div class="empty">No notices yet. Write one on the left and press Post Notice.</div>`;
+  nPreview();
+}
+$("#nForm").oninput = nPreview;
+$("#nClear").onclick = nReset;
+$("#nForm").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, fd = new FormData(f);
+  fd.set("visible", f.visible.checked ? "1" : "0"); fd.set("pinned", f.pinned.checked ? "1" : "0");
+  try { await api("/api/admin/notices", {method: "POST", body: fd}); toast(+f.id.value ? "Notice updated" : "Notice posted", "ok"); nReset(); loadNotices(); }
+  catch (err) { toast(err.message, "err"); }
+};
+$("#nList").onclick = async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.nedit) {
+    const n = NOTICES.find(x => x.id == b.dataset.nedit), f = $("#nForm");
+    f.id.value = n.id; f.title.value = n.title; f.body.value = n.body; f.color.value = n.color;
+    f.visible.checked = !!n.visible; f.pinned.checked = !!n.pinned;
+    $("#nFormTitle").textContent = "Edit Notice"; $("#nSave").textContent = "Save Changes"; nPreview(); f.title.focus();
+    return;
+  }
+  if (b.dataset.ntog) { await api(`/api/admin/notices/${b.dataset.ntog}/toggle`, {method: "POST"}); toast("Notice updated", "ok"); return loadNotices(); }
+  if (b.dataset.ndel) {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Sure? Click Again"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "Delete"; }, 4000); return; }
+    await api(`/api/admin/notices/${b.dataset.ndel}/delete`, {method: "POST"}); toast("Notice deleted", "ok"); loadNotices();
+  }
+};
 
 // ------------------------------------------------------------- overview --
 function thisMonth() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
@@ -502,7 +610,7 @@ $("#pwForm").onsubmit = async e => {
 // ---------------------------------------------------------------- start --
 api("/api/me").then(me => {
   ME = me; $("#whoName").textContent = me.user.name;
-  const t = store("admintab"); show(["overview", "typists", "history", "designs", "settings"].includes(t) ? t : "overview");
+  const t = store("admintab"); show(["overview", "typists", "history", "notices", "designs", "settings"].includes(t) ? t : "overview");
   setInterval(() => { if (document.hidden) return; const on = store("admintab");
     if (on === "overview") loadOverview(); else if (on === "history") loadHistory(); }, 10000);
 });

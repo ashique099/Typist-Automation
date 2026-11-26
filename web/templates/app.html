@@ -134,6 +134,16 @@
   .stat .k { color:var(--muted); font-size:12px; letter-spacing:.04em } .stat .v { font-size:22px; font-weight:700; margin-top:4px }
   .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap } .row > div { flex:1 1 160px }
   .hide { display:none !important }
+  .board { border-radius:18px; margin-bottom:26px }
+  .board .sec h2 { display:flex; align-items:center; gap:10px }
+  .mega { width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:#fdecec; color:var(--red) } .mega svg { width:19px; height:19px }
+  #notices { display:grid; gap:12px }
+  .c-blue { --nc:#1A2E6C; --nbg:#eef2fb } .c-red { --nc:#C0202A; --nbg:#fdf0f0 } .c-green { --nc:#00703C; --nbg:#ebf7f0 } .c-amber { --nc:#b7791f; --nbg:#fdf6e7 }
+  .notice { border-left:4px solid var(--nc); background:var(--nbg); border-radius:12px; padding:14px 16px; font-size:15px; line-height:1.6; color:var(--text) }
+  .notice .t { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:4px }
+  .notice .t b { color:var(--nc); font-size:16px } .notice .t small { color:var(--muted); font-size:12px; white-space:nowrap }
+  .notice ul { margin:4px 0; padding-left:22px } .notice a { color:var(--nc); font-weight:600 }
+  .board .nothing { padding:10px 0 4px; text-align:left }
   .acc { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:18px; max-width:880px; align-items:start }
   .profile { display:flex; flex-wrap:wrap; gap:16px; align-items:center }
   .profile b { font-size:18px; color:var(--navy) } .profile .pill { margin-top:8px }
@@ -184,6 +194,10 @@
         <button class="hstat ok" data-go="ready"><b id="stReady">0</b><span>Files Ready</span></button>
         <button class="hstat run" data-go="history"><b id="stRun">0</b><span>In Progress</span></button>
       </div>
+    </div>
+    <div class="card board" id="board">
+      <div class="sec"><h2><span class="mega" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>Notice Board</h2><span class="small" id="boardCount"></span></div>
+      <div id="notices"><div class="nothing">Loading…</div></div>
     </div>
     <div id="noKey" class="alert hide"><b>Notes and MCQ generation are temporarily unavailable.</b> Please contact Ashique Sir to resolve this. DOCX to PPT works as usual.</div>
     <div class="sec"><h2>Start a New Task</h2></div>
@@ -415,9 +429,29 @@ function jobRow(j, full) {
     <td>${j.status === "done" ? dls(j) : ""}</td></tr>`;
 }
 const empty = (n, t) => `<tr><td colspan="${n}" class="small">${t}</td></tr>`;
+function noticeHtml(t) {
+  const lines = esc(t || "").split(/\r?\n/); let html = "", list = false;
+  for (const l of lines) {
+    const m = l.match(/^\s*[-•]\s+(.*)/);
+    if (m && !list) { html += "<ul>"; list = true; } else if (!m && list) { html += "</ul>"; list = false; }
+    html += m ? `<li>${m[1]}</li>` : l.trim() ? l + "<br>" : "<br>";
+  }
+  if (list) html += "</ul>";
+  return html.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(<br>)+$/, "");
+}
+async function loadNotices() {
+  let list = [];
+  try { list = await api("/api/notices"); } catch (e) { return; }
+  $("#boardCount").textContent = list.length ? `${list.length} notice${list.length > 1 ? "s" : ""}` : "";
+  $("#notices").innerHTML = list.map(n => `<div class="notice c-${esc(n.color)}"><div class="t"><b>${n.pinned ? "📌 " : ""}${esc(n.title)}</b>
+      <small>${new Date(n.updated * 1000).toLocaleDateString("en-IN", {day: "numeric", month: "short"})}</small></div>${noticeHtml(n.body)}</div>`).join("")
+    || `<div class="nothing">No notices right now. Any new notice from Ashique Sir will show here.</div>`;
+}
+setInterval(() => !document.hidden && !$("#tab-home").classList.contains("hide") && loadNotices(), 60000);
 const FT = {notes: "DOCX", ppt: "PPT", test: "MCQ"};
 const jname = j => j.title || j.chapter || j.files[0];
 async function loadRecent() {
+  loadNotices();
   const d = await api("/api/jobs?scope=mine&per=40"), jobs = d.jobs, day = new Date().setHours(0, 0, 0, 0) / 1000;
   const ready = jobs.filter(j => j.status === "done" && j.downloads.length), run = jobs.filter(j => j.status === "running" || j.status === "queued");
   $("#stToday").textContent = jobs.filter(j => j.created >= day).length;
