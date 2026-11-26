@@ -35,7 +35,7 @@ from typist.convert import build_docx, transcribe_all
 DATA = Path(os.environ.get("DATA_DIR", "data")).resolve()
 JOBS = DATA / "jobs"
 JOBS.mkdir(parents=True, exist_ok=True)
-PASSWORD = os.environ.get("APP_PASSWORD", "")
+PASSWORD = os.environ.get("APP_PASSWORD", "").strip()
 SECRET = (os.environ.get("SECRET_KEY") or hashlib.sha256(("typist:" + PASSWORD).encode()).hexdigest()).encode()
 WORKERS = int(os.environ.get("JOB_WORKERS", "2"))
 KEEP_DAYS = float(os.environ.get("KEEP_DAYS", "30"))

@@ -13,6 +13,6 @@ if not exist settings.bat (
   notepad settings.bat
   exit /b
 )
-call settings.bat
+call "%~dp0settings.bat"
 echo Website chal rahi hai: http://localhost:8000  (doosre computer: http://IS-PC-KA-IP:8000)
 .venv\Scripts\python -m uvicorn web.app:app --host 0.0.0.0 --port 8000
