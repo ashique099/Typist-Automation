@@ -245,6 +245,14 @@ def main(out_dir="."):
         fn(d)
         d.save(out / name)
         print("wrote", out / name)
+    # all parts in one file, each part starting on a new page
+    d = NoteDoc()
+    for n, (_, fn) in PARTS.items():
+        if n > 1:
+            d.page_break()
+        fn(d)
+    d.save(out / "Solid_State_Part-1-4_Combined.docx")
+    print("wrote", out / "Solid_State_Part-1-4_Combined.docx")
 
 
 if __name__ == "__main__":
