@@ -74,3 +74,14 @@ Command line, same pipeline: `python -m typist.convert p1.pdf p2.pdf -o Notes.do
 pip install python-docx
 python -m typist.solid_state out/
 ```
+
+## Hosting on Render
+
+1. On https://dashboard.render.com choose **New → Blueprint**, connect GitHub and pick this repository.
+   Render reads `render.yaml`: a Docker web service (Starter plan, Singapore) with a 5 GB disk at `/data`
+   for the database, uploads and outputs.
+2. After the first deploy, open the service → **Environment** and copy `SETUP_KEY`.
+3. Open the `onrender.com` link, fill in First-Time Setup with that key, and create the admin account.
+4. Add the Claude key in Admin → Settings → API Integration (it is saved on the disk, never in the repo).
+
+The free plan has no disk, so every restart would wipe accounts and files. Keep one instance only (SQLite).

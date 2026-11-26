@@ -15,12 +15,14 @@ Environment:
   DATA_DIR            database, uploads and outputs (default ./data)
   JOB_WORKERS         conversions that run at the same time (default 2)
   KEEP_DAYS           delete job files older than this; history rows stay (default 90)
+  SETUP_KEY           if set, first-time setup asks for it (use on a public host such as Render)
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import secrets
 import shutil
 import time
 import traceback
@@ -187,17 +189,27 @@ def login(request: Request, username: str = Form(""), password: str = Form("")):
     return _login_response(tok, request)
 
 
+SETUP_KEY = os.environ.get("SETUP_KEY", "").strip()  # on a public host: only someone with this key can create the first admin
+_KEY_FIELD = ('<label for="k">Setup Key (From the Hosting Dashboard)</label>'
+              '<input id="k" name="setup_key" type="password" autocomplete="off" required>')
+
+
 @app.get("/setup")
 def setup_page(error: str = ""):
     if db.user_count():
         return RedirectResponse("/login", status_code=303)
-    return _page("setup.html", error=error and "Use a username of 3-30 letters/numbers and a password of at least 6 characters, typed the same twice.")
+    msg = {"2": "Wrong setup key. Copy SETUP_KEY from the hosting dashboard."}.get(
+        error, "Use a username of 3-30 letters/numbers and a password of at least 6 characters, typed the same twice.")
+    return _page("setup.html", keyfield=_KEY_FIELD if SETUP_KEY else "", error=msg if error else "")
 
 
 @app.post("/setup")
-def setup(request: Request, name: str = Form(""), username: str = Form(""), password: str = Form(""), password2: str = Form("")):
+def setup(request: Request, name: str = Form(""), username: str = Form(""), password: str = Form(""), password2: str = Form(""),
+          setup_key: str = Form("")):
     if db.user_count():
         return RedirectResponse("/login", status_code=303)
+    if SETUP_KEY and not secrets.compare_digest(setup_key.strip(), SETUP_KEY):
+        return RedirectResponse("/setup?error=2", status_code=303)
     if len(password) < 6 or password != password2 or not re.fullmatch(r"[a-zA-Z0-9_.-]{3,30}", username.strip()):
         return RedirectResponse("/setup?error=1", status_code=303)
     db.create_user(username, name, password, role="admin")

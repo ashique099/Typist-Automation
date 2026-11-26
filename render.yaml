@@ -1,0 +1,23 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> pick this repo.
+# SQLite, uploads and outputs live on the persistent disk at /data (needs a paid instance; the free
+# tier has no disk and would lose every account and file on each restart).
+services:
+  - type: web
+    name: disha-typist
+    runtime: docker
+    branch: claude/project-thread-mf02c3
+    plan: starter
+    region: singapore
+    healthCheckPath: /healthz
+    numInstances: 1
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: SETUP_KEY
+        generateValue: true
+      - key: KEEP_DAYS
+        value: "60"
