@@ -234,6 +234,32 @@ def test_ppt_deck(tmp_path):
     assert "ठोस अवस्था (Solid State)" in text and "उदाहरण" in text
 
 
+def test_plain_ppt_rules(tmp_path):
+    """Plain PPT: 40 x 22.504 in, black, Utsaah 120, MCQ question green, fractions as equations."""
+    import zipfile
+    from pptx import Presentation
+    from typist.plainppt import render_plain_deck, unicode_math
+    from typist.reader import pptx_blocks
+    parts = [{"chapter_title": "Test", "blocks": [
+        {"type": "h1", "text": "घनत्व"}, {"type": "para", "text": "सूत्र $d=\\frac{ZM}{a^3 N_A}$ और $SO_4^{2-}$ है।"},
+        {"type": "item", "marker": "1.", "text": "प्रश्न का पाठ?"},
+        {"type": "item", "marker": "(A)", "text": "4"}, {"type": "item", "marker": "(B)", "text": "6"},
+        {"type": "para", "text": "लंबा पाठ " * 400}]}]
+    out = render_plain_deck(parts, tmp_path / "p.pptx")
+    prs = Presentation(out)
+    assert (prs.slide_width, prs.slide_height) == (36576000, 20577175)
+    assert len(prs.slides) >= 5  # long paragraph continued on more slides
+    xml = "".join(zipfile.ZipFile(out).read(f).decode() for f in zipfile.ZipFile(out).namelist()
+                  if f.startswith("ppt/slides/slide"))
+    assert 'typeface="Utsaah"' in xml and 'sz="12000"' in xml and '<a:srgbClr val="000000"/>' in xml
+    assert "a14:m" in xml and "<m:f>" in xml and "mc:Fallback" in xml      # native equation
+    assert unicode_math("SO_4^{2-}") == "SO₄²⁻" and "SO₄²⁻" in xml
+    q = xml[xml.index("प्रश्न का पाठ") - 400: xml.index("प्रश्न का पाठ")]
+    assert "00FF00" in q                                                     # MCQ question green
+    _, blocks = pptx_blocks(out)
+    assert any("\\frac" in b["text"] for b in blocks)                       # reader sees the equation
+
+
 def test_template_deck(tmp_path):
     from pptx import Presentation
     from typist.pptkit import render_template_deck

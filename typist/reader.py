@@ -97,14 +97,43 @@ def _plain(s):
     return re.sub(r"\*\*|\$", "", s).strip()
 
 
+def _mcq_table(tbl):
+    """The team's test format: one 2-column table per question
+    (Question / Type / Option x4 / Answer / Solution / marks).  -> {"type": "mcq", ...}"""
+    rows = []
+    for tr in tbl.iter(f"{{{W}}}tr"):
+        cells = [c for c in tr if c.tag == f"{{{W}}}tc"]
+        if len(cells) < 2:
+            continue
+        key = _plain(" ".join(_para(p)[0] for p in cells[0].iter(f"{{{W}}}p"))).lower()
+        val = " ".join(t for t in (_para(p)[0] for p in cells[1].iter(f"{{{W}}}p")) if t)
+        rows.append((key, val))
+    if not rows or rows[0][0] != "question":
+        return None
+    get = lambda k: next((v for kk, v in rows if kk == k), "")
+    return {"type": "mcq", "q": get("question"), "options": [v for k, v in rows if k == "option"],
+            "answer": get("answer"), "solution": get("solution")}
+
+
 def docx_blocks(src) -> tuple[str, list[dict]]:
     """src: path or bytes.  Returns (chapter_title, blocks)."""
     doc = Document(io.BytesIO(src) if isinstance(src, (bytes, bytearray)) else src)
     S = Style
     title, blocks, last_caption_fig = "", [], None
+    mcq_tables = {}
+    for tbl in doc.element.body.iter(f"{{{W}}}tbl"):
+        m = _mcq_table(tbl)
+        if m:
+            mcq_tables[tbl] = m
     for p_el in doc.element.body.iter(f"{{{W}}}p"):
         if _in_textbox(p_el):
             continue  # text inside a figure's shapes
+        tbl = next((a for a in p_el.iterancestors(f"{{{W}}}tbl")), None)
+        if tbl is not None and tbl in mcq_tables:
+            if mcq_tables[tbl] is not None:  # first paragraph of an MCQ table -> one block
+                blocks.append(mcq_tables[tbl])
+                mcq_tables[tbl] = None
+            continue
         text, col, figs = _para(p_el)
         for f in figs:
             blocks.append(f)
@@ -155,20 +184,49 @@ def docx_blocks(src) -> tuple[str, list[dict]]:
     return title, blocks
 
 
+def _sp_paragraphs(sp):
+    """Paragraph texts of one p:sp, with PowerPoint equations (a14:m) as $..$ markup."""
+    A = "http://schemas.openxmlformats.org/drawingml/2006/main"
+    A14 = "http://schemas.microsoft.com/office/drawing/2010/main"
+    out = []
+    for p in sp.iter(f"{{{A}}}p"):
+        bits = []
+        for el in p:
+            if el.tag == f"{{{A}}}r":
+                bits.append("".join(t.text or "" for t in el.iter(f"{{{A}}}t")))
+            elif el.tag == f"{{{A14}}}m":
+                om = next(el.iter(_m("oMath")), None)
+                if om is not None:
+                    bits.append("$" + _omml(om) + "$")
+        out.append("".join(bits).strip())
+    return out
+
+
 def pptx_blocks(src) -> tuple[str, list[dict]]:
-    """Text of every slide, in order: slide title -> h1, other text -> paras."""
+    """Text of every slide, in order: slide title -> h1, other text -> paras.  Shapes inside
+    mc:AlternateContent (equations) are read from their Choice part."""
     from pptx import Presentation
+    P = "http://schemas.openxmlformats.org/presentationml/2006/main"
+    MC = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+    A = "http://schemas.openxmlformats.org/drawingml/2006/main"
     prs = Presentation(io.BytesIO(src) if isinstance(src, (bytes, bytearray)) else src)
     blocks, last_head = [], None
     for slide in prs.slides:
-        shapes = sorted((s for s in slide.shapes if s.has_text_frame and s.text_frame.text.strip()),
-                        key=lambda s: (s.top or 0, s.left or 0))
-        for i, sh in enumerate(shapes):
-            for para in sh.text_frame.paragraphs:
-                t = "".join(r.text for r in para.runs).strip()
-                if not t:
-                    continue
-                head = t.endswith(":-") or (len(shapes) > 1 and len(t) < 80 and t == sh.text_frame.text.strip())
+        found = []
+        for sp in slide.shapes._spTree.iter(f"{{{P}}}sp"):
+            if any(a.tag == f"{{{MC}}}Fallback" for a in sp.iterancestors()):
+                continue
+            paras = [t for t in _sp_paragraphs(sp) if t]
+            if not paras:
+                continue
+            off = next(sp.iter(f"{{{A}}}off"), None)
+            pos = (int(off.get("y", 0)), int(off.get("x", 0))) if off is not None else (0, 0)
+            found.append((pos, paras))
+        found.sort(key=lambda f: f[0])
+        for i, (_, paras) in enumerate(found):
+            whole = "\n".join(paras)
+            for t in paras:
+                head = t.endswith(":-") or (len(found) > 1 and len(t) < 80 and t == whole)
                 if i == 0 and head:
                     t = t.rstrip(":- ")
                     if t != last_head:
