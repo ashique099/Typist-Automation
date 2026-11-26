@@ -31,7 +31,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
 from typist.convert import build_docx, transcribe_all
-from typist.pptkit import render_deck
+from typist.pptkit import render_deck, render_template_deck
 
 DATA = Path(os.environ.get("DATA_DIR", "data")).resolve()
 JOBS = DATA / "jobs"
@@ -41,6 +41,15 @@ SECRET = (os.environ.get("SECRET_KEY") or hashlib.sha256(("typist:" + PASSWORD).
 WORKERS = int(os.environ.get("JOB_WORKERS", "2"))
 KEEP_DAYS = float(os.environ.get("KEEP_DAYS", "30"))
 MAX_FILES, MAX_MB = 20, 60
+# PPT designs: put the team's own .pptx here (any finished class deck works, its slides are
+# ignored and only the background/header is reused); a .png with the same name is the logo
+# shown on topic slides.
+TEMPLATES = Path(os.environ.get("TEMPLATE_DIR", DATA / "templates")).resolve()
+TEMPLATES.mkdir(parents=True, exist_ok=True)
+
+
+def ppt_templates():
+    return sorted(p.stem for p in TEMPLATES.glob("*.pptx"))
 
 
 @asynccontextmanager
@@ -140,7 +149,13 @@ def run_job(jid):
         build_docx(parts, d / "output.docx", m.get("title") or None)
         update(jid, step="PPT ban rahi hai")
         try:
-            render_deck(parts, d / "output.pptx", m.get("title") or None)
+            tpl = TEMPLATES / f"{m.get('ppt_template') or ''}.pptx"
+            if m.get("ppt_template") and tpl.exists():
+                logo = tpl.with_suffix(".png")
+                render_template_deck(parts, d / "output.pptx", str(tpl), str(logo) if logo.exists() else None,
+                                     m.get("title") or None)
+            else:
+                render_deck(parts, d / "output.pptx", m.get("title") or None)
         except Exception:  # notes are still useful without the deck
             traceback.print_exc()
         update(jid, status="done", step="Taiyar hai", output=out_name, chapter=title,
@@ -167,7 +182,8 @@ def _startup():
 
 
 @app.post("/api/jobs")
-async def create_job(request: Request, files: list[UploadFile] = File(...), title: str = Form("")):
+async def create_job(request: Request, files: list[UploadFile] = File(...), title: str = Form(""),
+                     ppt_template: str = Form("")):
     need_auth(request)
     if not files or len(files) > MAX_FILES:
         raise HTTPException(400, f"1 se {MAX_FILES} PDF tak upload karein.")
@@ -189,6 +205,7 @@ async def create_job(request: Request, files: list[UploadFile] = File(...), titl
         raise
     now = time.time()
     meta = {"id": jid, "files": names, "title": title.strip()[:120], "status": "queued",
+            "ppt_template": ppt_template if ppt_template in ppt_templates() else "",
             "step": "Line me hai", "by": request.cookies.get("ta_name", "Typist"),
             "created": now, "updated": now}
     save(meta)
@@ -228,6 +245,12 @@ def download(jid: str, request: Request, kind: str = "docx"):
         raise HTTPException(404, "File abhi taiyar nahi hai")
     name = Path(m.get("output") or "Notes.docx").stem + f".{kind}"
     return FileResponse(out, filename=name, media_type=KINDS[kind])
+
+
+@app.get("/api/templates")
+def templates(request: Request):
+    need_auth(request)
+    return ppt_templates()
 
 
 @app.get("/healthz")

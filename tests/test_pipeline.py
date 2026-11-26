@@ -90,3 +90,16 @@ def test_ppt_deck(tmp_path):
     assert len(prs.slides) >= 3
     text = " ".join(sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.has_text_frame)
     assert "ठोस अवस्था (Solid State)" in text and "उदाहरण" in text
+
+
+def test_template_deck(tmp_path):
+    from pptx import Presentation
+    from typist.pptkit import render_template_deck
+    tpl = tmp_path / "tpl.pptx"
+    p = Presentation()
+    p.slides.add_slide(p.slide_layouts[1])  # existing slides must be dropped
+    p.save(tpl)
+    out = render_template_deck(PARTS, tmp_path / "t.pptx", str(tpl))
+    prs = Presentation(out)
+    text = " ".join(sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.has_text_frame)
+    assert "ठोस (Solid) :-" in text and "Hg" in text
