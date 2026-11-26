@@ -126,10 +126,25 @@ def _page(name, **subs):
     return HTMLResponse(html)
 
 
-def _login_response(tok):
+def _login_response(tok, request: Request | None = None):
     r = RedirectResponse("/", status_code=303)
-    r.set_cookie(COOKIE, tok, max_age=60 * 86400, httponly=True, samesite="lax")
+    secure = bool(request and request.url.scheme == "https")  # behind nginx + HTTPS on the VPS
+    r.set_cookie(COOKIE, tok, max_age=60 * 86400, httponly=True, samesite="lax", secure=secure)
     return r
+
+
+# simple brute-force guard for the public website: 8 wrong passwords per IP+user in 15 minutes
+_FAILS: dict[str, list[float]] = {}
+
+
+def _client_ip(request: Request) -> str:
+    return (request.client.host if request.client else "") or "?"
+
+
+def _too_many(key: str) -> bool:
+    now = time.time()
+    _FAILS[key] = [t for t in _FAILS.get(key, []) if now - t < 900]
+    return len(_FAILS[key]) >= 8
 
 
 @app.get("/login")
@@ -138,15 +153,21 @@ def login_page(request: Request, error: str = ""):
         return RedirectResponse("/setup", status_code=303)
     if current_user(request):
         return RedirectResponse("/", status_code=303)
-    return _page("login.html", error="Wrong username or password." if error else "")
+    msg = {"1": "Wrong username or password.", "2": "Too many wrong tries. Wait 15 minutes and try again."}
+    return _page("login.html", error=msg.get(error, "Wrong username or password.") if error else "")
 
 
 @app.post("/login")
-def login(username: str = Form(""), password: str = Form("")):
+def login(request: Request, username: str = Form(""), password: str = Form("")):
+    key = _client_ip(request) + "|" + username.strip().lower()
+    if _too_many(key):
+        return RedirectResponse("/login?error=2", status_code=303)
     tok = db.login(username, password)
     if not tok:
+        _FAILS.setdefault(key, []).append(time.time())
         return RedirectResponse("/login?error=1", status_code=303)
-    return _login_response(tok)
+    _FAILS.pop(key, None)
+    return _login_response(tok, request)
 
 
 @app.get("/setup")
@@ -157,13 +178,13 @@ def setup_page(error: str = ""):
 
 
 @app.post("/setup")
-def setup(name: str = Form(""), username: str = Form(""), password: str = Form(""), password2: str = Form("")):
+def setup(request: Request, name: str = Form(""), username: str = Form(""), password: str = Form(""), password2: str = Form("")):
     if db.user_count():
         return RedirectResponse("/login", status_code=303)
     if len(password) < 6 or password != password2 or not re.fullmatch(r"[a-zA-Z0-9_.-]{3,30}", username.strip()):
         return RedirectResponse("/setup?error=1", status_code=303)
     db.create_user(username, name, password, role="admin")
-    return _login_response(db.login(username, password))
+    return _login_response(db.login(username, password), request)
 
 
 @app.get("/logout")
