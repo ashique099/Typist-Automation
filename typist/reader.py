@@ -221,7 +221,7 @@ def _clean_option(letter, text):
 def _group_mcqs(blocks):
     """Numbered question + options (A)-(D) -> {"type": "mcq", "q", "options", "letters"}."""
     out, i = [], 0
-    is_opt = lambda b: b.get("type") == "item" and bool(re.fullmatch(r"\(\s*[A-Da-d]\s*\)", str(b.get("marker") or "")))
+    is_opt = lambda b: b.get("type") == "item" and bool(re.fullmatch(r"\(?\s*[A-Da-d]\s*\)", str(b.get("marker") or "")))
     while i < len(blocks):
         b = blocks[i]
         q = None
@@ -230,10 +230,22 @@ def _group_mcqs(blocks):
         elif b.get("type") == "item" and re.fullmatch(r"(?:Q\.?\s*)?\d{1,3}[.)]", str(b.get("marker") or "")):
             q = f"{b['marker']} {b.get('text', '')}"
         j = i + 1
+        extra = []  # "[BB2022]" notes or a "या, ..." second wording between question and options
+        while q is not None and j < len(blocks) and not is_opt(blocks[j]) and len(extra) < 2:
+            nb = blocks[j]
+            if nb.get("type") == "note":
+                extra.append(f"[{nb.get('label', '')}] {nb.get('text', '')}".strip())
+            elif nb.get("type") in ("h1", "h2", "para") and _plain(nb.get("text", "")).startswith("या"):
+                extra.append(nb.get("text", ""))
+            else:
+                break
+            j += 1
+        k = j
         while j < len(blocks) and is_opt(blocks[j]):
             j += 1
-        if q is not None and j - i - 1 >= 2:
-            opts = blocks[i + 1:j]
+        if q is not None and j - k >= 2:
+            q = "\n".join([q] + extra)
+            opts = blocks[k:j]
             letters = [str(o["marker"]).strip("() ") for o in opts]
             out.append({"type": "mcq", "q": q.replace("**", "").strip(), "letters": letters,
                         "options": [_clean_option(l, str(o.get("text") or "")) for l, o in zip(letters, opts)]})
@@ -259,10 +271,10 @@ def _classify(p_el, text, col, blocks, last_caption_fig):
         blocks.append({"type": "title", "text": plain})
     elif not is_option and (style in ("heading1", "heading 1") or (
             col == S.red and len(plain) < 120 and not plain.startswith(("[", "प्रश्न")))):
-        blocks.append({"type": "h1", "text": plain})
+        blocks.append({"type": "h1", "text": text.replace("**", "").strip()})
     elif not is_option and (style in ("heading2", "heading 2") or (
             col == S.blue and len(plain) < 120 and "\t" not in text and not plain.startswith(("उदाहरण", "उत्तर")))):
-        blocks.append({"type": "h2", "text": plain})
+        blocks.append({"type": "h2", "text": text.replace("**", "").strip()})
     elif plain.startswith("उदाहरण"):
         blocks.append({"type": "example", "text": re.sub(r"^\**उदाहरण\s*[–:-]?\s*\**\s*", "", text)})
     elif re.match(r"^\**\[([^\]]+)\]", text):

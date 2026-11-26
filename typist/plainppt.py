@@ -522,10 +522,11 @@ def _is_question(blocks, i):
 def _mcq(d, q, options, answer="", solution="", number=None):
     """One question per slide: question green, options white."""
     d._cont() if d.slide is not None else d._open_body()
-    qa = atoms(q.replace("**", ""), Q_COLOR, True)
-    if number is not None:
-        qa = [(f"{number}. ", Q_COLOR, True, "")] + qa
-    d.add(qa)
+    for n, line in enumerate(q.replace("**", "").split("\n")):
+        qa = atoms(line, Q_COLOR, True)
+        if number is not None and n == 0:
+            qa = [(f"{number}. ", Q_COLOR, True, "")] + qa
+        d.add(qa)
     for letter, o in options:
         d.add([(f"({letter})", WHITE, False, ""), (" ", WHITE, False, "")] + atoms(o, WHITE), hang=True)
     if str(answer).strip():
