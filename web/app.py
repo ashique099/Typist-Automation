@@ -219,7 +219,7 @@ def download(jid: str, request: Request):
 
 @app.get("/healthz")
 def health():
-    return {"ok": True, "api_key": bool(os.environ.get("ANTHROPIC_API_KEY")), "password": bool(PASSWORD)}
+    return {"ok": True, "api_key": bool(os.environ.get("ANTHROPIC_API_KEY", "").strip()), "password": bool(PASSWORD)}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -228,7 +228,7 @@ def home(request: Request):
         return RedirectResponse("/login", status_code=303)
     html = (HERE / "templates" / "index.html").read_text(encoding="utf-8")
     return html.replace("{{name}}", escape(request.cookies.get("ta_name", "Typist"))) \
-               .replace("{{nokey}}", "" if os.environ.get("ANTHROPIC_API_KEY") else
+               .replace("{{nokey}}", "" if os.environ.get("ANTHROPIC_API_KEY", "").strip() else
                         '<div class="warn">Server par ANTHROPIC_API_KEY set nahi hai, conversion nahi chalega.</div>')
 
 

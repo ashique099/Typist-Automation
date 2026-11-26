@@ -95,9 +95,10 @@ class TranscribeError(RuntimeError):
 
 
 def _client():
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not key:
         raise TranscribeError("ANTHROPIC_API_KEY set nahi hai (server ki settings me API key daalein).")
-    return anthropic.Anthropic(max_retries=4, timeout=900)
+    return anthropic.Anthropic(api_key=key, max_retries=4, timeout=900)
 
 
 def _parse(text: str) -> dict:
