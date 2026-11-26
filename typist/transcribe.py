@@ -12,6 +12,8 @@ import re
 
 import anthropic
 
+from . import usage
+
 MODEL = os.environ.get("TYPIST_MODEL", "claude-opus-5-5")
 EFFORT = os.environ.get("TYPIST_EFFORT", "high")
 PAGES_PER_CALL = 10
@@ -97,7 +99,7 @@ class TranscribeError(RuntimeError):
 def _client():
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not key:
-        raise TranscribeError("ANTHROPIC_API_KEY set nahi hai (server ki settings me API key daalein).")
+        raise TranscribeError("ANTHROPIC_API_KEY is not set (put the API key in settings.bat on the server).")
     return anthropic.Anthropic(api_key=key, max_retries=4, timeout=900)
 
 
@@ -137,23 +139,24 @@ def transcribe_pages(images: list[bytes], context_blocks=None, label="") -> dict
                      {"role": "user", "content": f"That reply was not valid JSON ({last_err}). "
                                                  "Send the complete JSON object again, nothing else."}]
         with client.beta.messages.stream(
-            model=MODEL,
+            model=usage.model(MODEL),
             max_tokens=64000,
             system=SYSTEM,
             messages=msgs,
-            output_config={"effort": EFFORT},
+            output_config={"effort": usage.effort(EFFORT)},
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",
         ) as stream:
             msg = stream.get_final_message()
+        usage.record(msg)
         if msg.stop_reason == "refusal":
-            raise TranscribeError("Model ne ye slides process karne se mana kar diya.")
+            raise TranscribeError("The model declined to process these slides.")
         last_text = "".join(b.text for b in msg.content if b.type == "text")
         try:
             return _parse(last_text)
         except (ValueError, json.JSONDecodeError) as e:
             last_err = str(e)[:200]
-    raise TranscribeError(f"Model ka jawab JSON me nahi aaya: {last_err}")
+    raise TranscribeError(f"The model reply was not valid JSON: {last_err}")
 
 
 def transcribe_pdf_pages(images: list[bytes], context_blocks=None, progress=None, label=""):

@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Typist Automation</title>
+<style>
+  :root { --red:#C00000; --blue:#1F4E9F; --green:#00703C; --amber:#9a6700; --bg:#f4f5f8; --card:#fff; --text:#1b1f24;
+          --muted:#5d6672; --line:#e3e6eb; --soft:#eef3fb; }
+  * { box-sizing:border-box }
+  body { margin:0; font-family:system-ui,"Segoe UI","Nirmala UI",sans-serif; background:var(--bg); color:var(--text); font-size:15px }
+  a { color:var(--blue) }
+  header { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5 }
+  .bar { max-width:1120px; margin:0 auto; padding:0 20px; height:60px; display:flex; align-items:center; gap:22px }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; white-space:nowrap }
+  .logo { width:32px; height:32px; border-radius:9px; background:var(--red); color:#fff; display:grid; place-items:center; font-weight:800 }
+  nav { display:flex; gap:4px; flex:1; overflow-x:auto }
+  nav button { all:unset; padding:8px 12px; border-radius:8px; cursor:pointer; color:var(--muted); font-weight:500; white-space:nowrap }
+  nav button:hover { background:#f1f3f6 } nav button.on { background:var(--soft); color:var(--blue) }
+  .who { display:flex; align-items:center; gap:10px; font-size:14px; white-space:nowrap }
+  .avatar { width:32px; height:32px; border-radius:50%; background:#e7ecf5; color:var(--blue); display:grid; place-items:center; font-weight:700 }
+  .who a { color:var(--muted); text-decoration:none; font-size:13px } .who a:hover { color:var(--red) }
+  main { max-width:1120px; margin:0 auto; padding:28px 20px 60px }
+  h1 { font-size:24px; margin:0 0 4px } .sub { color:var(--muted); margin:0 0 22px; font-size:14px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:18px }
+  .card h2 { margin:0 0 14px; font-size:16px }
+  .tools { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:22px }
+  .tool { all:unset; cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px 22px 22px;
+          display:flex; flex-direction:column; gap:10px; transition:box-shadow .15s, transform .15s, border-color .15s }
+  .tool:hover, .tool:focus-visible { border-color:#c9d3e4; box-shadow:0 10px 28px rgba(25,40,80,.09); transform:translateY(-2px) }
+  .tool .ic { width:48px; height:48px; border-radius:12px; display:grid; place-items:center; font-size:22px; font-weight:800; color:#fff }
+  .tool h3 { margin:6px 0 0; font-size:18px } .tool p { margin:0; color:var(--muted); font-size:14px; line-height:1.45; flex:1 }
+  .flow { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--muted) }
+  .tag { padding:3px 8px; border-radius:6px; background:#f1f3f6 }
+  .go { color:var(--blue); font-weight:600; font-size:14px }
+  .t1 .ic { background:var(--red) } .t2 .ic { background:var(--blue) } .t3 .ic { background:var(--green) }
+  .meter { display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:22px; font-size:14px }
+  .meter .track { flex:1 1 200px; height:8px; background:#e8ebf0; border-radius:5px; overflow:hidden }
+  .meter i { display:block; height:100%; background:var(--green) } .meter i.warn { background:var(--amber) } .meter i.over { background:var(--red) }
+  .back { all:unset; cursor:pointer; color:var(--muted); font-size:14px; margin-bottom:12px; display:inline-block } .back:hover { color:var(--blue) }
+  #drop { border:2px dashed #cdd3dc; border-radius:12px; padding:38px 12px; text-align:center; color:var(--muted); cursor:pointer; background:#fafbfc }
+  #drop.over { border-color:var(--blue); background:var(--soft) } #drop b { color:var(--text); font-size:16px }
+  #files { list-style:none; margin:12px 0 0; padding:0 }
+  #files li { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; font-size:14px }
+  #files .n { color:var(--muted); width:22px } #files .f { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .ib { border:1px solid var(--line); background:#fff; border-radius:6px; width:30px; height:28px; cursor:pointer }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px }
+  label { display:block; font-size:13px; font-weight:600; margin:16px 0 6px }
+  input[type=text], input[type=password], input[type=number], input[type=search], select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:#fff; color:var(--text) }
+  input:focus, select:focus { outline:2px solid #c9d6ef; border-color:var(--blue) }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border:0; border-radius:8px; background:var(--blue); color:#fff; font-size:15px; font-weight:600; cursor:pointer; text-decoration:none }
+  .btn:disabled { opacity:.5; cursor:default } .btn.ghost { background:#fff; color:var(--text); border:1px solid var(--line) } .btn.sm { padding:6px 12px; font-size:13px }
+  .btn.danger { background:#fff; color:var(--red); border:1px solid #f0c4c4 }
+  .hint { color:var(--muted); font-size:13px; margin-top:10px }
+  .alert { background:#fff3f3; border:1px solid #f0c4c4; color:var(--red); padding:10px 14px; border-radius:8px; margin-bottom:16px; font-size:14px }
+  table { width:100%; border-collapse:collapse; font-size:14px }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; padding:8px }
+  td { padding:12px 8px; border-top:1px solid var(--line); vertical-align:top }
+  .pill { display:inline-block; padding:3px 9px; border-radius:99px; font-size:12px; font-weight:600; white-space:nowrap }
+  .pill.done { background:#e5f4ec; color:var(--green) } .pill.failed { background:#fdecec; color:var(--red) } .pill.running, .pill.queued { background:var(--soft); color:var(--blue) }
+  .pill.admin { background:#f3e8fd; color:#6b21a8 } .pill.typist { background:#eef0f3; color:var(--muted) } .pill.off { background:#fdecec; color:var(--red) }
+  .kind { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em }
+  .kind.notes { color:var(--red) } .kind.ppt { color:var(--blue) } .kind.test { color:var(--green) }
+  .small { color:var(--muted); font-size:12px; margin-top:3px; word-break:break-word }
+  .dls { display:flex; flex-wrap:wrap; gap:6px }
+  .dl { font-size:12px; font-weight:600; padding:6px 10px; border-radius:6px; text-decoration:none; color:#fff; background:var(--red); white-space:nowrap }
+  .dl.ppt, .dl.objective { background:var(--blue) } .dl.test { background:var(--green) }
+  .filters { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px } .filters > * { width:auto; flex:0 1 auto } .filters input { flex:1 1 220px }
+  .pager { display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:12px; color:var(--muted); font-size:13px }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px }
+  .stat { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px }
+  .stat .k { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em } .stat .v { font-size:22px; font-weight:700; margin-top:4px }
+  .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap } .row > div { flex:1 1 160px }
+  .hide { display:none !important }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:9 }
+  @media (max-width:900px) { .tools { grid-template-columns:1fr } }
+  @media (max-width:720px) {
+    .bar { height:auto; flex-wrap:wrap; padding:10px 16px; gap:8px } nav { order:3; flex-basis:100% } .who { margin-left:auto }
+    main { padding:20px 16px 50px } .hm { display:none }
+  }
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand"><div class="logo">T</div>Typist Automation</div>
+  <nav id="nav">
+    <button data-tab="home" class="on">Dashboard</button>
+    <button data-tab="history">Work history</button>
+    <button data-tab="users" class="adm hide">Typists</button>
+    <button data-tab="settings" class="adm hide">Settings</button>
+    <button data-tab="designs" class="adm hide">PPT designs</button>
+    <button data-tab="account">My account</button>
+  </nav>
+  <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout">Sign out</a></div>
+</div></header>
+<main>
+  <section id="tab-home">
+    <h1 id="hello">Welcome</h1><p class="sub">Choose what you want to make.</p>
+    <div id="noKey" class="alert hide">The Claude API key is not set on the server, so tools 1 and 3 will not run. The admin should add it to <code>settings.bat</code> and restart.</div>
+    <div class="tools">
+      <button class="tool t1" data-task="notes">
+        <div class="ic">1</div><div class="flow"><span class="tag">PDF</span>→<span class="tag">DOCX</span></div>
+        <h3>Panel PDF to Notes DOCX</h3>
+        <p>Upload the live-class panel PDFs of a chapter. Get one combined Word file in the house style, with equations and diagrams.</p>
+        <span class="go">Open →</span>
+      </button>
+      <button class="tool t2" data-task="ppt">
+        <div class="ic">2</div><div class="flow"><span class="tag">DOCX</span>→<span class="tag">PPT</span></div>
+        <h3>DOCX to PPT</h3>
+        <p>Upload the finished notes DOCX (after your corrections). Get class slides in the PPT design you pick. No API cost.</p>
+        <span class="go">Open →</span>
+      </button>
+      <button class="tool t3" data-task="test">
+        <div class="ic">3</div><div class="flow"><span class="tag">PPT / DOCX</span>→<span class="tag">MCQ</span></div>
+        <h3>PPT or DOCX to MCQ Test</h3>
+        <p>Upload notes or slides. Get an MCQ test in the Word table format, plus an Objective PPT.</p>
+        <span class="go">Open →</span>
+      </button>
+    </div>
+    <div class="meter" id="meter"></div>
+    <div class="card"><h2>My recent work</h2><table><tbody id="recent"></tbody></table></div>
+  </section>
+
+  <section id="tab-tool" class="hide">
+    <button class="back" id="back">← Dashboard</button>
+    <h1 id="toolTitle"></h1><p class="sub" id="toolSub"></p>
+    <div class="card">
+      <div id="drop"><b id="dropText"></b><br>or click to choose<br><small>Files are joined in the order shown; use ↑ ↓ to change it</small></div>
+      <input id="pick" type="file" multiple hidden>
+      <ul id="files"></ul>
+      <div class="grid">
+        <div><label for="title">Chapter name (optional)</label><input id="title" type="text" placeholder="Leave empty to take it from the file"></div>
+        <div id="tplBox"><label for="tpl">PPT design</label><select id="tpl"><option value="">Plain (white)</option></select></div>
+        <div id="mcqBox"><label for="mcq">Number of MCQs</label>
+          <select id="mcq"><option>25</option><option>50</option><option>75</option><option>100</option><option>150</option></select></div>
+      </div>
+      <div style="margin-top:20px"><button id="go" class="btn" disabled>Start</button></div>
+      <div class="hint" id="toolHint"></div>
+    </div>
+    <div class="card"><h2>Recent jobs with this tool</h2><table><tbody id="toolRecent"></tbody></table></div>
+  </section>
+
+  <section id="tab-history" class="hide">
+    <h1>Work history</h1><p class="sub">Every job: who uploaded it, when, which files, and what it cost.</p>
+    <div class="card">
+      <div class="filters">
+        <select id="hScope" class="adm hide"><option value="all">Everyone</option><option value="mine">Only mine</option></select>
+        <select id="hTask"><option value="">All tools</option><option value="notes">PDF to Notes</option><option value="ppt">DOCX to PPT</option><option value="test">MCQ Test</option></select>
+        <select id="hStatus"><option value="">Any status</option><option value="done">Ready</option><option value="running">Running</option><option value="failed">Failed</option></select>
+        <select id="hDays"><option value="0">All time</option><option value="1">Today</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>
+        <input id="hQ" type="search" placeholder="Search chapter or file name">
+      </div>
+      <table><thead><tr><th>Job</th><th class="hm">By / when</th><th>Status</th><th class="hm">Pages · MCQs · Cost</th><th>Download</th></tr></thead>
+        <tbody id="hist"></tbody></table>
+      <div class="pager"><span id="hInfo"></span><button class="btn ghost sm" id="hPrev">‹</button><button class="btn ghost sm" id="hNext">›</button></div>
+    </div>
+  </section>
+
+  <section id="tab-users" class="hide">
+    <h1>Typists</h1><p class="sub">Each typist gets their own login. A disabled account cannot sign in.</p>
+    <div class="card"><h2>Add a typist</h2>
+      <form id="addUser" class="row">
+        <div><label>Name</label><input type="text" name="name" required></div>
+        <div><label>Username</label><input type="text" name="username" required pattern="[a-zA-Z0-9_.\-]{3,30}"></div>
+        <div><label>Password</label><input type="text" name="password" required minlength="6"></div>
+        <div><label>Role</label><select name="role"><option value="typist">Typist</option><option value="admin">Admin</option></select></div>
+        <div style="flex:0 0 auto"><button class="btn">Add</button></div>
+      </form>
+    </div>
+    <div class="card"><h2>All accounts (work this month)</h2>
+      <table><thead><tr><th>Name</th><th>Role</th><th class="hm">Jobs</th><th class="hm">Pages</th><th class="hm">MCQs</th><th>Cost</th><th></th></tr></thead><tbody id="users"></tbody></table>
+    </div>
+  </section>
+
+  <section id="tab-settings" class="hide">
+    <h1>Settings &amp; spending</h1><p class="sub">Monthly budget, models, and this month's usage.</p>
+    <div class="stats" id="monthStats"></div>
+    <div class="card"><h2>Settings</h2>
+      <form id="settings">
+        <div class="grid">
+          <div><label>Monthly budget (₹)</label><input type="number" name="monthly_budget_inr" min="0" step="100"></div>
+          <div><label>$1 = ₹ (including bank charges)</label><input type="number" name="usd_to_inr" min="1" step="0.5"></div>
+          <div><label>Model for notes</label><select name="model"></select></div>
+          <div><label>Model for MCQs</label><select name="mcq_model"></select></div>
+          <div><label>Effort</label><select name="effort"><option value="low">Low (cheapest)</option><option value="medium">Medium</option><option value="high">High (best)</option></select></div>
+          <div><label>Default number of MCQs</label><input type="number" name="default_mcq_count" min="5" max="150"></div>
+        </div>
+        <div style="margin-top:18px"><button class="btn">Save</button></div>
+        <div class="hint">When the budget is used up, new PDF and MCQ jobs are blocked until next month. Costs come from the real API token counts of each job.</div>
+      </form>
+    </div>
+  </section>
+
+  <section id="tab-designs" class="hide">
+    <h1>PPT designs</h1><p class="sub">Upload any of your class PPTs. Its background and header strip are reused; its slides are not.</p>
+    <div class="card"><h2>New design</h2>
+      <form id="addTpl" class="row">
+        <div><label>Name (e.g. Class 12 Chemistry)</label><input type="text" name="name" required></div>
+        <div><label>PPT file (.pptx)</label><input type="file" name="pptx" accept=".pptx" required></div>
+        <div><label>Logo (.png, for topic slides)</label><input type="file" name="logo" accept="image/png,image/jpeg"></div>
+        <div style="flex:0 0 auto"><button class="btn">Upload</button></div>
+      </form>
+    </div>
+    <div class="card"><h2>Designs</h2><table><tbody id="tpls"></tbody></table></div>
+  </section>
+
+  <section id="tab-account" class="hide">
+    <h1>My account</h1><p class="sub" id="accInfo"></p>
+    <div class="card" style="max-width:460px"><h2>Change password</h2>
+      <form id="pwForm">
+        <label>Current password</label><input type="password" name="old" required autocomplete="current-password">
+        <label>New password</label><input type="password" name="new" required minlength="6" autocomplete="new-password">
+        <div style="margin-top:18px"><button class="btn">Change password</button></div>
+      </form>
+    </div>
+  </section>
+</main>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inr = v => "₹" + Math.round(v || 0).toLocaleString("en-IN");
+const when = t => t ? new Date(t * 1000).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"}) : "";
+const dur = j => !(j.finished && j.started) ? "" : j.finished - j.started < 60 ? "under 1 min" : Math.round((j.finished - j.started) / 60) + " min";
+const STATUS = {queued:"Queued", running:"Running", done:"Ready", failed:"Failed"};
+const TOOLS = {
+  notes: {title: "Panel PDF to Notes DOCX", accept: ".pdf,application/pdf", ext: /\.pdf$/i, type: "PDF", drop: "Drop the panel PDFs here",
+          sub: "Upload all panel PDFs of one chapter (Part 1, Part 2 …). They are combined into one notes file.",
+          hint: "Repeated slides are skipped automatically. About 1-3 minutes per PDF. You can close this page; the result stays in Work history.",
+          tpl: false, mcq: false},
+  ppt:   {title: "DOCX to PPT", accept: ".docx", ext: /\.docx$/i, type: "DOCX", drop: "Drop the notes DOCX here",
+          sub: "Upload the notes DOCX (with your corrections). Headings, points, equations and diagrams become slides.",
+          hint: "Built from the text of the notes, so it costs nothing and takes a few seconds.", tpl: true, mcq: false},
+  test:  {title: "PPT or DOCX to MCQ Test", accept: ".docx,.pptx", ext: /\.(docx|pptx)$/i, type: "DOCX or PPTX", drop: "Drop the notes DOCX or PPT here",
+          sub: "MCQs are written only from the uploaded notes or slides, with answers spread evenly over options 1-4.",
+          hint: "You get the MCQ test in the Word table format and an Objective PPT. About 1-2 minutes.", tpl: true, mcq: true},
+};
+let ME = null, files = [], hPage = 1, task = "notes";
+function toast(t) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 3500); }
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  if (r.status === 401) { location.href = "/login"; throw new Error("login"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+}
+const form = el => ({method: "POST", body: new FormData(el)});
+const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; };
+
+function show(tab) {
+  const navTab = tab === "tool" ? "home" : tab;
+  $$("#nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === navTab));
+  $$("main > section").forEach(s => s.classList.toggle("hide", s.id !== "tab-" + tab));
+  if (tab !== "tool") store("tab", tab);
+  ({home: loadRecent, tool: loadToolRecent, history: loadHistory, users: loadUsers, settings: loadSettings, designs: loadDesigns}[tab] || (() => {}))();
+  window.scrollTo(0, 0);
+}
+$("#nav").onclick = e => { const b = e.target.closest("button"); if (b) show(b.dataset.tab); };
+$$(".tool").forEach(c => c.onclick = () => openTool(c.dataset.task));
+$("#back").onclick = () => show("home");
+
+function openTool(t) {
+  task = t; const T = TOOLS[t];
+  if (!files.every(f => T.ext.test(f.name))) files = [];
+  $("#toolTitle").textContent = T.title; $("#toolSub").textContent = T.sub; $("#toolHint").textContent = T.hint;
+  $("#dropText").textContent = T.drop; $("#pick").accept = T.accept;
+  $("#tplBox").classList.toggle("hide", !T.tpl); $("#mcqBox").classList.toggle("hide", !T.mcq);
+  drawFiles(); show("tool");
+}
+
+async function loadMe() {
+  ME = await api("/api/me");
+  const u = ME.user;
+  $("#whoName").textContent = u.name; $("#avatar").textContent = (u.name || "?").trim()[0].toUpperCase();
+  $("#hello").textContent = "Welcome, " + u.name;
+  $("#accInfo").textContent = `${u.name} · username: ${u.username} · ${u.role === "admin" ? "Admin" : "Typist"}`;
+  $$(".adm").forEach(e => e.classList.toggle("hide", u.role !== "admin"));
+  $("#noKey").classList.toggle("hide", ME.api_key);
+  const b = ME.budget, pct = b.limit_inr ? Math.min(100, 100 * b.spent_inr / b.limit_inr) : 0;
+  $("#meter").innerHTML = `<b>This month</b><span>${inr(b.spent_inr)} of ${inr(b.limit_inr)} used</span>
+    <div class="track"><i class="${pct >= 100 ? "over" : pct > 80 ? "warn" : ""}" style="width:${pct}%"></i></div>
+    <span class="small" style="margin:0">${inr(Math.max(0, b.limit_inr - b.spent_inr))} left</span>`;
+  const sel = $("#tpl"), keep = sel.value || store("tpl") || ""; sel.length = 1;
+  ME.templates.forEach(t => sel.insertAdjacentHTML("beforeend", `<option value="${esc(t)}">${esc(t)}</option>`));
+  sel.value = ME.templates.includes(keep) ? keep : (ME.templates[0] || "");
+  const m = $("#mcq");
+  if (!m.dataset.set) { m.dataset.set = 1; m.value = String(ME.default_mcq_count); if (!m.value) m.value = "50"; }
+}
+$("#tpl").onchange = () => store("tpl", $("#tpl").value);
+
+const natural = (a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: "base"});
+function addFiles(fl) {
+  const T = TOOLS[task]; let bad = 0;
+  for (const f of fl) T.ext.test(f.name) ? files.push(f) : bad++;
+  if (bad) toast(`${bad} file(s) skipped: this tool takes ${T.type} files only`);
+  files.sort(natural); drawFiles();
+}
+function drawFiles() {
+  $("#files").innerHTML = files.map((f, i) => `<li><span class="n">${i + 1}.</span><span class="f">${esc(f.name)}</span>
+    <button class="ib" data-a="up" data-i="${i}" title="Move up">↑</button><button class="ib" data-a="down" data-i="${i}" title="Move down">↓</button>
+    <button class="ib" data-a="rm" data-i="${i}" title="Remove">✕</button></li>`).join("");
+  $("#go").disabled = !files.length;
+}
+$("#files").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return; const i = +b.dataset.i, a = b.dataset.a;
+  if (a === "rm") files.splice(i, 1);
+  if (a === "up" && i > 0) [files[i - 1], files[i]] = [files[i], files[i - 1]];
+  if (a === "down" && i < files.length - 1) [files[i + 1], files[i]] = [files[i], files[i + 1]];
+  drawFiles();
+};
+const drop = $("#drop");
+drop.onclick = () => $("#pick").click();
+$("#pick").onchange = () => { addFiles($("#pick").files); $("#pick").value = ""; };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); };
+$("#go").onclick = async () => {
+  const go = $("#go"); go.disabled = true; go.textContent = "Uploading…";
+  const fd = new FormData();
+  files.forEach(f => fd.append("files", f, f.name));
+  fd.append("task", task); fd.append("title", $("#title").value);
+  fd.append("ppt_template", $("#tpl").value); fd.append("mcq_count", $("#mcq").value);
+  try { await api("/api/jobs", {method: "POST", body: fd}); files = []; $("#title").value = ""; drawFiles(); toast("Job started"); loadToolRecent(); }
+  catch (err) { toast("Upload failed: " + err.message); }
+  go.textContent = "Start"; go.disabled = !files.length;
+};
+
+const dls = j => `<div class="dls">${j.downloads.map(d => `<a class="dl ${d.kind}" href="/api/jobs/${j.id}/download?kind=${d.kind}">⬇ ${esc(d.label)}</a>`).join("")}</div>`;
+function jobRow(j, full) {
+  const msg = j.status === "failed" || j.error ? j.error : j.status === "done" ? "" : j.step;
+  return `<tr>
+    <td><div class="kind ${j.task}">${esc(j.task_label)}</div><b>${esc(j.title || j.chapter || j.files[0])}</b>
+      <div class="small">${j.files.length} file${j.files.length > 1 ? "s" : ""}: ${esc(j.files.join(", "))}</div>
+      ${msg ? `<div class="small" style="color:${j.status === "failed" ? "var(--red)" : "var(--blue)"}">${esc(msg)}</div>` : ""}</td>
+    ${full ? `<td class="hm small">${esc(j.by_name || "")}<br>${when(j.created)}${dur(j) ? " · " + dur(j) : ""}</td>` : ""}
+    <td><span class="pill ${j.status}">${STATUS[j.status] || j.status}</span>${full ? "" : `<div class="small">${when(j.created)}</div>`}</td>
+    ${full ? `<td class="hm small">${[j.pages ? `${j.pages} pages${j.pages_sent && j.pages_sent < j.pages ? ` (${j.pages - j.pages_sent} repeats skipped)` : ""}` : "",
+      j.mcqs ? `${j.mcqs} MCQs` : ""].filter(Boolean).join(" · ")}<div>${j.task === "ppt" ? "Free" : inr(j.cost_inr)}</div></td>` : ""}
+    <td>${j.status === "done" ? dls(j) : ""}</td></tr>`;
+}
+const empty = (n, t) => `<tr><td colspan="${n}" class="small">${t}</td></tr>`;
+async function loadRecent() {
+  const d = await api("/api/jobs?scope=mine");
+  $("#recent").innerHTML = d.jobs.slice(0, 6).map(j => jobRow(j, false)).join("") || empty(3, "No jobs yet. Pick a tool above to start.");
+}
+async function loadToolRecent() {
+  const d = await api("/api/jobs?scope=mine&task=" + task);
+  $("#toolRecent").innerHTML = d.jobs.slice(0, 6).map(j => jobRow(j, false)).join("") || empty(3, "No jobs with this tool yet.");
+}
+async function loadHistory() {
+  const p = new URLSearchParams({scope: ME.user.role === "admin" ? $("#hScope").value : "mine", task: $("#hTask").value,
+                                 status: $("#hStatus").value, days: $("#hDays").value, q: $("#hQ").value, page: hPage});
+  const d = await api("/api/jobs?" + p);
+  $("#hist").innerHTML = d.jobs.map(j => jobRow(j, true)).join("") || empty(5, "Nothing found.");
+  const pages = Math.max(1, Math.ceil(d.total / 25));
+  $("#hInfo").textContent = `${d.total} job${d.total === 1 ? "" : "s"} · page ${hPage} of ${pages}`;
+  $("#hPrev").disabled = hPage <= 1; $("#hNext").disabled = hPage >= pages;
+}
+["#hScope", "#hTask", "#hStatus", "#hDays"].forEach(s => $(s).onchange = () => { hPage = 1; loadHistory(); });
+let qT; $("#hQ").oninput = () => { clearTimeout(qT); qT = setTimeout(() => { hPage = 1; loadHistory(); }, 300); };
+$("#hPrev").onclick = () => { hPage--; loadHistory(); }; $("#hNext").onclick = () => { hPage++; loadHistory(); };
+
+async function loadUsers() {
+  const us = await api("/api/admin/users");
+  $("#users").innerHTML = us.map(u => `<tr>
+    <td><b>${esc(u.name)}</b><div class="small">${esc(u.username)}</div></td>
+    <td><span class="pill ${u.role}">${u.role === "admin" ? "Admin" : "Typist"}</span> ${u.active ? "" : '<span class="pill off">Disabled</span>'}</td>
+    <td class="hm">${u.jobs}</td><td class="hm">${u.pages}</td><td class="hm">${u.mcqs}</td><td>${inr(u.cost_inr)}</td>
+    <td style="white-space:nowrap;text-align:right"><button class="btn ghost sm" data-pw="${u.id}">Reset password</button>
+      ${u.id === ME.user.id ? "" : `<button class="btn ${u.active ? "danger" : "ghost"} sm" data-act="${u.id}" data-v="${u.active ? 0 : 1}">${u.active ? "Disable" : "Enable"}</button>`}</td></tr>`).join("");
+}
+$("#users").onclick = async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const fd = new FormData();
+  if (b.dataset.pw) { const p = prompt("New password (at least 6 characters)"); if (!p) return; fd.append("password", p); }
+  if (b.dataset.act) fd.append("active", b.dataset.v);
+  try { await api(`/api/admin/users/${b.dataset.pw || b.dataset.act}`, {method: "POST", body: fd}); toast("Saved"); loadUsers(); }
+  catch (err) { toast(err.message); }
+};
+$("#addUser").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/admin/users", form(e.target)); e.target.reset(); toast("Typist added"); loadUsers(); }
+  catch (err) { toast(err.message); }
+};
+
+async function loadSettings() {
+  const d = await api("/api/admin/settings"), s = d.settings, f = $("#settings");
+  ["model", "mcq_model"].forEach(n => { f[n].innerHTML = Object.entries(d.models).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join(""); });
+  Object.entries(s).forEach(([k, v]) => { if (f[k]) f[k].value = v; });
+  const m = d.month, lim = +s.monthly_budget_inr;
+  $("#monthStats").innerHTML = [
+    ["Spent this month", inr(m.inr), `of ${inr(lim)} · $${m.usd.toFixed(2)}`],
+    ["Jobs", m.jobs, "this month"], ["PDF pages", m.pages, `${m.pages - m.sent} repeats skipped`], ["MCQs", m.mcqs, "this month"],
+    ["Cost per page", m.sent ? inr(m.notes_inr / m.sent) : "–", "average, notes only"]
+  ].map(([k, v, s2]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="small">${s2}</div></div>`).join("");
+}
+$("#settings").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/admin/settings", form(e.target)); toast("Settings saved"); loadSettings(); loadMe(); } catch (err) { toast(err.message); }
+};
+
+async function loadDesigns() {
+  const d = await api("/api/admin/settings");
+  $("#tpls").innerHTML = d.templates.map(t => `<tr><td><b>${esc(t)}</b></td>
+    <td style="text-align:right"><button class="btn danger sm" data-del="${esc(t)}">Delete</button></td></tr>`).join("")
+    || empty(2, "No designs yet. Upload one of your class PPTs above.");
+}
+$("#tpls").onclick = async e => {
+  const b = e.target.closest("button[data-del]"); if (!b || !confirm(`Delete the design "${b.dataset.del}"?`)) return;
+  try { await api(`/api/admin/templates/${encodeURIComponent(b.dataset.del)}/delete`, {method: "POST"}); loadDesigns(); loadMe(); }
+  catch (err) { toast(err.message); }
+};
+$("#addTpl").onsubmit = async e => {
+  e.preventDefault(); const btn = e.target.querySelector("button"); btn.disabled = true; btn.textContent = "Uploading…";
+  try { await api("/api/admin/templates", form(e.target)); e.target.reset(); toast("Design added"); loadDesigns(); loadMe(); }
+  catch (err) { toast(err.message); }
+  btn.disabled = false; btn.textContent = "Upload";
+};
+
+$("#pwForm").onsubmit = async e => {
+  e.preventDefault();
+  try { await api("/api/password", form(e.target)); e.target.reset(); toast("Password changed"); } catch (err) { toast(err.message); }
+};
+
+loadMe().then(() => {
+  let t = store("tab") || "home";
+  const b = $(`#nav button[data-tab="${t}"]`);
+  if (!b || b.classList.contains("hide")) t = "home";
+  show(t);
+  setInterval(() => {
+    if (document.hidden) return;
+    const on = $$("main > section").find(s => !s.classList.contains("hide"))?.id;
+    if (on === "tab-home") { loadRecent(); loadMe(); } else if (on === "tab-tool") loadToolRecent(); else if (on === "tab-history") loadHistory();
+  }, 5000);
+});
+</script>
+</body>
+</html>

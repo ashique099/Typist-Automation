@@ -317,6 +317,9 @@ def _roman(n):
 EMU = 12700  # per point
 
 
+FIG_TAG = "typist-figure:"
+
+
 class Figure:
     """Vector figure in points; emitted as one inline DrawingML group (editable in Word)."""
 
@@ -385,13 +388,16 @@ class Figure:
 
     def to_run(self, fid):
         W, H = int(self.w * EMU), int(self.h * EMU)
+        # the figure's JSON rides along as alt text so "DOCX to PPT" can redraw it later
+        src = getattr(self, "source", None)
+        descr = f' descr="{escape(FIG_TAG + src, {chr(34): "&quot;"})}"' if src else ""
         grp = (f'<wpg:wgp><wpg:cNvGrpSpPr/><wpg:grpSpPr><a:xfrm><a:off x="0" y="0"/>'
                f'<a:ext cx="{W}" cy="{H}"/><a:chOff x="0" y="0"/><a:chExt cx="{W}" cy="{H}"/>'
                f'</a:xfrm></wpg:grpSpPr>{"".join(self.shapes)}</wpg:wgp>')
         xml = (f'<w:r {_ns("w", "wp", "a", "wps", "wpg")}><w:drawing>'
                f'<wp:inline distT="0" distB="0" distL="0" distR="0">'
                f'<wp:extent cx="{W}" cy="{H}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
-               f'<wp:docPr id="{fid}" name="Figure {fid}"/><wp:cNvGraphicFramePr/>'
+               f'<wp:docPr id="{fid}" name="Figure {fid}"{descr}/><wp:cNvGraphicFramePr/>'
                f'<a:graphic><a:graphicData uri="{NS["wpg"]}">{grp}</a:graphicData></a:graphic>'
                f'</wp:inline></w:drawing></w:r>')
         return parse_xml(xml)

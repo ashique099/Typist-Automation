@@ -13,23 +13,26 @@ from pathlib import Path
 
 from .blocks import render
 from .docxkit import NoteDoc
-from .pages import pdf_pages
+from .pages import drop_repeats, pdf_pages
 
 
-def transcribe_all(pdfs, progress=None):
+def transcribe_all(pdfs, progress=None, stats=None):
     """pdfs: list of (name, path_or_bytes). Returns list of {"name","chapter_title","blocks"}."""
     from .transcribe import transcribe_pdf_pages  # needs the anthropic package + API key
 
     parts, ctx = [], []
     for n, (name, src) in enumerate(pdfs, 1):
         if progress:
-            progress(f"PDF {n}/{len(pdfs)} ({name}): pages nikal rahe hain")
-        images = pdf_pages(src)
+            progress(f"PDF {n}/{len(pdfs)} ({name}): reading pages")
+        all_pages = pdf_pages(src)
+        images = drop_repeats(all_pages)
+        if stats is not None:
+            stats["pages"] = stats.get("pages", 0) + len(all_pages)
+            stats["sent"] = stats.get("sent", 0) + len(images)
 
         def page_progress(i, total, n=n, name=name):
             if progress:
-                progress(f"PDF {n}/{len(pdfs)} ({name}): slides {i + 1}-{min(total, i + 10)} of {total} "
-                         f"type ho rahi hain")
+                progress(f"PDF {n}/{len(pdfs)} ({name}): typing slides {i + 1}-{min(total, i + 10)} of {total}")
 
         title, blocks = transcribe_pdf_pages(images, ctx, page_progress, label=f"(from {name})")
         parts.append({"name": name, "chapter_title": title, "blocks": blocks})

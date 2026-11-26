@@ -4,27 +4,44 @@ Turns live-class "panel" PDFs (handwritten slides exported as images) into clean
 
 ## Website (for the whole typist team)
 
-Typists log in with a shared team password, drop one or more panel PDFs (order can be changed with
-↑ ↓), and download one combined `.docx` in the house style. Every slide is read by Claude
-(vision), returned as structured blocks (`typist/transcribe.py`), and laid out by `typist/blocks.py`
-on top of `docxkit` (Word equations, vector figures, coloured points, 2 columns).
+After signing in, each typist sees a dashboard with three tools:
 
-Settings are environment variables, never committed:
+1. **Panel PDF to Notes DOCX**: drop a chapter's panel PDFs (order can be changed with ↑ ↓) and get
+   one combined `.docx` in the house style. Repeated slides are skipped, every slide is read by
+   Claude (vision, `typist/transcribe.py`) and laid out by `typist/blocks.py` on top of `docxkit`
+   (Word equations, vector figures, coloured points, 2 columns).
+2. **DOCX to PPT**: drop the (corrected) notes `.docx`; `typist/reader.py` reads it back into blocks
+   (colours, equations, and our figures from their alt text) and `typist/pptkit.py` builds slides in
+   the chosen PPT design. No API call, so it is free.
+3. **PPT or DOCX to MCQ Test**: drop notes or slides; Claude writes the MCQs (`typist/mcq.py`), answers
+   are spread evenly over options 1-4, output is the Word table test plus an Objective PPT.
+
+Accounts and history (`web/db.py`, SQLite in `DATA_DIR/typist.db`):
+
+* The first visit creates the **admin** account. The admin adds a login for each typist, resets
+  passwords, and disables accounts (Typists page).
+* **Work history** keeps every job: who, when, which files, pages, MCQs, real API cost (from token
+  counts), and the downloads. Admins see everyone's work; typists see their own.
+* **Settings** (admin): monthly budget in ₹ (AI jobs are blocked once it is used up), $→₹ rate,
+  model for notes and for MCQs, effort. **PPT designs** (admin): upload any class PPT; its master
+  background is kept and its slides are dropped.
+
+Environment variables (never committed):
 
 | Variable | Meaning |
 |---|---|
-| `ANTHROPIC_API_KEY` | Claude API key (required) |
-| `APP_PASSWORD` | shared team password |
-| `TYPIST_MODEL` | default `claude-opus-5-5` |
-| `DATA_DIR` | uploads + outputs (default `./data`), jobs auto-deleted after `KEEP_DAYS` (30) |
-| `JOB_WORKERS` | conversions at the same time (default 2) |
+| `ANTHROPIC_API_KEY` | Claude API key (needed for tools 1 and 3) |
+| `DATA_DIR` | database, uploads, outputs, PPT designs (default `./data`) |
+| `KEEP_DAYS` | job files older than this are deleted; history rows stay (default 90) |
+| `JOB_WORKERS` | jobs running at the same time (default 2) |
 
 Run it:
 
-* **Office Windows PC** (typists on the same Wi-Fi/LAN): double-click `start-windows.bat`, fill the
-  key and password in the `settings.bat` it opens, run again, open `http://<PC-IP>:8000`.
-* **Any server / cloud (Render, Railway, a VPS)**: `docker build -t typist . && docker run -p 8000:8000
-  -e ANTHROPIC_API_KEY=... -e APP_PASSWORD=... -v typist-data:/data typist`
+* **Office Windows PC** (typists on the same Wi-Fi/LAN): double-click `start-windows.bat`, put the API
+  key in the `settings.bat` it opens, run again, open `http://localhost:8000` and create the admin.
+  Other PCs open `http://<PC-IP>:8000`.
+* **Any server / cloud**: `docker build -t typist . && docker run -p 8000:8000
+  -e ANTHROPIC_API_KEY=... -v typist-data:/data typist`
 * **Dev**: `pip install -r requirements.txt && uvicorn web.app:app --reload`
 
 Command line, same pipeline: `python -m typist.convert p1.pdf p2.pdf -o Notes.docx --save-json b.json`

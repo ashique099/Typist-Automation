@@ -123,19 +123,21 @@ def generate_mcqs(parts, count=50, solution=False, model=None):
     """Text-only call (no images), so it is cheap. Needs ANTHROPIC_API_KEY."""
     from .transcribe import _client, _parse, TranscribeError
     client = _client()
-    model = model or os.environ.get("TYPIST_MCQ_MODEL") or os.environ.get("TYPIST_MODEL", "claude-opus-5-5")
+    from . import usage
+    model = model or usage.model(os.environ.get("TYPIST_MCQ_MODEL") or os.environ.get("TYPIST_MODEL", "claude-opus-5-5"))
     notes = json.dumps(_slim(parts), ensure_ascii=False)
     ask = (f"NOTES (JSON blocks):\n{notes}\n\nWrite exactly {count} MCQs. "
            + ("Give a one-line Hindi explanation in \"solution\"." if solution else 'Leave "solution" empty.'))
     with client.beta.messages.stream(
         model=model, max_tokens=64000, system=MCQ_SYSTEM,
         messages=[{"role": "user", "content": ask}],
-        output_config={"effort": os.environ.get("TYPIST_EFFORT", "high")},
+        output_config={"effort": usage.effort(os.environ.get("TYPIST_EFFORT", "high"))},
         betas=["server-side-fallback-2026-07-01"], fallbacks="default",
     ) as stream:
         msg = stream.get_final_message()
+    usage.record(msg)
     if msg.stop_reason == "refusal":
-        raise TranscribeError("Model ne MCQ banane se mana kar diya.")
+        raise TranscribeError("The model declined to write MCQs for these notes.")
     data = _parse("".join(b.text for b in msg.content if b.type == "text").replace('"mcqs"', '"blocks"', 1))
     good = []
     for m in data["blocks"]:

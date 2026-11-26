@@ -25,6 +25,7 @@ Unknown or malformed blocks degrade to a plain paragraph instead of failing the 
 """
 from __future__ import annotations
 
+import json
 import re
 
 from .docxkit import Figure, NoteDoc, Style
@@ -60,6 +61,7 @@ def build_figure(b) -> Figure:
     w = max(20.0, _num(b.get("width"), 250))
     h = max(20.0, _num(b.get("height"), 150))
     f = Figure(w, h)
+    f.source = json.dumps(b, ensure_ascii=False, separators=(",", ":"))
     for sh in b.get("shapes") or []:
         if not isinstance(sh, dict):
             continue

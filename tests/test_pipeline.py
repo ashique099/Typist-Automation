@@ -38,7 +38,7 @@ def test_pdf_pages(tmp_path):
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
-    monkeypatch.setenv("APP_PASSWORD", "pw")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     import importlib
     import typist.transcribe as tr
     calls = iter(PARTS)
@@ -51,7 +51,8 @@ def client(tmp_path, monkeypatch):
     import web.app as appmod
     importlib.reload(appmod)
     from fastapi.testclient import TestClient
-    return TestClient(appmod.app)
+    with TestClient(appmod.app) as c:
+        yield c
 
 
 def _pdf_bytes():
@@ -61,33 +62,93 @@ def _pdf_bytes():
     return doc.tobytes()
 
 
-def test_web_flow(client):
-    assert client.get("/", follow_redirects=False).status_code == 303
-    assert client.post("/api/jobs", files=[("files", ("a.pdf", _pdf_bytes()))]).status_code == 401
-    r = client.post("/login", data={"password": "bad"}, follow_redirects=False)
-    assert "error" in r.headers["location"]
-    client.post("/login", data={"password": "pw", "name": "Rahul"})
-    assert "Namaste Rahul" in client.get("/").text
-    r = client.post("/api/jobs", files=[("files", ("Part-1.pdf", _pdf_bytes())),
-                                        ("files", ("Part-2.pdf", _pdf_bytes()))], data={"mcq_count": "8"})
-    jid = r.json()["id"]
-    for _ in range(100):
-        m = client.get(f"/api/jobs/{jid}").json()
+def _wait(c, jid):
+    for _ in range(150):
+        m = c.get(f"/api/jobs/{jid}").json()
         if m["status"] in ("done", "failed"):
-            break
+            return m
         time.sleep(0.1)
+    return m
+
+
+def test_web_flow(client, tmp_path):
+    c = client
+    # first visit -> create the admin
+    assert c.get("/", follow_redirects=False).headers["location"] == "/setup"
+    r = c.post("/setup", data={"name": "Ashique", "username": "admin", "password": "secret1", "password2": "secret1"},
+               follow_redirects=False)
+    assert r.status_code == 303 and "ta_session" in r.cookies
+    assert "Panel PDF to Notes DOCX" in c.get("/").text
+    assert c.get("/setup", follow_redirects=False).headers["location"] == "/login"
+    # admin adds a typist
+    assert c.post("/api/admin/users", data={"username": "rahul", "name": "Rahul", "password": "abc123"}).status_code == 200
+    assert c.post("/api/admin/users", data={"username": "rahul", "name": "X", "password": "abc123"}).status_code == 400
+    c.get("/logout")
+    assert c.post("/api/jobs", data={"task": "ppt"}, files=[("files", ("a.docx", b"PK"))]).status_code == 401
+    assert "error" in c.post("/login", data={"username": "rahul", "password": "nope"},
+                             follow_redirects=False).headers["location"]
+    c.post("/login", data={"username": "Rahul", "password": "abc123"})
+    me = c.get("/api/me").json()
+    assert me["user"]["name"] == "Rahul" and me["user"]["role"] == "typist" and me["api_key"]
+    assert c.get("/api/admin/users").status_code == 403
+
+    # 1. PDFs -> notes
+    r = c.post("/api/jobs", data={"task": "notes"},
+               files=[("files", ("Part-1.pdf", _pdf_bytes())), ("files", ("Part-2.pdf", _pdf_bytes()))])
+    m = _wait(c, r.json()["id"])
     assert m["status"] == "done", m
-    assert m["output"] == "ठोस अवस्था (Solid State).docx"
-    d = client.get(f"/api/jobs/{jid}/download")
-    assert d.status_code == 200 and d.content[:2] == b"PK"
-    p = client.get(f"/api/jobs/{jid}/download?kind=pptx")
-    assert p.status_code == 200 and p.content[:2] == b"PK" and m["has_ppt"]
-    assert client.get(f"/api/jobs/{jid}/download?kind=exe").status_code == 404
-    assert m["mcqs"] == 8
-    t = client.get(f"/api/jobs/{jid}/download?kind=test")
+    assert [d["kind"] for d in m["downloads"]] == ["notes"] and m["by_name"] == "Rahul" and m["pages"] == 2
+    d = c.get(f"/api/jobs/{m['id']}/download?kind=notes")
+    assert d.status_code == 200 and d.content[:2] == b"PK" and "Solid" in d.headers["content-disposition"]
+    assert c.get(f"/api/jobs/{m['id']}/download?kind=ppt").status_code == 404
+    notes = d.content
+    assert c.post("/api/jobs", data={"task": "notes"}, files=[("files", ("x.pdf", b"not a pdf"))]).status_code == 400
+
+    # 2. DOCX -> PPT (no API)
+    r = c.post("/api/jobs", data={"task": "ppt"}, files=[("files", ("Notes.docx", notes))])
+    m = _wait(c, r.json()["id"])
+    assert m["status"] == "done", m
+    p = c.get(f"/api/jobs/{m['id']}/download?kind=ppt")
+    assert p.status_code == 200 and p.content[:2] == b"PK"
+    assert c.post("/api/jobs", data={"task": "ppt"}, files=[("files", ("a.pdf", _pdf_bytes()))]).status_code == 400
+
+    # 3. PPT / DOCX -> MCQ test
+    r = c.post("/api/jobs", data={"task": "test", "mcq_count": "8"}, files=[("files", ("Deck.pptx", p.content))])
+    m = _wait(c, r.json()["id"])
+    assert m["status"] == "done" and m["mcqs"] == 8, m
+    t = c.get(f"/api/jobs/{m['id']}/download?kind=test")
     assert t.status_code == 200 and "MCQ%20Test" in t.headers["content-disposition"]
-    assert client.get(f"/api/jobs/{jid}/download?kind=objective").status_code == 200
-    assert client.post("/api/jobs", files=[("files", ("x.pdf", b"not a pdf"))]).status_code == 400
+    assert c.get(f"/api/jobs/{m['id']}/download?kind=objective").status_code == 200
+
+    # history filters
+    h = c.get("/api/jobs?task=ppt").json()
+    assert h["total"] == 1 and h["jobs"][0]["task"] == "ppt"
+    assert c.get("/api/jobs?q=Deck").json()["total"] == 1
+
+    # admin sees everyone's work and the month's spend; budget blocks AI jobs
+    c.get("/logout")
+    c.post("/login", data={"username": "admin", "password": "secret1"})
+    assert c.get("/api/jobs?scope=all").json()["total"] == 3
+    assert c.get("/api/jobs?scope=mine").json()["total"] == 0
+    assert c.get("/api/admin/settings").json()["month"]["jobs"] == 3
+    assert next(u for u in c.get("/api/admin/users").json() if u["username"] == "rahul")["jobs"] == 3
+    c.post("/api/admin/settings", data={"monthly_budget_inr": "0"})
+    r = c.post("/api/jobs", data={"task": "notes"}, files=[("files", ("a.pdf", _pdf_bytes()))])
+    assert r.status_code == 400 and "budget" in r.json()["detail"]
+    r = c.post("/api/jobs", data={"task": "ppt"}, files=[("files", ("Notes.docx", notes))])
+    assert r.status_code == 200  # PPT costs nothing, so it still runs
+
+
+def test_docx_round_trip(tmp_path):
+    from typist.convert import build_docx
+    from typist.reader import docx_blocks
+    build_docx(PARTS, tmp_path / "n.docx")
+    title, blocks = docx_blocks(tmp_path / "n.docx")
+    assert title == "ठोस अवस्था (Solid State)"
+    orig = [b for p in PARTS for b in p["blocks"] if b.get("type") == "figure"]
+    figs = [b for b in blocks if b["type"] == "figure"]
+    assert len(figs) == len(orig) and figs[0]["shapes"] == orig[0]["shapes"]
+    assert any(b["type"] == "h1" for b in blocks) and any("$" in (b.get("text") or "") for b in blocks)
 
 
 def test_ppt_deck(tmp_path):

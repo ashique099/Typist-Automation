@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Typist Automation – Setup</title>
+<style>
+  :root { --red:#C00000; --blue:#1F4E9F; --bg:#f3f4f7; --card:#fff; --text:#1b1f24; --muted:#5b6470; --line:#dde1e6; }
+  * { box-sizing:border-box }
+  body { margin:0; font-family:system-ui,"Segoe UI","Nirmala UI",sans-serif; background:var(--bg); color:var(--text); display:grid; place-items:center; min-height:100vh; padding:16px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:32px 28px; width:100%; max-width:380px; box-shadow:0 8px 30px rgba(20,30,60,.06) }
+  .brand { display:flex; align-items:center; gap:10px; margin-bottom:6px }
+  .logo { width:38px; height:38px; border-radius:10px; background:var(--red); color:#fff; display:grid; place-items:center; font-weight:800 }
+  h1 { margin:0; font-size:20px } p { margin:6px 0 22px; color:var(--muted); font-size:14px }
+  label { display:block; font-size:13px; font-weight:600; margin:14px 0 6px }
+  input { width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px }
+  input:focus { outline:2px solid #c9d6ef; border-color:var(--blue) }
+  button { margin-top:22px; width:100%; padding:12px; border:0; border-radius:8px; background:var(--blue); color:#fff; font-size:15px; font-weight:600; cursor:pointer }
+  .err { color:var(--red); font-size:13px; margin-top:12px; min-height:1em }
+</style>
+</head>
+<body>
+<form class="card" method="post" action="/setup">
+  <div class="brand"><div class="logo">T</div><h1>Typist Automation</h1></div>
+  <p>First time setup: create the admin (owner) account. The admin can then add an account for each typist.</p>
+  <label for="n">Your name</label>
+  <input id="n" name="name" autocomplete="name" required>
+  <label for="u">Username (for login, e.g. ashique)</label>
+  <input id="u" name="username" autocomplete="username" autofocus required>
+  <label for="pw">Password</label>
+  <input id="pw" name="password" type="password" autocomplete="new-password" minlength="6" required>
+  <label for="pw2">Confirm password</label>
+  <input id="pw2" name="password2" type="password" autocomplete="new-password" minlength="6" required>
+  <button type="submit">Create admin account</button>
+  <div class="err">{{error}}</div>
+</form>
+</body>
+</html>
