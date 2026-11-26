@@ -27,6 +27,10 @@ Accounts, history and the **Admin panel** at `/admin` (`web/templates/admin.html
   model for notes and for MCQs, effort. **PPT designs** (admin): upload any class PPT; its master
   background is kept and its slides are dropped.
 
+Forgot the admin password? On the server PC run `python -m web.manage users` (lists usernames) and
+`python -m web.manage reset USERNAME` (sets and prints a temporary password). Passwords are stored
+hashed, so they can only be replaced, never read back.
+
 Environment variables (never committed):
 
 | Variable | Meaning |
