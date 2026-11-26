@@ -29,6 +29,7 @@
   .who { display:flex; align-items:center; gap:10px; font-size:14px; white-space:nowrap }
   .avatar { width:32px; height:32px; border-radius:50%; background:#e7ecf5; color:var(--blue); display:grid; place-items:center; font-weight:700 }
   .who a { color:var(--muted); text-decoration:none; font-size:13px } .who a:hover { color:var(--red) }
+  .so { display:inline-flex; align-items:center; gap:6px } .so svg { width:16px; height:16px }
   main { max-width:1120px; margin:0 auto; padding:28px 20px 60px }
   h1 { font-size:24px; margin:0 0 4px } .sub { color:var(--muted); margin:0 0 22px; font-size:14px }
   .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:18px }
@@ -133,13 +134,20 @@
   .stat .k { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em } .stat .v { font-size:22px; font-weight:700; margin-top:4px }
   .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap } .row > div { flex:1 1 160px }
   .hide { display:none !important }
+  .acc { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:18px; max-width:880px; align-items:start }
+  .profile { display:flex; flex-wrap:wrap; gap:16px; align-items:center }
+  .profile b { font-size:18px; color:var(--navy) } .profile .pill { margin-top:8px }
+  .bigav { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, var(--navy), var(--blue)); color:#fff; display:grid; place-items:center; font-size:26px; font-weight:700; flex:none }
+  .profile .help { flex-basis:100%; margin:6px 0 0; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; line-height:1.5 }
+  .chk { display:flex; align-items:center; gap:8px; font-weight:500; color:var(--muted) } .chk input { width:auto; margin:0 }
+  :focus-visible { outline:2px solid var(--blue); outline-offset:2px }
   .island { top:18px }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#141a26; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:9 }
   @media (max-width:900px) { .tools { grid-template-columns:1fr } }
   @media (max-width:900px) { .hero { padding:24px; grid-template-columns:1fr } .hero::after { width:170px; height:170px; border-width:22px } .panels { grid-template-columns:1fr } }
   @media (max-width:720px) {
-    .bar { padding:0 16px; height:64px } .bt, .adminlink, .so { display:none !important }
-    .tabs nav { padding:0 6px } .navadmin:not(.hide) { display:inline-block !important; color:var(--navy) } .navout { display:inline-block !important }
+    .bar { padding:0 16px; height:64px } .bt, .adminlink { display:none !important } .acc { grid-template-columns:1fr } .who .avatar { display:none } .so span { display:none } .so { width:36px; height:36px; justify-content:center; border-radius:10px; background:var(--soft) } .so svg { width:18px; height:18px }
+    .tabs nav { padding:0 6px } .navadmin:not(.hide) { display:inline-block !important; color:var(--navy) } .navout { display:none !important } .tabs nav { justify-content:space-between } nav button { padding:12px 8px 11px }
     main { padding:18px 16px 50px } .hm { display:none } h1 { font-size:21px }
     .art { height:110px } .hero { padding:22px 18px; border-radius:18px } .hero::after { display:none } .hero h1 { font-size:24px } .hstat { padding:12px 10px } .hstat b { font-size:22px }
     .item .dls { margin-top:0 } .item { flex-wrap:wrap } .item .dls { flex-basis:100%; padding-left:50px }
@@ -157,7 +165,7 @@
   <div class="bar">
     <div class="brand"><img class="logo" src="/static/disha-logo.png" alt="Disha"><div class="bt"><b>Disha Online Solution</b><small>Direction to Success</small></div></div>
     <div class="spacer"></div>
-    <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout" class="so">Sign out</a></div>
+    <div class="who"><div class="avatar" id="avatar"></div><span id="whoName" class="hm"></span><a href="/logout" class="so" title="Sign out" aria-label="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Sign out</span></a></div>
   </div>
   <div class="tabs"><nav id="nav">
     <button data-tab="home" class="on">Dashboard</button>
@@ -215,6 +223,7 @@
       </div>
       <div style="margin-top:20px"><button id="go" class="btn" disabled>Start</button></div>
       <div class="hint" id="toolHint"></div>
+      <div class="alert hide" id="toolOff" style="margin:14px 0 0"><b>This tool is temporarily unavailable.</b> Please contact Ashique Sir to resolve this.</div>
     </div>
     <div class="card"><h2>Recent tasks with this tool</h2><table><tbody id="toolRecent"></tbody></table></div>
   </section>
@@ -229,20 +238,27 @@
         <select id="hDays"><option value="0">All time</option><option value="1">Today</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>
         <input id="hQ" type="search" placeholder="Search chapter or file name">
       </div>
-      <table><thead><tr><th>Task</th><th class="hm">By / when</th><th>Status</th><th class="hm">Pages · MCQs · Cost</th><th>Download</th></tr></thead>
+      <table><thead><tr><th>Task</th><th class="hm">Uploaded</th><th>Status</th><th class="hm">Details</th><th>Download</th></tr></thead>
         <tbody id="hist"></tbody></table>
       <div class="pager"><span id="hInfo"></span><button class="btn ghost sm" id="hPrev">‹</button><button class="btn ghost sm" id="hNext">›</button></div>
     </div>
   </section>
 
   <section id="tab-account" class="hide">
-    <h1>My account</h1><p class="sub" id="accInfo"></p>
-    <div class="card" style="max-width:460px"><h2>Change password</h2>
-      <form id="pwForm">
-        <label>Current password</label><input type="password" name="old" required autocomplete="current-password">
-        <label>New password</label><input type="password" name="new" required minlength="6" autocomplete="new-password">
-        <div style="margin-top:18px"><button class="btn">Change password</button></div>
-      </form>
+    <h1>My account</h1><p class="sub">Your profile and password.</p>
+    <div class="acc">
+      <div class="card profile"><div class="bigav" id="bigAv"></div>
+        <div><b id="accName"></b><div class="small" id="accUser"></div><span class="pill typist" id="accRole"></span></div>
+        <p class="help">Need help with your account or a file? Please contact <b>Ashique Sir</b>.</p></div>
+      <div class="card"><h2>Change password</h2>
+        <form id="pwForm">
+          <label for="pwOld">Current password</label><input id="pwOld" type="password" name="old" required autocomplete="current-password">
+          <label for="pwNew">New password</label><input id="pwNew" type="password" name="new" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+          <label for="pwNew2">Type the new password again</label><input id="pwNew2" type="password" required minlength="6" autocomplete="new-password">
+          <label class="chk"><input type="checkbox" id="pwShow"> Show passwords</label>
+          <div style="margin-top:18px"><button class="btn">Change password</button></div>
+        </form>
+      </div>
     </div>
   </section>
 </main>
@@ -306,6 +322,7 @@ const ART = {
 };
 const DZ = {notes: ["PDF", "PDF", "PDF"], ppt: ["DOCX"], test: ["DOCX", "PPT"]};
 $$(".art").forEach(a => a.insertAdjacentHTML("beforeend", ART[a.dataset.art]));
+const toolOff = () => task !== "ppt" && ME && !ME.api_key;
 const fsize = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
 $$(".tool").forEach(c => c.onclick = () => openTool(c.dataset.task));
 $("#back").onclick = () => show("home");
@@ -317,17 +334,20 @@ function openTool(t) {
   $("#dropText").textContent = T.drop; $("#pick").accept = T.accept;
   $("#tab-tool").dataset.task = t; $("#dz").innerHTML = (DZ[t] || []).map(l => fileIcon(l)).join("") + `<span class="up">↑</span>`;
   $("#tplBox").classList.toggle("hide", !T.tpl); $("#mcqBox").classList.toggle("hide", !T.mcq);
-  drawFiles(); show("tool");
+  drawFiles(); show("tool"); $("#title").focus({preventScroll: true});
 }
 
+const firstName = n => { const w = String(n || "").trim().split(/\s+/);
+  return (w.length > 1 && /^(md|mohd|mohammad|muhammad|mr|mrs|ms|dr|sri|shri)\.?$/i.test(w[0]) ? w[1] : w[0]) || "there"; };
 async function loadMe() {
   ME = await api("/api/me");
   const u = ME.user;
   $("#whoName").textContent = u.name; $("#avatar").textContent = (u.name || "?").trim()[0].toUpperCase();
-  const hr = new Date().getHours(), first = (u.name || "").trim().split(/\s+/)[0];
+  const hr = new Date().getHours(), first = firstName(u.name);
   $("#hello").textContent = `${hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening"}, ${first} 👋`;
   $("#today").textContent = new Date().toLocaleDateString("en-IN", {weekday: "long", day: "numeric", month: "long"});
-  $("#accInfo").textContent = `${u.name} · username: ${u.username} · ${u.is_admin ? "Admin account" : "Typist"}`;
+  $("#accName").textContent = u.name; $("#accUser").textContent = "Username: " + u.username;
+  $("#accRole").textContent = u.is_admin ? "Admin account" : "Typist"; $("#bigAv").textContent = (u.name || "?").trim()[0].toUpperCase();
   $$(".adm").forEach(e => e.classList.toggle("hide", u.role !== "admin"));
   $("#noKey").classList.toggle("hide", ME.api_key);
   const b = ME.budget, pct = b.limit_inr ? Math.min(100, 100 * b.spent_inr / b.limit_inr) : 0;
@@ -353,7 +373,9 @@ function drawFiles() {
   $("#files").innerHTML = files.map((f, i) => `<li><span class="n">${i + 1}.</span>${fileIcon(/\.pdf$/i.test(f.name) ? "PDF" : /\.pptx$/i.test(f.name) ? "PPT" : "DOCX")}<span class="f">${esc(f.name)}</span><span class="sz">${fsize(f.size)}</span>
     <button class="ib" data-a="up" data-i="${i}" title="Move up">↑</button><button class="ib" data-a="down" data-i="${i}" title="Move down">↓</button>
     <button class="ib" data-a="rm" data-i="${i}" title="Remove">✕</button></li>`).join("");
-  $("#go").disabled = !files.length;
+  const off = toolOff();
+  $("#toolOff").classList.toggle("hide", !off);
+  $("#go").disabled = !files.length || off;
 }
 $("#files").onclick = e => {
   const b = e.target.closest("button"); if (!b) return; const i = +b.dataset.i, a = b.dataset.a;
@@ -376,7 +398,7 @@ $("#go").onclick = async () => {
   fd.append("ppt_template", $("#tpl").value); fd.append("mcq_count", $("#mcq").value);
   try { await api("/api/jobs", {method: "POST", body: fd}); files = []; $("#title").value = ""; drawFiles(); loadToolRecent(); window.Island ? Island.refresh() : toast("Task started", "ok"); }
   catch (err) { toast("Upload failed: " + err.message); }
-  go.textContent = "Start"; go.disabled = !files.length;
+  go.textContent = "Start"; go.disabled = !files.length || toolOff();
 };
 
 const dls = j => `<div class="dls">${j.downloads.map(d => `<a class="dl ${d.kind}" href="/api/jobs/${j.id}/download?kind=${d.kind}">⬇ ${esc(d.label)}</a>`).join("")}</div>`;
@@ -386,10 +408,10 @@ function jobRow(j, full) {
     <td><div class="kind ${j.task}">${esc(j.task_label)}</div><b>${esc(j.title || j.chapter || j.files[0])}</b>
       <div class="small">${j.files.length} file${j.files.length > 1 ? "s" : ""}: ${esc(j.files.join(", "))}</div>
       ${msg ? `<div class="small" style="color:${j.status === "failed" ? "var(--red)" : "var(--blue)"}">${esc(msg)}</div>` : ""}</td>
-    ${full ? `<td class="hm small">${esc(j.by_name || "")}<br>${when(j.created)}${dur(j) ? " · " + dur(j) : ""}</td>` : ""}
+    ${full ? `<td class="hm small">${when(j.created)}${dur(j) ? `<br>took ${dur(j)}` : ""}</td>` : ""}
     <td><span class="pill ${j.status}">${STATUS[j.status] || j.status}</span>${full ? "" : `<div class="small">${when(j.created)}</div>`}</td>
     ${full ? `<td class="hm small">${[j.pages ? `${j.pages} pages${j.pages_sent && j.pages_sent < j.pages ? ` (${j.pages - j.pages_sent} repeats skipped)` : ""}` : "",
-      j.mcqs ? `${j.mcqs} MCQs` : ""].filter(Boolean).join(" · ")}<div>${j.task === "ppt" ? "Free" : inr(j.cost_inr)}</div></td>` : ""}
+      j.mcqs ? `${j.mcqs} MCQs` : ""].filter(Boolean).join(" · ") || "–"}</td>` : ""}
     <td>${j.status === "done" ? dls(j) : ""}</td></tr>`;
 }
 const empty = (n, t) => `<tr><td colspan="${n}" class="small">${t}</td></tr>`;
@@ -434,8 +456,10 @@ async function loadHistory() {
 let qT; $("#hQ").oninput = () => { clearTimeout(qT); qT = setTimeout(() => { hPage = 1; loadHistory(); }, 300); };
 $("#hPrev").onclick = () => { hPage--; loadHistory(); }; $("#hNext").onclick = () => { hPage++; loadHistory(); };
 
+$("#pwShow").onchange = e => ["#pwOld", "#pwNew", "#pwNew2"].forEach(i => $(i).type = e.target.checked ? "text" : "password");
 $("#pwForm").onsubmit = async e => {
   e.preventDefault();
+  if ($("#pwNew").value !== $("#pwNew2").value) return toast("The two new passwords are not the same", "err");
   try { await api("/api/password", form(e.target)); e.target.reset(); toast("Password changed"); } catch (err) { toast(err.message); }
 };
 

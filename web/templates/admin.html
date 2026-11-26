@@ -73,6 +73,9 @@
   .kv { display:grid; grid-template-columns:auto 1fr; gap:8px 16px; font-size:14px } .kv dt { color:var(--muted) } .kv dd { margin:0; font-weight:600 }
   .empty { color:var(--muted); font-size:13px; padding:8px 0 }
   .hide { display:none !important }
+  input[type=file] { width:100%; font-size:13px; color:var(--muted); border:1px dashed #c9d0dc; border-radius:8px; padding:6px; background:#fafbfc }
+  input[type=file]::file-selector-button { font-family:inherit; font-weight:600; font-size:13px; border:0; border-radius:6px; padding:7px 12px; margin-right:10px; background:var(--navy); color:#fff; cursor:pointer }
+  :focus-visible { outline:2px solid var(--blue); outline-offset:2px }
   .apistat { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; background:var(--soft); font-size:14px }
   .apistat i { width:10px; height:10px; border-radius:50%; background:var(--red); flex:none } .apistat.on i { background:#1f9d55 }
   .apistat code { background:#fff; border:1px solid var(--line); padding:2px 7px; border-radius:6px; font-size:13px }
@@ -110,6 +113,7 @@
     table.stack tr { padding:12px 0; border-top:1px solid var(--line) } table.stack tr:first-child { border-top:0 }
     table.stack td { border:0; padding:3px 0; text-align:left } table.stack td.hm { display:none }
     table.stack .acts { justify-content:flex-start; margin-top:6px }
+    table.stack td.n { display:inline-block; width:auto; margin-right:14px } table.stack td.n[data-l]::before { content:attr(data-l) " "; color:var(--muted); font-size:12px }
   }
   @media (min-width:1025px) and (max-width:1200px) { main { padding:70px 20px 50px } }
   main { min-width:0 }
@@ -511,6 +515,13 @@ let rT; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTime
   m.onclick = () => m.setAttribute("aria-expanded", a.classList.toggle("open"));
   document.getElementById("nav").addEventListener("click", e => { if (e.target.closest("button")) { a.classList.remove("open"); m.setAttribute("aria-expanded", "false"); } });
 })();
+</script>
+<script>
+// label numbers in stacked (phone/tablet) tables with their column name
+new MutationObserver(() => document.querySelectorAll("table.stack").forEach(t => {
+  const h = [...t.querySelectorAll("thead th")].map(th => th.textContent.trim());
+  t.querySelectorAll("tbody tr").forEach(tr => [...tr.children].forEach((td, i) => { if (h[i] && !td.dataset.l) td.dataset.l = h[i]; }));
+})).observe(document.querySelector("main"), {childList: true, subtree: true});
 </script>
 </body>
 </html>

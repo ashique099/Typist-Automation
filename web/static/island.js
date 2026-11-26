@@ -149,7 +149,9 @@
       const b = d.budget, pc = b && b.limit_inr > 0 ? b.spent_inr / b.limit_inr : 0;
       if (first && !seen.welcome && d.user) {
         seen.welcome = 1;
-        flash(`Welcome, ${(d.user.name || d.user.username || "").split(" ")[0]}`, {kind: "ok", sub: "Signed in to Disha Online Solution", wait: true});
+        const w = String(d.user.name || d.user.username || "").trim().split(/\s+/),
+          first = w.length > 1 && /^(md|mohd|mohammad|muhammad|mr|mrs|ms|dr|sri|shri)\.?$/i.test(w[0]) ? w[1] : w[0];
+        flash(`Welcome, ${first}`, {kind: "ok", sub: "Signed in to Disha Online Solution", wait: true});
       }
       if (!d.api_key && !seen.key) { seen.key = 1;
         flash(ADMIN ? "API key missing" : "Notes & MCQ paused", {kind: "warn", sub: ADMIN ? "Settings → API integration" : "Please contact Ashique Sir to resolve this", wait: true}); }
